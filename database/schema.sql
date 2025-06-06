@@ -1,5 +1,5 @@
 -- ========================================
--- SISTEMA EDUCATIVO - ESQUEMA COMPLETO Y LIMPIO
+-- SISTEMA EDUCATIVO - ESQUEMA COMPLETAMENTE LIMPIO
 -- ========================================
 
 -- Tabla de Escuelas
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS subjects (
 );
 
 -- ========================================
--- NUEVAS TABLAS PARA GESTIÓN AVANZADA
+-- TABLAS PARA GESTIÓN AVANZADA
 -- ========================================
 
 -- Tabla de Grados
@@ -202,48 +202,15 @@ CREATE TABLE IF NOT EXISTS attendance_periods (
 );
 
 -- ========================================
--- DATOS INICIALES MÍNIMOS (SOLO LO ESENCIAL)
+-- SOLO DATOS MÍNIMOS ESENCIALES
 -- ========================================
 
 -- Escuela de ejemplo (necesaria para funcionamiento)
 INSERT OR IGNORE INTO schools (id, name, address, phone, email) 
 VALUES (1, 'Mi Escuela', 'Dirección', '0000-0000', 'contacto@miescuela.cr');
 
--- GRADOS ESTÁNDAR DE COSTA RICA
-INSERT OR IGNORE INTO grades (name, usage, priority) VALUES 
-('Maternal', 0, 1),
-('Preescolar', 0, 1),
-('Kinder', 0, 1),
-('Transición', 0, 1),
-('Primero', 0, 1),
-('Segundo', 0, 1),
-('Tercero', 0, 1),
-('Cuarto', 0, 1),
-('Quinto', 0, 1),
-('Sexto', 0, 1),
-('Séptimo', 0, 1),
-('Octavo', 0, 1),
-('Noveno', 0, 1),
-('Décimo', 0, 1),
-('Undécimo', 0, 1);
-
--- MATERIAS ESTÁNDAR DE COSTA RICA
-INSERT OR IGNORE INTO custom_subjects (name, usage, priority) VALUES 
-('Matemáticas', 0, 1),
-('Español', 0, 1),
-('Ciencias', 0, 1),
-('Estudios Sociales', 0, 1),
-('Inglés', 0, 1),
-('Educación Física', 0, 1),
-('Artes Plásticas', 0, 1),
-('Música', 0, 1),
-('Educación Religiosa', 0, 1),
-('Informática', 0, 0),
-('Biología', 0, 0),
-('Física', 0, 0),
-('Química', 0, 0),
-('Psicología', 0, 0),
-('Filosofía', 0, 0),
-('Francés', 0, 0),
-('Contabilidad', 0, 0),
-('Administración', 0, 0);
+-- ✅ SISTEMA COMPLETAMENTE LIMPIO
+-- ✅ Sin grados precargados
+-- ✅ Sin materias precargadas  
+-- ✅ Solo estructura de tablas
+-- ✅ Usuario agrega sus propios datos

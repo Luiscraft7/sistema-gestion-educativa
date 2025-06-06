@@ -502,17 +502,34 @@ class Database {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
+            if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
+                reject(new Error('subjectIds debe ser un array no vacío'));
+                return;
+            }
+            
+            console.log('🗑️ Database: Eliminando materias con IDs:', subjectIds);
+            
+            // Crear placeholders para la consulta (?, ?, ?, ...)
             const placeholders = subjectIds.map(() => '?').join(',');
             const query = `DELETE FROM custom_subjects WHERE id IN (${placeholders})`;
             
+            console.log('📝 Query SQL:', query);
+            console.log('📝 Parámetros:', subjectIds);
+            
             this.db.run(query, subjectIds, function(err) {
                 if (err) {
+                    console.error('❌ Error SQL eliminando materias:', err);
                     reject(err);
                 } else {
-                    resolve({
+                    const result = {
                         deletedCount: this.changes,
-                        message: `${this.changes} materias eliminadas correctamente`
-                    });
+                        requestedCount: subjectIds.length,
+                        message: `${this.changes} materias eliminadas correctamente`,
+                        deletedIds: subjectIds
+                    };
+                    
+                    console.log('✅ Database: Materias eliminadas exitosamente:', result);
+                    resolve(result);
                 }
             });
         });
