@@ -1094,6 +1094,10 @@
                     </button>
                 </div>
             </div>
+
+
+
+            
             
             <!-- Tab Content: Single Grade -->
             <div id="singleTab" class="tab-content">
@@ -1194,7 +1198,7 @@
         </div>
     </div>
 
-    <!-- Modal para Agregar Múltiples Estudiantes -->
+   <!-- Modal para Agregar Múltiples Estudiantes - VERSIÓN CORREGIDA -->
     <div class="modal" id="bulkAddModal">
         <div class="modal-content" style="max-width: 1000px;">
             <div class="modal-header">
@@ -1202,7 +1206,7 @@
                 <button class="close-btn" onclick="closeBulkAddModal()">&times;</button>
             </div>
             
-            <!-- En students.html - REEMPLAZAR las instrucciones del modal bulkAddModal -->
+            <!-- Instrucciones -->
             <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                 <p><strong>📝 Instrucciones:</strong></p>
                 <ul style="margin: 10px 0; padding-left: 20px;">
@@ -1217,7 +1221,31 @@
                     <span style="color: #666; font-size: 12px;">Filas: <span id="rowCount">0</span></span>
                 </div>
             </div>
-                        
+
+            <!-- ✅ NUEVO: Controles globales para aplicar grado a todos -->
+            <div style="background: #e8f4fd; border: 2px solid #2196f3; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                <h4 style="margin-bottom: 10px; color: #1976d2;">🎯 Aplicar Grado a Todos</h4>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Grado para todos:</label>
+                        <select id="bulkGradeSelect" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="">Seleccionar grado...</option>
+                            <!-- Se llena dinámicamente -->
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-info" onclick="applyGradeToAll()" style="margin-top: 20px;">
+                        📚 Aplicar a Todas las Filas
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="clearAllGrades()" style="margin-top: 20px;">
+                        🧹 Limpiar Grados
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                    💡 Seleccione un grado y haga clic en "Aplicar" para completar automáticamente todas las filas
+                </div>
+            </div>
+            
+            <!-- Tabla de estudiantes -->
             <div style="overflow-x: auto; max-height: 400px; border: 1px solid #e1e1e1; border-radius: 8px;">
                 <table id="bulkAddTable" style="width: 100%; min-width: 800px;">
                     <thead style="background: #667eea; color: white; position: sticky; top: 0;">
@@ -1815,20 +1843,58 @@
         async function saveStudent(event) {
             event.preventDefault();
             
-            const formData = new FormData(event.target);
-            const studentData = Object.fromEntries(formData.entries());
-
-            if (!editingStudentId && !studentData.student_id) {
-                delete studentData.student_id;
-                console.log('🔢 ID será generado automáticamente por el servidor');
-            }
-
             try {
+                console.log('📝 Iniciando guardado de estudiante...');
+                
+                // ✅ VALIDACIÓN MEJORADA
+                const firstSurname = document.getElementById('firstSurname').value.trim();
+                const firstName = document.getElementById('firstName').value.trim();
+                
+                if (!firstSurname || !firstName) {
+                    alert('❌ Primer Apellido y Nombre son obligatorios');
+                    return;
+                }
+                
+                // ✅ RECOPILAR DATOS MANUALMENTE (más confiable que FormData)
+                const studentData = {
+                    cedula: document.getElementById('cedula').value.trim() || null,
+                    first_surname: firstSurname,
+                    second_surname: document.getElementById('secondSurname').value.trim() || null,
+                    first_name: firstName,
+                    student_id: document.getElementById('studentId').value.trim() || null,
+                    birth_date: document.getElementById('birthDate').value || null,
+                    grade_level: document.getElementById('gradeLevel').value.trim() || null,
+                    subject_area: document.getElementById('subjectArea').value.trim() || null,
+                    section: document.getElementById('section').value || null,
+                    email: document.getElementById('email').value.trim() || null,
+                    phone: document.getElementById('phone').value.trim() || null,
+                    address: document.getElementById('address').value.trim() || null,
+                    parent_name: document.getElementById('parentName').value.trim() || null,
+                    parent_phone: document.getElementById('parentPhone').value.trim() || null,
+                    parent_email: document.getElementById('parentEmail').value.trim() || null,
+                    notes: document.getElementById('notes').value.trim() || null,
+                    status: 'active'
+                };
+                
+                console.log('📤 Datos a enviar:', studentData);
+                
+                // ✅ GENERAR ID AUTOMÁTICO SI NO EXISTE
+                if (!editingStudentId && !studentData.student_id) {
+                    delete studentData.student_id;
+                    console.log('🔢 ID será generado automáticamente por el servidor');
+                }
+                
+                // ✅ DESHABILITAR BOTÓN DURANTE EL GUARDADO
+                const saveBtn = document.getElementById('saveBtn');
+                const originalText = saveBtn.textContent;
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Guardando...';
+                
                 const url = editingStudentId ? `/api/students/${editingStudentId}` : '/api/students';
                 const method = editingStudentId ? 'PUT' : 'POST';
-
-                console.log(`📝 ${editingStudentId ? 'Actualizando' : 'Creando'} estudiante:`, studentData);
-
+                
+                console.log(`📡 ${editingStudentId ? 'Actualizando' : 'Creando'} estudiante en: ${url}`);
+                
                 const response = await fetch(url, {
                     method: method,
                     headers: {
@@ -1836,25 +1902,133 @@
                     },
                     body: JSON.stringify(studentData)
                 });
-
+                
+                console.log('📥 Respuesta del servidor:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const result = await response.json();
-
+                console.log('📋 Resultado completo:', result);
+                
                 if (result.success) {
+                    console.log('✅ Estudiante guardado exitosamente');
+                    
                     closeModal();
                     loadStudents();
                     loadGradesAndSubjects();
+                    
                     const message = editingStudentId ? 'Estudiante actualizado correctamente' : 'Estudiante agregado correctamente';
-                    alert(message);
-                    console.log('✅', message);
+                    alert(`✅ ${message}`);
+                    
                 } else {
-                    alert('Error: ' + result.message);
-                    console.error('❌ Error del servidor:', result.message);
+                    throw new Error(result.message || 'Error desconocido del servidor');
                 }
+                
             } catch (error) {
-                console.error('❌ Error:', error);
-                alert('Error guardando estudiante');
+                console.error('❌ Error completo:', error);
+                alert(`❌ Error guardando estudiante: ${error.message}`);
+            } finally {
+                // ✅ REHABILITAR BOTÓN
+                const saveBtn = document.getElementById('saveBtn');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = editingStudentId ? 'Actualizar Estudiante' : 'Guardar Estudiante';
+                }
             }
         }
+
+
+        function applyGradeToAll() {
+            const selectedGrade = document.getElementById('bulkGradeSelect').value;
+            
+            if (!selectedGrade) {
+                alert('❌ Seleccione un grado primero');
+                return;
+            }
+            
+            const gradeInputs = document.querySelectorAll('#bulkAddTableBody input[name="grade_level"]');
+            let count = 0;
+            
+            gradeInputs.forEach(input => {
+                if (input.closest('tr')) {  // Verificar que la fila existe
+                    input.value = selectedGrade;
+                    input.style.backgroundColor = '#d4edda';
+                    input.style.border = '2px solid #28a745';
+                    count++;
+                }
+            });
+            
+            if (count > 0) {
+                alert(`✅ Grado "${selectedGrade}" aplicado a ${count} estudiantes`);
+                
+                // Quitar el resaltado después de 2 segundos
+                setTimeout(() => {
+                    gradeInputs.forEach(input => {
+                        input.style.backgroundColor = '';
+                        input.style.border = '2px solid #e1e1e1';
+                    });
+                }, 2000);
+            } else {
+                alert('❌ No hay filas para aplicar el grado');
+            }
+        }
+
+        function applyGradeToAll() {
+            const selectedGrade = document.getElementById('bulkGradeSelect').value;
+            
+            if (!selectedGrade) {
+                alert('❌ Seleccione un grado primero');
+                return;
+            }
+            
+            const gradeInputs = document.querySelectorAll('#bulkAddTableBody input[name="grade_level"]');
+            let count = 0;
+            
+            gradeInputs.forEach(input => {
+                if (input.closest('tr')) {  // Verificar que la fila existe
+                    input.value = selectedGrade;
+                    input.style.backgroundColor = '#d4edda';
+                    input.style.border = '2px solid #28a745';
+                    count++;
+                }
+            });
+            
+            if (count > 0) {
+                alert(`✅ Grado "${selectedGrade}" aplicado a ${count} estudiantes`);
+                
+                // Quitar el resaltado después de 2 segundos
+                setTimeout(() => {
+                    gradeInputs.forEach(input => {
+                        input.style.backgroundColor = '';
+                        input.style.border = '2px solid #e1e1e1';
+                    });
+                }, 2000);
+            } else {
+                alert('❌ No hay filas para aplicar el grado');
+            }
+        }
+
+        function clearAllGrades() {
+            if (!confirm('¿Limpiar todos los grados de las filas?')) {
+                return;
+            }
+            
+            const gradeInputs = document.querySelectorAll('#bulkAddTableBody input[name="grade_level"]');
+            let count = 0;
+            
+            gradeInputs.forEach(input => {
+                if (input.closest('tr')) {
+                    input.value = '';
+                    count++;
+                }
+            });
+            
+            document.getElementById('bulkGradeSelect').value = '';
+            alert(`✅ Grados limpiados en ${count} filas`);
+        }
+
 
         async function deleteStudent(id) {
         const student = students.find(s => s.id === id);
@@ -2607,11 +2781,31 @@
 
         function openBulkAddModal() {
             document.getElementById('bulkAddModal').classList.add('show');
-            clearBulkTable();
             
-            // Empezar con solo 3 filas vacías en lugar de 10
-            for (let i = 0; i < 3; i++) {
+            // ✅ CARGAR GRADOS EN EL SELECT GLOBAL
+            loadGradesForBulkModal();
+            
+            clearBulkTable();
+            for (let i = 0; i < 10; i++) {
                 addBulkRow();
+            }
+        }
+
+        async function loadGradesForBulkModal() {
+            try {
+                const response = await fetch('/api/grades');
+                const result = await response.json();
+                
+                const bulkGradeSelect = document.getElementById('bulkGradeSelect');
+                bulkGradeSelect.innerHTML = '<option value="">Seleccionar grado...</option>';
+                
+                if (result.success) {
+                    result.data.forEach(grade => {
+                        bulkGradeSelect.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Error cargando grados para modal múltiple:', error);
             }
         }
 
@@ -2678,6 +2872,41 @@
             
             tbody.appendChild(row);
             updateRowCount();
+        }
+
+        function closeModal() {
+            console.log('🚪 Cerrando modal...');
+            
+            const modal = document.getElementById('studentModal');
+            if (modal) {
+                modal.classList.remove('show');
+                console.log('✅ Modal cerrado');
+            }
+            
+            // ✅ LIMPIAR ESTADO
+            editingStudentId = null;
+            selectedGrade = '';
+            
+            // ✅ RESETEAR COMBOBOX
+            const selectedText = document.querySelector('#gradeSelect .selected-text');
+            if (selectedText) {
+                selectedText.textContent = 'Seleccione un grado...';
+            }
+            
+            const gradeLevel = document.getElementById('gradeLevel');
+            if (gradeLevel) {
+                gradeLevel.value = '';
+            }
+            
+            // ✅ CERRAR DROPDOWN SI ESTÁ ABIERTO
+            const dropdown = document.getElementById('gradeDropdown');
+            const button = document.querySelector('#gradeSelect .select-button');
+            if (dropdown && button) {
+                dropdown.classList.remove('show');
+                button.classList.remove('open');
+            }
+            
+            console.log('🧹 Estado limpiado correctamente');
         }
 
         function removeBulkRow(rowId) {
@@ -3174,6 +3403,36 @@
             // Cerrar modal de edición masiva al hacer clic fuera
             document.getElementById('bulkGradeModal').addEventListener('click', function(event) {
                 if (event.target === this) closeBulkGradeModal();
+            });
+        });
+
+
+
+                // ✅ MEJORAR EVENT LISTENER PARA CERRAR MODAL
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener mejorado para cerrar modal con ESC
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    if (document.getElementById('studentModal').classList.contains('show')) {
+                        closeModal();
+                    }
+                    if (document.getElementById('bulkAddModal').classList.contains('show')) {
+                        closeBulkAddModal();
+                    }
+                }
+            });
+            
+            // Event listener mejorado para cerrar al hacer clic fuera
+            document.getElementById('studentModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    console.log('🖱️ Clic fuera del modal detectado');
+                    closeModal();
+                }
+            });
+            
+            // Prevenir que clics dentro del modal lo cierren
+            document.querySelector('#studentModal .modal-content').addEventListener('click', function(event) {
+                event.stopPropagation();
             });
         });
     </script>
