@@ -1128,19 +1128,22 @@
                 <button class="close-btn" onclick="closeBulkAddModal()">&times;</button>
             </div>
             
+            <!-- En students.html - REEMPLAZAR las instrucciones del modal bulkAddModal -->
             <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                 <p><strong>📝 Instrucciones:</strong></p>
                 <ul style="margin: 10px 0; padding-left: 20px;">
                     <li><strong>Opción 1:</strong> Complete manualmente los campos. Solo <strong>Primer Apellido</strong> y <strong>Nombre</strong> son obligatorios.</li>
-                    <li><strong>Opción 2:</strong> <span style="background: #fff3cd; padding: 2px 6px; border-radius: 4px;">🔥 Pegue desde Excel</span></li>
+                    <li><strong>Opción 2:</strong> <span style="background: #fff3cd; padding: 2px 6px; border-radius: 4px;">🔥 Pegue desde Excel/Google Sheets</span> - Seleccione una celda y pegue (Ctrl+V)</li>
+                    <li><strong>Navegación:</strong> Use Tab, Enter o flechas para moverse entre celdas</li>
+                    <li><strong>Agregar filas:</strong> Use el botón "+ Agregar Fila" o navegue más allá de la última fila</li>
                 </ul>
                 <div style="margin-top: 10px; display: flex; gap: 15px; align-items: center;">
                     <button class="btn btn-success btn-sm" onclick="addBulkRow()">+ Agregar Fila</button>
-                    <button class="btn btn-warning btn-sm" onclick="clearBulkTable()">Limpiar Todo</button>
+                    <button class="btn btn-warning btn-sm" onclick="clearBulkTable(); for(let i=0; i<3; i++) addBulkRow();">🧹 Limpiar Todo</button>
                     <span style="color: #666; font-size: 12px;">Filas: <span id="rowCount">0</span></span>
                 </div>
             </div>
-            
+                        
             <div style="overflow-x: auto; max-height: 400px; border: 1px solid #e1e1e1; border-radius: 8px;">
                 <table id="bulkAddTable" style="width: 100%; min-width: 800px;">
                     <thead style="background: #667eea; color: white; position: sticky; top: 0;">
@@ -1622,37 +1625,56 @@
         }
 
         async function deleteStudent(id) {
-            const student = students.find(s => s.id === id);
-            if (!student) return;
+        const student = students.find(s => s.id === id);
+        if (!student) return;
 
-            const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
-            if (!confirm(`¿Estás seguro de eliminar a ${fullName}?`)) {
-                return;
-            }
+        const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+        
+        // Mostrar opciones de eliminación
+        const action = confirm(
+            `¿Cómo deseas eliminar a ${fullName}?\n\n` +
+            `• OK = Eliminar PERMANENTEMENTE (no se puede recuperar)\n` +
+            `• Cancelar = Solo marcar como inactivo (se puede recuperar)\n\n` +
+            `⚠️ La eliminación permanente borrará también todas las asistencias y calificaciones.`
+        );
 
-            try {
-                const response = await fetch(`/api/students/${id}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    loadStudents();
-                    alert('Estudiante eliminado correctamente');
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error eliminando estudiante');
-            }
+        if (action === null) {
+            return; // Usuario canceló completamente
         }
 
-        function closeModal() {
-            document.getElementById('studentModal').classList.remove('show');
-            editingStudentId = null;
+        const permanently = action; // true = permanente, false = lógica
+        const actionText = permanently ? 'eliminar permanentemente' : 'marcar como inactivo';
+        
+        if (!confirm(`¿Estás seguro de ${actionText} a ${fullName}?`)) {
+            return;
         }
+
+        try {
+            let url = `/api/students/${id}`;
+            if (permanently) {
+                url += '?permanently=true';
+            }
+
+            const response = await fetch(url, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                loadStudents();
+                const message = permanently ? 
+                    `✅ ${fullName} eliminado permanentemente` :
+                    `✅ ${fullName} marcado como inactivo`;
+                alert(message);
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error eliminando estudiante');
+        }
+    }
 
         // ========================================
         // FUNCIONES GESTIÓN DE GRADOS/MATERIAS CON SELECCIÓN MÚLTIPLE
@@ -1850,6 +1872,10 @@
                                 <span class="priority-star ${subject.priority ? 'active' : ''}" 
                                     onclick="toggleSubjectPriority(${subject.id}, ${!subject.priority})" 
                                     title="${subject.priority ? 'Quitar prioridad' : 'Marcar como prioritario'}">⭐</span>
+                                <button class="btn btn-info btn-sm" 
+                                        onclick="debugSubject(${subject.id}, '${subject.name}')"
+                                        title="Debug materia"
+                                        style="padding: 2px 6px; font-size: 10px; margin-left: 5px;">🐛</button>
                                 <button class="btn btn-danger btn-sm" 
                                         onclick="removeSubject(${subject.id}, '${subject.name}', ${subject.usage})"
                                         title="Eliminar materia"
@@ -1866,7 +1892,6 @@
                 container.innerHTML = '<div style="color: #dc3545; font-style: italic;">Error cargando materias</div>';
             }
         }
-
         function toggleAllSubjects(checked) {
             const checkboxes = document.querySelectorAll('#subjectsList input[type="checkbox"]');
             checkboxes.forEach(cb => cb.checked = checked);
@@ -2016,8 +2041,8 @@
             }
         }
 
-        // Función para eliminar materia individual
-       async function removeSubject(subjectId, subjectName, usageCount) {
+        // Función para eliminar materia individual - CORREGIDA
+        async function removeSubject(subjectId, subjectName, usageCount) {
             let confirmMessage = `¿Estás seguro de eliminar la materia "${subjectName}"?`;
             
             if (usageCount > 0) {
@@ -2351,7 +2376,9 @@
         function openBulkAddModal() {
             document.getElementById('bulkAddModal').classList.add('show');
             clearBulkTable();
-            for (let i = 0; i < 10; i++) {
+            
+            // Empezar con solo 3 filas vacías en lugar de 10
+            for (let i = 0; i < 3; i++) {
                 addBulkRow();
             }
         }
@@ -2370,38 +2397,38 @@
             row.innerHTML = `
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                           placeholder="123456789" name="cedula" 
-                           data-row="${bulkRowCounter-1}" data-col="0"
-                           onclick="selectCell(this)" onpaste="handlePaste(event)"
-                           onkeydown="handleKeyDown(event)">
+                        placeholder="" name="cedula" 
+                        data-row="${bulkRowCounter-1}" data-col="0"
+                        onclick="selectCell(this)" onpaste="handlePaste(event)"
+                        onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                           placeholder="Pérez" name="first_surname" required
-                           data-row="${bulkRowCounter-1}" data-col="1"
-                           onclick="selectCell(this)" onpaste="handlePaste(event)"
-                           onkeydown="handleKeyDown(event)">
+                        placeholder="" name="first_surname" required
+                        data-row="${bulkRowCounter-1}" data-col="1"
+                        onclick="selectCell(this)" onpaste="handlePaste(event)"
+                        onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                           placeholder="González" name="second_surname"
-                           data-row="${bulkRowCounter-1}" data-col="2"
-                           onclick="selectCell(this)" onpaste="handlePaste(event)"
-                           onkeydown="handleKeyDown(event)">
+                        placeholder="" name="second_surname"
+                        data-row="${bulkRowCounter-1}" data-col="2"
+                        onclick="selectCell(this)" onpaste="handlePaste(event)"
+                        onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                           placeholder="Juan" name="first_name" required
-                           data-row="${bulkRowCounter-1}" data-col="3"
-                           onclick="selectCell(this)" onpaste="handlePaste(event)"
-                           onkeydown="handleKeyDown(event)">
+                        placeholder="" name="first_name" required
+                        data-row="${bulkRowCounter-1}" data-col="3"
+                        onclick="selectCell(this)" onpaste="handlePaste(event)"
+                        onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                           placeholder="Séptimo" name="grade_level"
-                           data-row="${bulkRowCounter-1}" data-col="4"
-                           onclick="selectCell(this)" onpaste="handlePaste(event)"
-                           onkeydown="handleKeyDown(event)">
+                        placeholder="" name="grade_level"
+                        data-row="${bulkRowCounter-1}" data-col="4"
+                        onclick="selectCell(this)" onpaste="handlePaste(event)"
+                        onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px; text-align: center;">
                     <button type="button" class="btn btn-danger btn-sm" 
@@ -2680,6 +2707,33 @@
             }
         }
 
+
+        async function debugSubject(subjectId, subjectName) {
+            try {
+                console.log(`🐛 DEBUG: Verificando materia ${subjectId} (${subjectName})`);
+                
+                const response = await fetch(`/api/debug/subjects/${subjectId}`);
+                const result = await response.json();
+                
+                console.log('🔍 Debug result:', result);
+                
+                if (result.success) {
+                    if (result.exists) {
+                        console.log(`📋 Materia encontrada: ${result.subject.name}`);
+                        console.log(`👥 Uso actual: ${result.usage} estudiantes`);
+                        console.log(`🗑️ Se puede eliminar: ${result.canDelete}`);
+                        
+                        alert(`Debug Info:\n• Materia: ${result.subject.name}\n• Estudiantes usando: ${result.usage}\n• Se puede eliminar: ${result.canDelete ? 'SÍ' : 'NO'}`);
+                    } else {
+                        console.log('❌ Materia no encontrada en BD');
+                        alert('Materia no encontrada en la base de datos');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error en debug:', error);
+                alert('Error en debug: ' + error.message);
+            }
+        }
         // ========================================
         // EVENT LISTENERS
         // ========================================

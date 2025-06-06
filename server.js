@@ -973,6 +973,51 @@ app.get('/api/debug/student-attendance/:studentId', async (req, res) => {
 });
 
 
+// En server.js - AGREGAR este endpoint de debug
+app.get('/api/debug/subjects/:id', async (req, res) => {
+    try {
+        const subjectId = req.params.id;
+        
+        // Verificar si la materia existe
+        const checkQuery = 'SELECT * FROM custom_subjects WHERE id = ?';
+        
+        database.db.get(checkQuery, [subjectId], async (err, subject) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: err.message });
+            }
+            
+            if (!subject) {
+                return res.json({ 
+                    success: true, 
+                    exists: false, 
+                    message: 'Materia no encontrada' 
+                });
+            }
+            
+            // Verificar uso de la materia
+            const usageQuery = 'SELECT COUNT(*) as count FROM students WHERE subject_area = ? AND status = "active"';
+            
+            database.db.get(usageQuery, [subject.name], (err, usageResult) => {
+                if (err) {
+                    return res.status(500).json({ success: false, error: err.message });
+                }
+                
+                res.json({
+                    success: true,
+                    exists: true,
+                    subject: subject,
+                    usage: usageResult.count,
+                    canDelete: usageResult.count === 0
+                });
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
 
 // ========================================
 // INICIAR SERVIDOR
