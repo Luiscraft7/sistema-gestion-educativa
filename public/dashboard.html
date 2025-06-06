@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Dashboard - Sistema Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .module-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .module-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .module-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .module-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .module-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-ready {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-development {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-planned {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .quick-stats {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .stats-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .module-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎓 Dashboard - Sistema Educativo</h1>
+            <p>Centro de control para la gestión académica moderna</p>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stats-title">📊 Vista General del Sistema</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Escuelas Registradas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Estudiantes Activos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Materias Configuradas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">7</div>
+                    <div class="stat-label">Módulos Disponibles</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modules Grid -->
+        <div class="modules-grid">
+            <!-- Módulo Cotidiano -->
+            <div class="module-card" onclick="openModule('cotidiano')">
+                <div class="module-icon">📊</div>
+                <div class="module-title">Cotidiano</div>
+                <div class="module-description">
+                    Registro diario de calificaciones, participación y comportamiento de estudiantes
+                </div>
+                <div class="module-status status-development">En Desarrollo</div>
+            </div>
+            
+            <!-- Módulo Tareas -->
+            <div class="module-card" onclick="openModule('tareas')">
+                <div class="module-icon">📝</div>
+                <div class="module-title">Tareas</div>
+                <div class="module-description">
+                    Asignación, seguimiento y calificación de tareas por materia y período
+                </div>
+                <div class="module-status status-planned">Planificado</div>
+            </div>
+            
+            <!-- Módulo Exámenes -->
+            <div class="module-card" onclick="openModule('examenes')">
+                <div class="module-icon">📋</div>
+                <div class="module-title">Exámenes</div>
+                <div class="module-description">
+                    Programación y registro de calificaciones de exámenes y evaluaciones
+                </div>
+                <div class="module-status status-planned">Planificado</div>
+            </div>
+            
+
+            <!-- Módulo Asistencia -->
+            <div class="module-card" onclick="openModule('asistencia')">
+                <div class="module-icon">📅</div>
+                <div class="module-title">Asistencia</div>
+                <div class="module-description">
+                    Control diario de asistencia, tardanzas y reportes según normativas MEP
+                </div>
+                <div class="module-status status-ready">Disponible</div>
+            </div>
+                        
+            <!-- Módulo Estudiantes -->
+            <div class="module-card" onclick="openModule('estudiantes')">
+                <div class="module-icon">👨‍🎓</div>
+                <div class="module-title">Estudiantes</div>
+                <div class="module-description">
+                    Gestión de información personal, matrícula y historial académico
+                </div>
+                <div class="module-status status-development">En Desarrollo</div>
+            </div>
+            
+            <!-- Módulo Materias -->
+            <div class="module-card" onclick="openModule('materias')">
+                <div class="module-icon">📚</div>
+                <div class="module-title">Materias</div>
+                <div class="module-description">
+                    Configuración de materias, horarios, profesores y ponderaciones
+                </div>
+                <div class="module-status status-development">En Desarrollo</div>
+            </div>
+            
+            <!-- Módulo Reportes -->
+            <div class="module-card" onclick="openModule('reportes')">
+                <div class="module-icon">📈</div>
+                <div class="module-title">Reportes</div>
+                <div class="module-description">
+                    Análisis, estadísticas y reportes académicos personalizables
+                </div>
+                <div class="module-status status-planned">Planificado</div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                <a href="index.html">← Volver al Login</a> | 
+                © 2025 Sistema Educativo - Dashboard v1.0
+            </p>
+        </div>
+    </div>
+
+    <script>
+    function openModule(moduleName) {
+        // Navegación directa a páginas reales
+        if (moduleName === 'estudiantes') {
+            window.location.href = 'students.html';
+        } else if (moduleName === 'asistencia') {
+            window.location.href = 'attendance.html';
+        } else if (moduleName === 'cotidiano') {
+            alert('📊 Módulo Cotidiano - ¡Será el próximo en desarrollar!');
+        } else {
+            const messages = {
+                'tareas': '📝 Módulo Tareas - Próximamente disponible',
+                'examenes': '📋 Módulo Exámenes - En planificación',
+                'materias': '📚 Módulo Materias - En desarrollo',
+                'reportes': '📈 Módulo Reportes - En planificación'
+            };
+            alert(messages[moduleName] || 'Módulo no encontrado');
+        }
+    }
+        
+        // Efecto de aparición progresiva
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.module-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'opacity 0.5s, transform 0.5s';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

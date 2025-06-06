@@ -1,0 +1,24 @@
+
+{
+  "name": "sistema-educativo",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "migrate": "node migrate.js",
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["educacion", "gestion", "estudiantes", "escuela"],
+  "author": "",
+  "license": "ISC",
+  "description": "Sistema integral de gestión educativa",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 Módulo de Asistencias - Sistema Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-purple { background: #6f42c1; color: white; }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* ========================================
+           CALENDARIO - CSS COMPLETAMENTE CORREGIDO
+           ======================================== */
+        .calendar-container {
+            text-align: center;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-nav {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .calendar-nav:hover {
+            background: #5a6fd8;
+        }
+        
+        .calendar-month-year {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-wrapper {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1px;
+            overflow: hidden;
+        }
+
+        .calendar-days-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #667eea;
+        }
+
+        .calendar-day-header {
+            padding: 12px 8px;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #e9ecef;
+            gap: 1px;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: #e3f2fd !important;
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .calendar-day.other-month {
+            color: #adb5bd;
+            background: #f8f9fa;
+            font-weight: 400;
+        }
+
+        .calendar-day.other-month:hover {
+            background: #e9ecef !important;
+        }
+
+        .calendar-day.selected {
+            background: #667eea !important;
+            color: white !important;
+            font-weight: 700;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .calendar-day.today {
+            background: #28a745 !important;
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .calendar-day.today::after {
+            content: '●';
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-size: 8px;
+        }
+
+        .calendar-day.weekend {
+            background: #fff5f5 !important;
+        }
+
+        .calendar-day.weekend:hover {
+            background: #fed7d7 !important;
+        }
+
+        .calendar-day.has-attendance {
+            border: 2px solid #ffc107;
+        }
+
+        .calendar-day.has-attendance::before {
+            content: '📝';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+        
+        /* Filtros */
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Panel de configuración de lecciones */
+        .lesson-config {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .config-input {
+            width: 80px;
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        /* Área principal de asistencia */
+        .attendance-main {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .attendance-header {
+            padding: 25px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .attendance-date {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .attendance-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* ========================================
+           BOTONES DE ESTADO MEJORADOS
+           ======================================== */
+        .quick-actions {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .quick-actions-title {
+            font-weight: 600;
+            color: #333;
+            margin-right: 15px;
+        }
+        
+        .status-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* ✅ NUEVOS ESTILOS MEJORADOS PARA ESTADOS */
+        .status-btn.present { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; 
+            border: 2px solid #1e7e34;
+        }
+        .status-btn.late-justified { 
+            background: linear-gradient(135deg, #ffc107, #ffca2c); 
+            color: #212529; 
+            border: 2px solid #d39e00;
+        }
+        .status-btn.late-unjustified { 
+            background: linear-gradient(135deg, #fd7e14, #ff8c42); 
+            color: white; 
+            border: 2px solid #dc6002;
+        }
+        .status-btn.absent-justified { 
+            background: linear-gradient(135deg, #17a2b8, #20c997); 
+            color: white; 
+            border: 2px solid #117a8b;
+        }
+        .status-btn.absent-unjustified { 
+            background: linear-gradient(135deg, #dc3545, #e74c3c); 
+            color: white; 
+            border: 2px solid #bd2130;
+        }
+        
+        .status-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .status-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        /* Tabla de estudiantes */
+        .students-table {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .student-photo {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .student-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        
+        .student-id {
+            color: #666;
+            font-size: 11px;
+        }
+        
+        /* ========================================
+           CONTROLES DE ASISTENCIA MEJORADOS
+           ======================================== */
+        .attendance-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .attendance-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 70px;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .attendance-btn.present { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; 
+        }
+        .attendance-btn.late-justified { 
+            background: linear-gradient(135deg, #ffc107, #ffca2c); 
+            color: #212529; 
+        }
+        .attendance-btn.late-unjustified { 
+            background: linear-gradient(135deg, #fd7e14, #ff8c42); 
+            color: white; 
+        }
+        .attendance-btn.absent-justified { 
+            background: linear-gradient(135deg, #17a2b8, #20c997); 
+            color: white; 
+        }
+        .attendance-btn.absent-unjustified { 
+            background: linear-gradient(135deg, #dc3545, #e74c3c); 
+            color: white; 
+        }
+        
+        .attendance-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .attendance-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 90px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .status-present { 
+            background: linear-gradient(135deg, #d4edda, #c3e6cb); 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .status-late-justified { 
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7); 
+            color: #856404; 
+            border: 1px solid #ffeaa7;
+        }
+        .status-late-unjustified { 
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb); 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
+        .status-absent-justified { 
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb); 
+            color: #0c5460; 
+            border: 1px solid #bee5eb;
+        }
+        .status-absent-unjustified { 
+            background: linear-gradient(135deg, #f5c6cb, #f1b0b7); 
+            color: #721c24; 
+            border: 1px solid #f1b0b7;
+        }
+        .status-not-marked { 
+            background: linear-gradient(135deg, #e9ecef, #dee2e6); 
+            color: #495057; 
+            border: 1px solid #dee2e6;
+        }
+        
+        /* Panel de estadísticas */
+        .stats-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 25px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        /* Debug panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 9999;
+            display: none;
+        }
+        
+        .debug-panel.show {
+            display: block;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .attendance-controls {
+                flex-direction: column;
+            }
+            
+            .calendar-day {
+                padding: 8px 4px;
+                font-size: 12px;
+                min-height: 35px;
+            }
+            
+            .calendar-day-header {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* Success/Error messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>📅 Módulo de Asistencias</h1>
+                <p>Control de asistencia según reglamentos del MEP</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-info" onclick="openLessonConfigModal()">
+                    ⚙️ Configurar Lecciones
+                </button>
+                <button class="btn btn-purple" onclick="showClassStats()">
+                    📊 Estadísticas MEP
+                </button>
+                <button class="btn btn-success" onclick="exportAttendance()">
+                    📄 Exportar Reportes
+                </button>
+                <button class="btn btn-warning" onclick="toggleDebug()">
+                    🐛 Debug
+                </button>
+                <a href="dashboard.html" class="btn btn-secondary">
+                    ← Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Mensajes -->
+        <div id="successMessage" class="message success">✅ Operación completada exitosamente</div>
+        <div id="errorMessage" class="message error">❌ Error en la operación</div>
+
+        <!-- Contenido Principal -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Calendario -->
+                <div class="card">
+                    <div class="card-header">
+                        📅 Seleccionar Fecha
+                    </div>
+                    <div class="card-body">
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <button class="calendar-nav" onclick="changeMonth(-1)">‹</button>
+                                <div class="calendar-month-year" id="calendarMonthYear">
+                                    Mayo 2025
+                                </div>
+                                <button class="calendar-nav" onclick="changeMonth(1)">›</button>
+                            </div>
+                            <div class="calendar-wrapper">
+                                <div class="calendar-days-header">
+                                    <div class="calendar-day-header">Dom</div>
+                                    <div class="calendar-day-header">Lun</div>
+                                    <div class="calendar-day-header">Mar</div>
+                                    <div class="calendar-day-header">Mié</div>
+                                    <div class="calendar-day-header">Jue</div>
+                                    <div class="calendar-day-header">Vie</div>
+                                    <div class="calendar-day-header">Sáb</div>
+                                </div>
+                                <div class="calendar-days-grid" id="calendarDays">
+                                    <!-- Los días se generan aquí -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="card">
+                    <div class="card-header">
+                        🎯 Filtros
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-group">
+                            <label class="filter-label">Grado:</label>
+                            <select class="filter-select" id="gradeFilter" onchange="loadStudents()">
+                                <option value="">Seleccionar grado...</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Materia:</label>
+                            <select class="filter-select" id="subjectFilter" onchange="loadStudents()">
+                                <option value="">Seleccionar materia...</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn btn-primary" style="width: 100%;" onclick="loadStudents()">
+                                🔄 Actualizar Lista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración de Lecciones -->
+                <div class="card">
+                    <div class="card-header">
+                        📚 Configuración Actual
+                    </div>
+                    <div class="card-body">
+                        <div class="lesson-config">
+                            <div class="config-item">
+                                <span>Lecciones/semana:</span>
+                                <input type="number" class="config-input" id="lessonsPerWeek" value="5" min="1" max="10">
+                            </div>
+                            <div class="config-item">
+                                <span>Total semanas:</span>
+                                <input type="number" class="config-input" id="totalWeeks" value="40" min="1" max="52">
+                            </div>
+                            <div class="config-item">
+                                <span><strong>Total lecciones:</strong></span>
+                                <span id="totalLessons">200</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-warning btn-sm" style="width: 100%;" onclick="saveLessonConfig()">
+                            💾 Guardar Configuración
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área Principal -->
+            <div class="attendance-main">
+                <!-- Header de Asistencia -->
+                <div class="attendance-header">
+                    <div class="attendance-date" id="attendanceDate">
+                        Sábado, 31 de Mayo de 2025
+                    </div>
+                    <div class="attendance-info" id="attendanceInfo">
+                        Seleccione grado para comenzar
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas -->
+                <div class="quick-actions">
+                    <span class="quick-actions-title">⚡ Acciones Rápidas:</span>
+                    <button class="status-btn present" onclick="markAllStudents('present')">
+                        ✅ Todos Presentes
+                    </button>
+                    <button class="status-btn late-justified" onclick="markAllStudents('late_justified')">
+                        ⏰ Todos Tarde (J)
+                    </button>
+                    <button class="status-btn absent-justified" onclick="markAllStudents('absent_justified')">
+                        📋 Todos Ausentes (J)
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearAllAttendance()">
+                        🧹 Limpiar Todo
+                    </button>
+                </div>
+
+                <!-- Tabla de Estudiantes -->
+                <div class="students-table">
+                    <div id="loadingState" style="text-align: center; padding: 50px; color: #666;">
+                        🔄 Seleccione grado para cargar estudiantes...
+                    </div>
+                    
+                    <table id="attendanceTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Materia</th>
+                                <th>Estado Actual</th>
+                                <th>Acciones</th>
+                                <th>Hora Llegada</th>
+                                <th>Justificación</th>
+                                <th>Asistencia MEP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Estadísticas -->
+        <div class="stats-panel">
+            <div class="card-header">
+                📊 Estadísticas del Día
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="statPresent">0</div>
+                    <div class="stat-label">Presentes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statLateJustified">0</div>
+                    <div class="stat-label">Tardías Justificadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statLateUnjustified">0</div>
+                    <div class="stat-label">Tardías Injustificadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statAbsentJustified">0</div>
+                    <div class="stat-label">Ausencias Justificadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statAbsentUnjustified">0</div>
+                    <div class="stat-label">Ausencias Injustificadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statNotMarked">0</div>
+                    <div class="stat-label">Sin Marcar</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div id="debugPanel" class="debug-panel">
+        <h4>🐛 Debug Info</h4>
+        <div id="debugContent">Debug activado</div>
+    </div>
+
+    <!-- Modal para Justificación -->
+    <div class="modal" id="justificationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Agregar Justificación</h2>
+                <button class="close-btn" onclick="closeJustificationModal()">&times;</button>
+            </div>
+            
+            <form id="justificationForm" onsubmit="saveJustification(event)">
+                <div class="form-group">
+                    <label class="form-label">Estudiante:</label>
+                    <div id="justificationStudent" style="font-weight: 600; color: #333;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estado:</label>
+                    <select class="form-input" id="justificationStatus" required>
+                        <option value="present">✅ Presente</option>
+                        <option value="late_justified">⏰ Tardía Justificada</option>
+                        <option value="late_unjustified">🔶 Tardía Injustificada</option>
+                        <option value="absent_justified">📋 Ausencia Justificada</option>
+                        <option value="absent_unjustified">❌ Ausencia Injustificada</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Hora de Llegada (opcional):</label>
+                    <input type="time" class="form-input" id="justificationTime">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Justificación:</label>
+                    <textarea class="form-textarea" id="justificationText" rows="3" 
+                              placeholder="Describa la justificación o motivo..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeJustificationModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Configuración de Lecciones -->
+    <div class="modal" id="lessonConfigModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⚙️ Configurar Lecciones</h2>
+                <button class="close-btn" onclick="closeLessonConfigModal()">&times;</button>
+            </div>
+            
+            <form id="lessonConfigForm" onsubmit="saveLessonConfigModal(event)">
+                <div class="form-group">
+                    <label class="form-label">Grado:</label>
+                    <select class="form-input" id="configGrade" required>
+                        <option value="">Seleccionar grado...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Materia:</label>
+                    <select class="form-input" id="configSubject" required>
+                        <option value="">Seleccionar materia...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Lecciones por Semana:</label>
+                    <input type="number" class="form-input" id="configLessonsPerWeek" min="1" max="10" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Total de Semanas en el Período:</label>
+                    <input type="number" class="form-input" id="configTotalWeeks" min="1" max="52" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Nombre del Profesor:</label>
+                    <input type="text" class="form-input" id="configTeacher" placeholder="Profesor encargado">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Total de Lecciones Calculado:</label>
+                    <div id="calculatedLessons" style="font-size: 18px; font-weight: 600; color: #667eea;">0</div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeLessonConfigModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // VARIABLES GLOBALES
+        // ========================================
+        let students = [];
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let currentGrade = '';
+        let currentSubject = '';
+        let currentStudentId = null;
+        let attendanceData = {};
+        let lessonConfig = { lessonsPerWeek: 5, totalWeeks: 40, totalLessons: 200 };
+        let debugMode = false;
+
+        // ========================================
+        // INICIALIZACIÓN
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando módulo de asistencias - VERSIÓN CORREGIDA...');
+            initializeCalendar();
+            loadFilters();
+            updateCurrentDate();
+            calculateTotalLessons();
+            
+            // Debug inicial
+            debugLog('Sistema iniciado correctamente');
+        });
+
+        // ========================================
+        // FUNCIONES DE DEBUG
+        // ========================================
+        function debugLog(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] ${message}`, data);
+            
+            if (debugMode) {
+                const debugContent = document.getElementById('debugContent');
+                debugContent.innerHTML += `<div><strong>${timestamp}:</strong> ${message}</div>`;
+                if (data) {
+                    debugContent.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+                debugContent.scrollTop = debugContent.scrollHeight;
+            }
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugMode) {
+                debugPanel.classList.add('show');
+                debugLog('Debug mode activado');
+            } else {
+                debugPanel.classList.remove('show');
+            }
+        }
+
+        function showMessage(type, message) {
+            const messageEl = document.getElementById(type + 'Message');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 5000);
+        }
+
+        // ========================================
+        // FUNCIONES DEL CALENDARIO
+        // ========================================
+        function initializeCalendar() {
+            debugLog('🚀 Inicializando calendario...');
+            
+            const now = new Date();
+            currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            selectedDate = new Date(now);
+            
+            renderCalendar();
+            updateCurrentDate();
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            debugLog(`🗓️ Renderizando: ${month + 1}/${year}`);
+            
+            const monthNames = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const firstDayOfWeek = firstDay.getDay();
+            
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            for (let i = 0; i < 42; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                let dayNumber;
+                let dayDate;
+                
+                if (i < firstDayOfWeek) {
+                    const prevMonth = month - 1;
+                    const prevYear = prevMonth < 0 ? year - 1 : year;
+                    const prevMonthActual = prevMonth < 0 ? 11 : prevMonth;
+                    const daysInPrevMonth = new Date(prevYear, prevMonthActual + 1, 0).getDate();
+                    
+                    dayNumber = daysInPrevMonth - (firstDayOfWeek - 1 - i);
+                    dayDate = new Date(prevYear, prevMonthActual, dayNumber);
+                    dayElement.classList.add('other-month');
+                    
+                } else if (i < firstDayOfWeek + daysInMonth) {
+                    dayNumber = i - firstDayOfWeek + 1;
+                    dayDate = new Date(year, month, dayNumber);
+                    
+                } else {
+                    const nextMonth = month + 1;
+                    const nextYear = nextMonth > 11 ? year + 1 : year;
+                    const nextMonthActual = nextMonth > 11 ? 0 : nextMonth;
+                    
+                    dayNumber = i - firstDayOfWeek - daysInMonth + 1;
+                    dayDate = new Date(nextYear, nextMonthActual, dayNumber);
+                    dayElement.classList.add('other-month');
+                }
+                
+                dayElement.textContent = dayNumber;
+                
+                if (dayDate.getDay() === 0 || dayDate.getDay() === 6) {
+                    dayElement.classList.add('weekend');
+                }
+                
+                if (isSameDay(dayDate, new Date())) {
+                    dayElement.classList.add('today');
+                }
+                
+                if (isSameDay(dayDate, selectedDate)) {
+                    dayElement.classList.add('selected');
+                }
+                
+                dayElement.addEventListener('click', () => selectDate(dayDate));
+                calendarDays.appendChild(dayElement);
+            }
+            
+            debugLog('✅ Calendario renderizado');
+        }
+
+        function selectDate(date) {
+            debugLog('📅 Fecha seleccionada:', date.toISOString().split('T')[0]);
+            
+            if (date.getMonth() !== currentDate.getMonth() || date.getFullYear() !== currentDate.getFullYear()) {
+                currentDate = new Date(date.getFullYear(), date.getMonth(), 1);
+            }
+            
+            selectedDate = new Date(date);
+            renderCalendar();
+            updateCurrentDate();
+            loadAttendanceForDate();
+        }
+
+        function changeMonth(delta) {
+            const newMonth = currentDate.getMonth() + delta;
+            const newYear = currentDate.getFullYear();
+            
+            if (newMonth < 0) {
+                currentDate = new Date(newYear - 1, 11, 1);
+            } else if (newMonth > 11) {
+                currentDate = new Date(newYear + 1, 0, 1);
+            } else {
+                currentDate = new Date(newYear, newMonth, 1);
+            }
+            
+            renderCalendar();
+        }
+
+        function isSameDay(date1, date2) {
+            if (!date1 || !date2) return false;
+            
+            return date1.getDate() === date2.getDate() &&
+                date1.getMonth() === date2.getMonth() &&
+                date1.getFullYear() === date2.getFullYear();
+        }
+
+        function updateCurrentDate() {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            try {
+                const dateString = selectedDate.toLocaleDateString('es-ES', options);
+                const capitalizedDate = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+                document.getElementById('attendanceDate').textContent = capitalizedDate;
+            } catch (error) {
+                console.error('Error actualizando fecha:', error);
+            }
+        }
+
+        // ========================================
+        // CARGA DE DATOS - CORREGIDO
+        // ========================================
+        async function loadFilters() {
+            try {
+                debugLog('📋 Cargando filtros...');
+                
+                // Cargar grados
+                const gradesResponse = await fetch('/api/grades');
+                const gradesResult = await gradesResponse.json();
+                
+                const gradeFilter = document.getElementById('gradeFilter');
+                const configGrade = document.getElementById('configGrade');
+                gradeFilter.innerHTML = '<option value="">Seleccionar grado...</option>';
+                configGrade.innerHTML = '<option value="">Seleccionar grado...</option>';
+                
+                if (gradesResult.success) {
+                    gradesResult.data.forEach(grade => {
+                        gradeFilter.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
+                        configGrade.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
+                    });
+                    debugLog('✅ Grados cargados:', gradesResult.data.length);
+                }
+                
+                // Cargar materias
+                const subjectsResponse = await fetch('/api/custom-subjects');
+                const subjectsResult = await subjectsResponse.json();
+                
+                const subjectFilter = document.getElementById('subjectFilter');
+                const configSubject = document.getElementById('configSubject');
+                subjectFilter.innerHTML = '<option value="">Todas las materias</option>';
+                configSubject.innerHTML = '<option value="">Seleccionar materia...</option>';
+                
+                if (subjectsResult.success) {
+                    subjectsResult.data.forEach(subject => {
+                        subjectFilter.innerHTML += `<option value="${subject.name}">${subject.name}</option>`;
+                        configSubject.innerHTML += `<option value="${subject.name}">${subject.name}</option>`;
+                    });
+                    debugLog('✅ Materias cargadas:', subjectsResult.data.length);
+                }
+                
+            } catch (error) {
+                debugLog('❌ Error cargando filtros:', error);
+                showMessage('error', 'Error cargando filtros');
+            }
+        }
+
+        async function loadStudents() {
+            const grade = document.getElementById('gradeFilter').value;
+            const subject = document.getElementById('subjectFilter').value;
+            
+            debugLog('👥 Cargando estudiantes...', { grade, subject });
+            
+            if (!grade) {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('loadingState').innerHTML = '🔄 Seleccione grado para cargar estudiantes...';
+                document.getElementById('attendanceTable').style.display = 'none';
+                return;
+            }
+            
+            currentGrade = grade;
+            currentSubject = subject;
+            
+            try {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('loadingState').innerHTML = '🔄 Cargando estudiantes...';
+                document.getElementById('attendanceTable').style.display = 'none';
+                
+                const response = await fetch('/api/students');
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Filtrar estudiantes por grado y materia (si se especifica)
+                    students = result.data.filter(student => {
+                        const gradeMatch = student.grade_level === grade;
+                        const subjectMatch = !subject || student.subject_area === subject;
+                        const statusMatch = student.status === 'active';
+                        
+                        return gradeMatch && subjectMatch && statusMatch;
+                    });
+                    
+                    debugLog(`✅ Estudiantes filtrados: ${students.length}`, { grade, subject });
+                    
+                    const subjectText = subject ? ` - ${subject}` : '';
+                    document.getElementById('attendanceInfo').textContent = 
+                        `${students.length} estudiantes en ${grade}${subjectText}`;
+                    
+                    await loadAttendanceForDate();
+                    renderStudentsTable();
+                } else {
+                    debugLog('❌ Error del servidor:', result.message);
+                    document.getElementById('loadingState').innerHTML = '❌ Error cargando estudiantes';
+                    showMessage('error', 'Error cargando estudiantes: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('❌ Error de conexión:', error);
+                document.getElementById('loadingState').innerHTML = '❌ Error de conexión';
+                showMessage('error', 'Error de conexión al cargar estudiantes');
+            }
+        }
+
+        async function loadAttendanceForDate() {
+            if (!currentGrade || students.length === 0) {
+                debugLog('⚠️ No se puede cargar asistencia: falta grado o estudiantes');
+                return;
+            }
+            
+            // ✅ NUEVO: Invalidar cache de estadísticas al cambiar fecha
+            studentMEPStats = {};
+            
+            try {
+                const dateStr = selectedDate.toISOString().split('T')[0];
+                debugLog('📊 Cargando asistencia para:', { date: dateStr, grade: currentGrade, subject: currentSubject });
+                
+                let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}`;
+                if (currentSubject) {
+                    url += `&subject=${encodeURIComponent(currentSubject)}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                attendanceData = {};
+                if (result.success && result.data) {
+                    debugLog('🔍 DATOS CRUDOS del servidor:', result.data);
+                    
+                    result.data.forEach(record => {
+                        // ✅ CORREGIDO: Usar el ID numérico correcto
+                        const studentKey = record.student_id; // Ahora debería ser numérico
+                        attendanceData[studentKey] = record;
+                        debugLog(`📝 Asistencia mapeada: key=${studentKey} (code: ${record.student_code}), status=${record.status}, name=${record.first_name}`);
+                    });
+                    
+                    debugLog('✅ Asistencia cargada:', result.data.length, 'registros');
+                    debugLog('📋 AttendanceData final:', attendanceData);
+                    debugLog('👥 Student IDs disponibles:', students.map(s => `${s.id}(${s.first_name})`));
+                    
+                    // ✅ VERIFICACIÓN DE COINCIDENCIAS MEJORADA
+                    students.forEach(student => {
+                        const hasAttendance = !!attendanceData[student.id];
+                        const attendanceStatus = attendanceData[student.id]?.status || 'none';
+                        debugLog(`🔍 Estudiante ${student.id} (${student.first_name}) vs AttendanceKey: ${hasAttendance ? '✅ COINCIDE' : '❌ NO COINCIDE'} - Status: ${attendanceStatus}`);
+                    });
+                    
+                } else {
+                    debugLog('⚠️ No hay asistencia previa para esta fecha');
+                }
+                
+                renderStudentsTable();
+                updateStats();
+                
+            } catch (error) {
+                debugLog('❌ Error cargando asistencia:', error);
+                showMessage('error', 'Error cargando asistencia');
+            }
+        }
+
+        // ========================================
+        // RENDERIZADO DE TABLA - MEJORADO
+        // ========================================
+        async function renderStudentsTable() {
+            if (students.length === 0) {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('loadingState').innerHTML = '📝 No hay estudiantes para mostrar';
+                document.getElementById('attendanceTable').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('attendanceTable').style.display = 'table';
+            
+            debugLog('🎨 Renderizando tabla con estudiantes:', students.map(s => ({ id: s.id, name: s.first_name })));
+            debugLog('📊 Datos de asistencia disponibles:', attendanceData);
+            
+            // Invalidar cache de estadísticas cuando renderizamos
+            studentMEPStats = {};
+            
+            const tbody = document.getElementById('attendanceTableBody');
+            
+            // Renderizar filas una por una para cargar estadísticas progresivamente
+            tbody.innerHTML = '';
+            
+            for (const student of students) {
+                const attendance = attendanceData[student.id];
+                const initials = ((student.first_name?.[0] || '') + (student.first_surname?.[0] || '')).toUpperCase();
+                const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+                
+                const status = attendance?.status || 'not_marked';
+                const statusText = getStatusText(status);
+                const statusClass = getStatusClass(status);
+                
+                // Debug por estudiante
+                debugLog(`👤 Estudiante ${student.id} (${student.first_name}):`, {
+                    hasAttendance: !!attendance,
+                    status: status
+                });
+                
+                // Crear fila inicial con datos básicos
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="student-photo">${initials}</div>
+                            <div>
+                                <div class="student-name">${fullName}</div>
+                                <div class="student-id">${student.student_id || '-'} (ID: ${student.id})</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${student.subject_area || 'Sin especificar'}</td>
+                    <td>
+                        <span class="attendance-status ${statusClass}">${statusText}</span>
+                    </td>
+                    <td>
+                        <div class="attendance-controls">
+                            <button class="attendance-btn present" onclick="markAttendance(${student.id}, 'present')" title="Presente">
+                                ✅ P
+                            </button>
+                            <button class="attendance-btn late-justified" onclick="markAttendance(${student.id}, 'late_justified')" title="Tardía Justificada">
+                                ⏰ TJ
+                            </button>
+                            <button class="attendance-btn late-unjustified" onclick="markAttendance(${student.id}, 'late_unjustified')" title="Tardía Injustificada">
+                                🔶 TI
+                            </button>
+                            <button class="attendance-btn absent-justified" onclick="markAttendance(${student.id}, 'absent_justified')" title="Ausencia Justificada">
+                                📋 AJ
+                            </button>
+                            <button class="attendance-btn absent-unjustified" onclick="markAttendance(${student.id}, 'absent_unjustified')" title="Ausencia Injustificada">
+                                ❌ AI
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="openJustificationModal(${student.id})" title="Editar">
+                                ✏️
+                            </button>
+                        </div>
+                    </td>
+                    <td>${attendance?.arrival_time || '-'}</td>
+                    <td>${attendance?.justification || '-'}</td>
+                    <td id="stats-${student.id}">
+                        <div style="text-align: center; color: #666;">🔄 Calculando...</div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+                
+                // Cargar estadísticas MEP de forma asíncrona
+                getMEPGradeForStudent(student.id).then(mepStats => {
+                    const statsCell = document.getElementById(`stats-${student.id}`);
+                    if (statsCell) {
+                        const attendancePercentage = mepStats.attendance_percentage;
+                        const notaAsistencia = mepStats.nota_asistencia;
+                        const nota10 = mepStats.nota_0_10;
+                        
+                        statsCell.innerHTML = `
+                            <div style="text-align: center;">
+                                <div style="font-weight: 600; color: ${attendancePercentage >= 90 ? '#28a745' : attendancePercentage >= 75 ? '#ffc107' : '#dc3545'};">
+                                    ${attendancePercentage.toFixed(1)}%
+                                </div>
+                                <div style="font-size: 11px; color: #666;">
+                                    Nota: ${notaAsistencia.toFixed(1)}/5.0
+                                </div>
+                                <div style="font-size: 10px; color: #999;" title="Nota en escala 0-10 según MEP">
+                                    (${nota10}/10)
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).catch(error => {
+                    debugLog(`❌ Error cargando estadísticas para estudiante ${student.id}:`, error);
+                    const statsCell = document.getElementById(`stats-${student.id}`);
+                    if (statsCell) {
+                        statsCell.innerHTML = `
+                            <div style="text-align: center; color: #dc3545;">
+                                Error
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            debugLog('✅ Tabla renderizada con', students.length, 'estudiantes');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'present': '✅ Presente',
+                'late_justified': '⏰ Tardía (J)',
+                'late_unjustified': '🔶 Tardía (I)',
+                'absent_justified': '📋 Ausencia (J)',
+                'absent_unjustified': '❌ Ausencia (I)',
+                'not_marked': '⭕ Sin marcar'
+            };
+            return statusMap[status] || '⭕ Sin marcar';
+        }
+
+        function getStatusClass(status) {
+            const classMap = {
+                'present': 'status-present',
+                'late_justified': 'status-late-justified',
+                'late_unjustified': 'status-late-unjustified',
+                'absent_justified': 'status-absent-justified',
+                'absent_unjustified': 'status-absent-unjustified',
+                'not_marked': 'status-not-marked'
+            };
+            return classMap[status] || 'status-not-marked';
+        }
+
+        // ========================================
+        // FUNCIONES DE ASISTENCIA - COMPLETAMENTE CORREGIDAS
+        // ========================================
+        async function markAttendance(studentId, status) {
+            try {
+                debugLog(`📝 Marcando asistencia:`, { studentId, status, grade: currentGrade, subject: currentSubject });
+                
+                const dateStr = selectedDate.toISOString().split('T')[0];
+                const now = new Date();
+                
+                // ✅ CORREGIDO: Usar la materia seleccionada del estudiante
+                const student = students.find(s => s.id === studentId);
+                const subjectArea = currentSubject || student?.subject_area || 'general';
+                
+                const attendanceRecord = {
+                    student_id: studentId,
+                    date: dateStr,
+                    status: status,
+                    grade_level: currentGrade,
+                    subject_area: subjectArea,
+                    arrival_time: status.includes('late') ? now.toTimeString().substr(0, 5) : null,
+                    justification: null,
+                    notes: null
+                };
+                
+                debugLog('📤 Enviando datos:', attendanceRecord);
+                
+                const response = await fetch('/api/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(attendanceRecord)
+                });
+                
+                const result = await response.json();
+                debugLog('📥 Respuesta del servidor:', result);
+                
+                if (result.success) {
+                    // ✅ CORREGIDO: Actualizar datos locales correctamente
+                    attendanceData[studentId] = {
+                        ...attendanceRecord,
+                        id: result.data.id,
+                        student_id: studentId // Asegurar que coincide con el ID del estudiante
+                    };
+                    
+                    // ✅ NUEVO: Invalidar cache de estadísticas MEP para este estudiante
+                    delete studentMEPStats[studentId];
+                    
+                    debugLog('✅ Datos locales actualizados:', attendanceData[studentId]);
+                    
+                    renderStudentsTable();
+                    updateStats();
+                    
+                    const statusText = getStatusText(status);
+                    debugLog(`✅ Asistencia guardada: ${studentId} = ${status}`);
+                    showMessage('success', `Asistencia marcada: ${statusText}`);
+                } else {
+                    debugLog('❌ Error del servidor:', result);
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('❌ Error marcando asistencia:', error);
+                showMessage('error', 'Error de conexión al guardar asistencia');
+            }
+        }
+
+        async function markAllStudents(status) {
+            if (students.length === 0) {
+                showMessage('error', 'No hay estudiantes cargados');
+                return;
+            }
+            
+            if (!confirm(`¿Marcar a todos los ${students.length} estudiantes como "${getStatusText(status)}"?`)) {
+                return;
+            }
+            
+            debugLog(`📋 Marcando todos como: ${status}`);
+            
+            try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const student of students) {
+                    try {
+                        await markAttendance(student.id, status);
+                        successCount++;
+                        // Pequeña pausa para no sobrecargar el servidor
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    } catch (error) {
+                        errorCount++;
+                        debugLog(`❌ Error marcando estudiante ${student.id}:`, error);
+                    }
+                }
+                
+                const statusText = getStatusText(status);
+                if (errorCount === 0) {
+                    showMessage('success', `✅ ${successCount} estudiantes marcados como "${statusText}"`);
+                } else {
+                    showMessage('error', `⚠️ ${successCount} exitosos, ${errorCount} errores`);
+                }
+                
+                debugLog(`📊 Resultado: ${successCount} exitosos, ${errorCount} errores`);
+                
+            } catch (error) {
+                debugLog('❌ Error marcando todos:', error);
+                showMessage('error', 'Error marcando estudiantes');
+            }
+        }
+
+        async function clearAllAttendance() {
+            if (!confirm('¿Eliminar toda la asistencia del día seleccionado?')) {
+                return;
+            }
+            
+            try {
+                const dateStr = selectedDate.toISOString().split('T')[0];
+                let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}`;
+                if (currentSubject) {
+                    url += `&subject=${encodeURIComponent(currentSubject)}`;
+                }
+                
+                debugLog('🗑️ Eliminando asistencia:', { date: dateStr, grade: currentGrade, subject: currentSubject });
+                
+                const response = await fetch(url, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                debugLog('📥 Respuesta eliminación:', result);
+                
+                if (result.success) {
+                    attendanceData = {};
+                    renderStudentsTable();
+                    updateStats();
+                    showMessage('success', '✅ Asistencia eliminada correctamente');
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('❌ Error eliminando asistencia:', error);
+                showMessage('error', 'Error eliminando asistencia');
+            }
+        }
+
+        // ========================================
+        // ESTADÍSTICAS Y CÁLCULOS - USANDO LÓGICA REAL DEL MEP
+        // ========================================
+        
+        let studentMEPStats = {}; // Cache para estadísticas MEP
+        
+        async function calculateAttendancePercentage(studentId) {
+            try {
+                const mepStats = await getMEPGradeForStudent(studentId);
+                return mepStats.attendance_percentage;
+            } catch (error) {
+                debugLog('❌ Error calculando porcentaje:', error);
+                return 100; // Por defecto si hay error
+            }
+        }
+        
+        async function getMEPGradeForStudent(studentId) {
+            try {
+                // Obtener configuración de lecciones
+                const config = await getLessonConfigForCurrentSelection();
+                const totalLessons = config?.total_lessons || 200;
+                
+                // Buscar en cache primero
+                if (studentMEPStats[studentId] && studentMEPStats[studentId].total_lessons === totalLessons) {
+                    debugLog(`📈 Usando cache para estudiante ${studentId}`);
+                    return studentMEPStats[studentId];
+                }
+                
+                // Construir URL con parámetros correctos
+                const params = new URLSearchParams({
+                    grade: currentGrade,
+                    subject: currentSubject || 'general',
+                    totalLessons: totalLessons.toString()
+                });
+                
+                const url = `/api/attendance/stats/${studentId}?${params.toString()}`;
+                debugLog(`🔍 Llamando API: ${url}`);
+                
+                // Hacer la petición
+                const response = await fetch(url);
+                debugLog(`📡 Respuesta HTTP: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                debugLog(`📋 Resultado completo:`, result);
+                
+                if (result.success && result.data) {
+                    // Guardar en cache
+                    studentMEPStats[studentId] = result.data;
+                    debugLog(`✅ Estadísticas MEP obtenidas para estudiante ${studentId}:`, result.data);
+                    return result.data;
+                } else {
+                    throw new Error(result.message || 'Respuesta sin datos');
+                }
+                
+            } catch (error) {
+                debugLog(`❌ Error detallado obteniendo estadísticas MEP para estudiante ${studentId}:`, {
+                    error: error.message,
+                    stack: error.stack,
+                    currentGrade: currentGrade,
+                    currentSubject: currentSubject,
+                    studentId: studentId
+                });
+                
+                // Devolver datos por defecto en caso de error
+                return {
+                    attendance_percentage: 100,
+                    nota_asistencia: 5.0,
+                    nota_0_10: 10,
+                    absence_percentage: 0,
+                    total_lessons: 200,
+                    error: error.message
+                };
+            }
+        }
+
+        function updateStats() {
+            const stats = {
+                present: 0,
+                lateJustified: 0,
+                lateUnjustified: 0,
+                absentJustified: 0,
+                absentUnjustified: 0,
+                notMarked: 0
+            };
+            
+            debugLog('👥 Estudiantes para estadísticas:', students.length);
+            debugLog('📊 AttendanceData disponible:', Object.keys(attendanceData));
+            
+            students.forEach(student => {
+                const attendance = attendanceData[student.id];
+                const status = attendance?.status || 'not_marked';
+                
+                debugLog(`📝 Estudiante ${student.id} (${student.first_name}): ${status}`);
+                
+                switch (status) {
+                    case 'present': stats.present++; break;
+                    case 'late_justified': stats.lateJustified++; break;
+                    case 'late_unjustified': stats.lateUnjustified++; break;
+                    case 'absent_justified': stats.absentJustified++; break;
+                    case 'absent_unjustified': stats.absentUnjustified++; break;
+                    default: stats.notMarked++; break;
+                }
+            });
+            
+            document.getElementById('statPresent').textContent = stats.present;
+            document.getElementById('statLateJustified').textContent = stats.lateJustified;
+            document.getElementById('statLateUnjustified').textContent = stats.lateUnjustified;
+            document.getElementById('statAbsentJustified').textContent = stats.absentJustified;
+            document.getElementById('statAbsentUnjustified').textContent = stats.absentUnjustified;
+            document.getElementById('statNotMarked').textContent = stats.notMarked;
+            
+            debugLog('📊 Estadísticas finales:', stats);
+        }
+
+        // ========================================
+        // CONFIGURACIÓN DE LECCIONES
+        // ========================================
+        function calculateTotalLessons() {
+            const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
+            const totalWeeks = parseInt(document.getElementById('totalWeeks').value) || 40;
+            const totalLessons = lessonsPerWeek * totalWeeks;
+            
+            document.getElementById('totalLessons').textContent = totalLessons;
+            lessonConfig.totalLessons = totalLessons;
+            
+            const configLessonsPerWeek = document.getElementById('configLessonsPerWeek');
+            const configTotalWeeks = document.getElementById('configTotalWeeks');
+            if (configLessonsPerWeek && configTotalWeeks) {
+                const modalLessons = (parseInt(configLessonsPerWeek.value) || 0) * (parseInt(configTotalWeeks.value) || 0);
+                document.getElementById('calculatedLessons').textContent = modalLessons;
+            }
+        }
+
+        async function saveLessonConfig() {
+            if (!currentGrade) {
+                showMessage('error', 'Seleccione un grado primero');
+                return;
+            }
+            
+            try {
+                const configData = {
+                    grade_level: currentGrade,
+                    subject_area: currentSubject || 'general',
+                    lessons_per_week: parseInt(document.getElementById('lessonsPerWeek').value),
+                    total_weeks: parseInt(document.getElementById('totalWeeks').value),
+                    total_lessons: lessonConfig.totalLessons
+                };
+                
+                const response = await fetch('/api/lesson-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('success', '✅ Configuración guardada correctamente');
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('Error guardando configuración:', error);
+                showMessage('error', 'Error guardando configuración');
+            }
+        }
+
+        // ========================================
+        // MODALES
+        // ========================================
+        function openJustificationModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            currentStudentId = studentId;
+            const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+            
+            document.getElementById('justificationStudent').textContent = fullName;
+            
+            const attendance = attendanceData[studentId];
+            if (attendance) {
+                document.getElementById('justificationStatus').value = attendance.status;
+                document.getElementById('justificationTime').value = attendance.arrival_time || '';
+                document.getElementById('justificationText').value = attendance.justification || '';
+            } else {
+                document.getElementById('justificationForm').reset();
+            }
+            
+            document.getElementById('justificationModal').classList.add('show');
+        }
+
+        function closeJustificationModal() {
+            document.getElementById('justificationModal').classList.remove('show');
+            currentStudentId = null;
+        }
+
+        async function saveJustification(event) {
+            event.preventDefault();
+            
+            if (!currentStudentId) return;
+            
+            try {
+                const dateStr = selectedDate.toISOString().split('T')[0];
+                const student = students.find(s => s.id === currentStudentId);
+                const subjectArea = currentSubject || student?.subject_area || 'general';
+                
+                const attendanceRecord = {
+                    student_id: currentStudentId,
+                    date: dateStr,
+                    status: document.getElementById('justificationStatus').value,
+                    arrival_time: document.getElementById('justificationTime').value || null,
+                    justification: document.getElementById('justificationText').value || null,
+                    grade_level: currentGrade,
+                    subject_area: subjectArea
+                };
+                
+                const response = await fetch('/api/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(attendanceRecord)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    attendanceData[currentStudentId] = {
+                        ...attendanceRecord,
+                        id: result.data.id
+                    };
+                    
+                    renderStudentsTable();
+                    updateStats();
+                    closeJustificationModal();
+                    showMessage('success', '✅ Asistencia guardada correctamente');
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('Error guardando justificación:', error);
+                showMessage('error', 'Error guardando asistencia');
+            }
+        }
+
+        function openLessonConfigModal() {
+            document.getElementById('lessonConfigModal').classList.add('show');
+            
+            document.getElementById('configGrade').value = currentGrade;
+            document.getElementById('configSubject').value = currentSubject;
+            document.getElementById('configLessonsPerWeek').value = lessonConfig.lessonsPerWeek;
+            document.getElementById('configTotalWeeks').value = lessonConfig.totalWeeks;
+            document.getElementById('configTeacher').value = '';
+            
+            calculateTotalLessons();
+        }
+
+        function closeLessonConfigModal() {
+            document.getElementById('lessonConfigModal').classList.remove('show');
+        }
+
+        async function saveLessonConfigModal(event) {
+            event.preventDefault();
+            
+            try {
+                const configData = {
+                    grade_level: document.getElementById('configGrade').value,
+                    subject_area: document.getElementById('configSubject').value,
+                    lessons_per_week: parseInt(document.getElementById('configLessonsPerWeek').value),
+                    total_weeks: parseInt(document.getElementById('configTotalWeeks').value),
+                    teacher_name: document.getElementById('configTeacher').value || null
+                };
+                
+                configData.total_lessons = configData.lessons_per_week * configData.total_weeks;
+                
+                const response = await fetch('/api/lesson-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('success', '✅ Configuración guardada correctamente');
+                    closeLessonConfigModal();
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('Error guardando configuración:', error);
+                showMessage('error', 'Error guardando configuración');
+            }
+        }
+
+        async function getLessonConfigForCurrentSelection() {
+            try {
+                if (!currentGrade) {
+                    debugLog('⚠️ No hay grado seleccionado para configuración');
+                    return null;
+                }
+                
+                const params = new URLSearchParams({
+                    grade: currentGrade,
+                    subject: currentSubject || 'general'
+                });
+                
+                const url = `/api/lesson-config?${params.toString()}`;
+                debugLog(`🔍 Obteniendo configuración: ${url}`);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    debugLog(`⚠️ Error HTTP obteniendo configuración: ${response.status}`);
+                    return null;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    debugLog(`✅ Configuración obtenida:`, result.data);
+                    return result.data;
+                } else {
+                    debugLog(`⚠️ Configuración no disponible, usando defaults`);
+                    return null;
+                }
+                
+            } catch (error) {
+                debugLog('❌ Error obteniendo configuración de lecciones:', error);
+                return null;
+            }
+        }
+
+
+        function exportAttendance() {
+            showMessage('info', '📄 Función de exportar en desarrollo');
+        }
+
+        function exportClassStats() {
+            showMessage('info', '📊 Función de exportar estadísticas en desarrollo');
+        }
+
+        // ========================================
+        // ESTADÍSTICAS DE CLASE MEP
+        // ========================================
+        
+        async function showClassStats() {
+            if (!currentGrade) {
+                showMessage('error', 'Seleccione un grado primero');
+                return;
+            }
+            
+            try {
+                const config = await getLessonConfigForCurrentSelection();
+                const totalLessons = config?.total_lessons || 200;
+                
+                showMessage('success', '📊 Calculando estadísticas MEP...');
+                
+                const response = await fetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayClassStatsModal(result.data, result.summary, config);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                debugLog('❌ Error obteniendo estadísticas de clase:', error);
+                showMessage('error', 'Error obteniendo estadísticas de clase');
+            }
+        }
+        
+        function displayClassStatsModal(classStats, summary, config) {
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">📊 Estadísticas MEP - ${currentGrade}</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    
+                    <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                        <!-- Resumen general -->
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                            <h3>📈 Resumen General</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #667eea;">${classStats.length}</div>
+                                    <div style="color: #666; font-size: 12px;">ESTUDIANTES</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #28a745;">${summary.average_attendance.toFixed(1)}%</div>
+                                    <div style="color: #666; font-size: 12px;">ASISTENCIA PROMEDIO</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #ffc107;">${summary.average_grade.toFixed(1)}/5.0</div>
+                                    <div style="color: #666; font-size: 12px;">NOTA PROMEDIO</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #17a2b8;">${config?.total_lessons || 200}</div>
+                                    <div style="color: #666; font-size: 12px;">LECCIONES TOTAL</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabla de estudiantes -->
+                        <h3>👥 Detalle por Estudiante</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f8f9fa;">
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Estudiante</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Asistencia</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Ausencias</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Nota 0-10</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Nota Final</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Registros</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${classStats.map(student => {
+                                        const stats = student.mep_stats;
+                                        return `
+                                            <tr>
+                                                <td style="padding: 8px; border: 1px solid #ddd;">
+                                                    <strong>${student.first_surname} ${student.second_surname}, ${student.first_name}</strong><br>
+                                                    <small style="color: #666;">${student.student_id}</small>
+                                                </td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                                    <span style="color: ${stats.attendance_percentage >= 90 ? '#28a745' : stats.attendance_percentage >= 75 ? '#ffc107' : '#dc3545'}; font-weight: 600;">
+                                                        ${stats.attendance_percentage.toFixed(1)}%
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                                    ${stats.total_absences.toFixed(1)} / ${stats.total_lessons}
+                                                </td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: 600;">
+                                                    ${stats.nota_0_10}/10
+                                                </td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                                    <span style="color: ${stats.nota_asistencia >= 4 ? '#28a745' : stats.nota_asistencia >= 3 ? '#ffc107' : '#dc3545'}; font-weight: 600;">
+                                                        ${stats.nota_asistencia.toFixed(1)}/5.0
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">
+                                                    P:${stats.stats.present} | TJ:${stats.stats.late_justified} | TI:${stats.stats.late_unjustified}<br>
+                                                    AJ:${stats.stats.absent_justified} | AI:${stats.stats.absent_unjustified}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Explicación de la fórmula MEP -->
+                        <div style="background: #e3f2fd; border-radius: 10px; padding: 15px; margin-top: 20px;">
+                            <h4>📋 Fórmula MEP Aplicada</h4>
+                            <p style="margin: 5px 0;"><strong>1.</strong> Ausencias = Ausencias Injustificadas + (Tardías × 0.5)</p>
+                            <p style="margin: 5px 0;"><strong>2.</strong> % Ausencias = (Ausencias ÷ Total Lecciones) × 100</p>
+                            <p style="margin: 5px 0;"><strong>3.</strong> Nota 0-10 según tabla oficial MEP</p>
+                            <p style="margin: 5px 0;"><strong>4.</strong> Nota Final = Nota 0-10 × 0.5 (5% del período)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cerrar</button>
+                        <button class="btn btn-success" onclick="exportClassStats()">📄 Exportar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Cerrar al hacer clic fuera
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('lessonsPerWeek').addEventListener('input', calculateTotalLessons);
+        document.getElementById('totalWeeks').addEventListener('input', calculateTotalLessons);
+        document.getElementById('configLessonsPerWeek').addEventListener('input', calculateTotalLessons);
+        document.getElementById('configTotalWeeks').addEventListener('input', calculateTotalLessons);
+
+        // Cerrar modales al hacer clic fuera
+        document.getElementById('justificationModal').addEventListener('click', function(event) {
+            if (event.target === this) closeJustificationModal();
+        });
+
+        document.getElementById('lessonConfigModal').addEventListener('click', function(event) {
+            if (event.target === this) closeLessonConfigModal();
+        });
+    </script>
+</body>
+</html>
