@@ -639,19 +639,20 @@
                 <h1>👨‍🎓 Gestión de Estudiantes</h1>
                 <p>Administra estudiantes, grados y materias de forma integrada</p>
             </div>
-            <div class="header-actions">
-                <button class="btn btn-info" onclick="openBulkAddModal()">
-                    📋 Agregar Múltiples
-                </button>
-                <button class="btn btn-primary" onclick="openAddModal()">
-                    ➕ Agregar Estudiante
-                </button>
-                <a href="dashboard.html" class="btn btn-secondary">
-                    ← Dashboard
-                </a>
-            </div>
+        <div class="header-actions">
+            <button class="btn btn-success" onclick="openBulkGradeModal()">
+                📝 Edición Masiva
+            </button>
+            <button class="btn btn-info" onclick="openBulkAddModal()">
+                📋 Agregar Múltiples
+            </button>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                ➕ Agregar Estudiante
+            </button>
+            <a href="dashboard.html" class="btn btn-secondary">
+                ← Dashboard
+            </a>
         </div>
-
         <!-- Main Content -->
         <div class="main-content">
             <!-- Content Header with Stats -->
@@ -735,6 +736,9 @@
                 <table id="studentsTable" style="display: none;">
                     <thead>
                         <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllStudents" onchange="toggleAllStudents(this.checked)">
+                            </th>
                             <th>Estudiante</th>
                             <th>Cédula</th>
                             <th>ID</th>
@@ -899,7 +903,77 @@
             </form>
         </div>
     </div>
-
+    <!-- Modal para Edición Masiva de Grados -->
+    <div class="modal" id="bulkGradeModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 Edición Masiva de Estudiantes</h2>
+                <button class="close-btn" onclick="closeBulkGradeModal()">&times;</button>
+            </div>
+            
+            <div id="selectedStudentsInfo" style="padding: 0 20px;">
+                <!-- Se llena dinámicamente -->
+            </div>
+            
+            <form id="bulkGradeForm" onsubmit="saveBulkGradeChange(event)" style="padding: 20px;">
+                <div style="background: #fff3cd; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <p><strong>⚠️ Instrucciones:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px; color: #856404;">
+                        <li>Solo se actualizarán los campos que tengan valores seleccionados</li>
+                        <li>Los campos vacíos no se modificarán</li>
+                        <li>Esta acción afectará a todos los estudiantes seleccionados</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">🎓 Nuevo Grado (opcional):</label>
+                    <div class="custom-select" id="bulkGradeSelect">
+                        <div class="select-button" onclick="toggleDropdown('bulkGradeSelect')">
+                            <span class="selected-text">Mantener grado actual...</span>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        <div class="select-dropdown" id="bulkGradeDropdown">
+                            <div class="search-box">
+                                <input type="text" placeholder="🔍 Buscar grado..." onkeyup="filterBulkGrades(this.value)">
+                            </div>
+                            <div id="bulkGradeOptions"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="bulkNewGrade">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📚 Nueva Materia (opcional):</label>
+                    <div class="autocomplete-container">
+                        <input type="text" class="form-input" id="bulkNewSubject" 
+                            placeholder="Mantener materia actual o escribir nueva..."
+                            onkeyup="handleAutocomplete(this, 'subjects')"
+                            onfocus="showAutocomplete(this, 'subjects')">
+                        <div class="autocomplete-list" id="subjectAutocomplete"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">🏫 Nueva Sección (opcional):</label>
+                    <select class="form-input" id="bulkNewSection">
+                        <option value="">Mantener sección actual...</option>
+                        <option value="A">Sección A</option>
+                        <option value="B">Sección B</option>
+                        <option value="C">Sección C</option>
+                    </select>
+                </div>
+                
+                <div id="bulkGradeProgress" style="display: none; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin: 15px 0;">
+                    🔄 Procesando...
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkGradeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">✅ Actualizar Estudiantes</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- Modal para Gestionar Grados -->
     <div class="modal" id="gradesModal">
         <div class="modal-content">
@@ -1152,7 +1226,7 @@
                             <th style="padding: 12px; width: 20%;">Primer Apellido *</th>
                             <th style="padding: 12px; width: 20%;">Segundo Apellido</th>
                             <th style="padding: 12px; width: 20%;">Nombre *</th>
-                            <th style="padding: 12px; width: 20%;">Grado</th>
+                            <th style="padding: 12px; width: 20%;">Grado *</th>
                             <th style="padding: 12px; width: 5%;">Eliminar</th>
                         </tr>
                     </thead>
@@ -1289,83 +1363,241 @@
             });
         }
 
-        function renderStudentsTable() {
-            const tbody = document.getElementById('studentsTableBody');
-            
-            if (filteredStudents.length === 0) {
+        async function renderStudentsTable() {
+            if (students.length === 0) {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('loadingState').innerHTML = '📝 No hay estudiantes para mostrar';
                 document.getElementById('studentsTable').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'block';
                 return;
             }
-
-            document.getElementById('emptyState').style.display = 'none';
+            
+            document.getElementById('loadingState').style.display = 'none';
             document.getElementById('studentsTable').style.display = 'table';
-
-            tbody.innerHTML = filteredStudents.map(student => {
+            
+            debugLog('🎨 Renderizando tabla con estudiantes:', students.map(s => ({ id: s.id, name: s.first_name })));
+            debugLog('📊 Datos de asistencia disponibles:', attendanceData);
+            
+            // Invalidar cache de estadísticas cuando renderizamos
+            studentMEPStats = {};
+            
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+            
+            for (const student of students) {
+                const attendance = attendanceData[student.id];
                 const initials = ((student.first_name?.[0] || '') + (student.first_surname?.[0] || '')).toUpperCase();
                 const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
                 
-                return `
-                    <tr>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="student-photo">${initials}</div>
-                                <div>
-                                    <div class="student-name">${fullName}</div>
-                                    <div class="student-id">${student.student_id || '-'}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>${student.cedula || '-'}</td>
-                        <td>${student.student_id || '-'}</td>
-                        <td>${student.grade_level ? `<span class="grade-badge">${student.grade_level}</span>` : '-'}</td>
-                        <td>${student.subject_area ? `<span class="subject-badge">${student.subject_area}</span>` : '-'}</td>
-                        <td>${student.section || '-'}</td>
-                        <td>
-                            <div>${student.email || '-'}</div>
-                            <div style="font-size: 12px; color: #666;">${student.phone || '-'}</div>
-                        </td>
-                        <td>
-                            <div>${student.parent_name || '-'}</div>
-                            <div style="font-size: 12px; color: #666;">${student.parent_phone || '-'}</div>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-warning btn-sm" onclick="editStudent(${student.id})" title="Editar">
-                                    ✏️
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.id})" title="Eliminar">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function filterStudents() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const gradeFilter = document.getElementById('gradeFilter').value;
-            const subjectFilter = document.getElementById('subjectFilter').value;
-            const sectionFilter = document.getElementById('sectionFilter').value;
-
-            filteredStudents = students.filter(student => {
-                const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.toLowerCase();
-                const matchesSearch = !searchTerm || 
-                    fullName.includes(searchTerm) ||
-                    (student.cedula && student.cedula.includes(searchTerm)) ||
-                    (student.student_id && student.student_id.toLowerCase().includes(searchTerm));
+                const status = attendance?.status || 'not_marked';
+                const statusText = getStatusText(status);
+                const statusClass = getStatusClass(status);
                 
-                const matchesGrade = !gradeFilter || student.grade_level === gradeFilter;
-                const matchesSubject = !subjectFilter || student.subject_area === subjectFilter;
-                const matchesSection = !sectionFilter || student.section === sectionFilter;
-
-                return matchesSearch && matchesGrade && matchesSubject && matchesSection;
-            });
-
-            renderStudentsTable();
+                // Debug por estudiante
+                debugLog(`👤 Estudiante ${student.id} (${student.first_name}):`, {
+                    hasAttendance: !!attendance,
+                    status: status
+                });
+                
+                // Crear fila con checkbox para selección masiva
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="student-checkbox" value="${student.id}" onchange="updateStudentSelection()">
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="student-photo">${initials}</div>
+                            <div>
+                                <div class="student-name">${fullName}</div>
+                                <div class="student-id">${student.student_id || '-'} (ID: ${student.id})</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${student.cedula || '-'}</td>
+                    <td>${student.student_id || '-'}</td>
+                    <td>${student.grade_level ? `<span class="grade-badge">${student.grade_level}</span>` : '-'}</td>
+                    <td>${student.subject_area ? `<span class="subject-badge">${student.subject_area}</span>` : '-'}</td>
+                    <td>${student.section || '-'}</td>
+                    <td>
+                        <div>${student.email || '-'}</div>
+                        <div style="font-size: 12px; color: #666;">${student.phone || '-'}</div>
+                    </td>
+                    <td>
+                        <div>${student.parent_name || '-'}</div>
+                        <div style="font-size: 12px; color: #666;">${student.parent_phone || '-'}</div>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-warning btn-sm" onclick="editStudent(${student.id})" title="Editar">
+                                ✏️
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.id})" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            }
+            
+            debugLog('✅ Tabla renderizada con', students.length, 'estudiantes');
         }
+
+
+        // ========================================
+        // FUNCIONES DE EDICIÓN MASIVA DE ESTUDIANTES
+        // ========================================
+
+        let selectedStudentIds = [];
+
+        function updateStudentSelection() {
+            const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+            selectedStudentIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            const bulkActionsPanel = document.getElementById('studentBulkActions');
+            if (selectedStudentIds.length > 0) {
+                bulkActionsPanel.classList.add('show');
+                document.getElementById('selectedStudentsCount').textContent = selectedStudentIds.length;
+            } else {
+                bulkActionsPanel.classList.remove('show');
+            }
+            
+            // Actualizar estado del checkbox "Seleccionar todos"
+            const selectAllCheckbox = document.getElementById('selectAllStudents');
+            const allCheckboxes = document.querySelectorAll('.student-checkbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedStudentIds.length === allCheckboxes.length;
+            }
+        }
+
+        function toggleAllStudents(checked) {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => cb.checked = checked);
+            updateStudentSelection();
+        }
+
+        function clearStudentSelection() {
+            selectedStudentIds = [];
+            document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('studentBulkActions').classList.remove('show');
+            const selectAllCheckbox = document.getElementById('selectAllStudents');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
+        }
+
+        function openBulkGradeModal() {
+            if (selectedStudentIds.length === 0) {
+                alert('Seleccione al menos un estudiante');
+                return;
+            }
+            
+            document.getElementById('bulkGradeModal').classList.add('show');
+            
+            // Mostrar información de estudiantes seleccionados
+            const selectedStudentsInfo = document.getElementById('selectedStudentsInfo');
+            const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
+            
+            selectedStudentsInfo.innerHTML = `
+                <h4>📋 Estudiantes Seleccionados: ${selectedStudents.length}</h4>
+                <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 10px 0;">
+                    ${selectedStudents.map(student => {
+                        const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+                        return `
+                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                                <span><strong>${fullName}</strong></span>
+                                <span style="color: #666;">Actual: ${student.grade_level || 'Sin grado'}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function closeBulkGradeModal() {
+            document.getElementById('bulkGradeModal').classList.remove('show');
+        }
+
+        async function saveBulkGradeChange(event) {
+            event.preventDefault();
+            
+            const newGrade = document.getElementById('bulkNewGrade').value;
+            const newSubject = document.getElementById('bulkNewSubject').value;
+            const newSection = document.getElementById('bulkNewSection').value;
+            
+            if (!newGrade && !newSubject && !newSection) {
+                alert('Seleccione al menos un campo para actualizar');
+                return;
+            }
+            
+            if (!confirm(`¿Actualizar ${selectedStudentIds.length} estudiantes seleccionados?`)) {
+                return;
+            }
+            
+            try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                // Mostrar progreso
+                const progressDiv = document.getElementById('bulkGradeProgress');
+                progressDiv.style.display = 'block';
+                progressDiv.innerHTML = '🔄 Actualizando estudiantes...';
+                
+                for (const studentId of selectedStudentIds) {
+                    try {
+                        const student = students.find(s => s.id === studentId);
+                        const updateData = { ...student };
+                        
+                        // Solo actualizar campos que tienen valores
+                        if (newGrade) updateData.grade_level = newGrade;
+                        if (newSubject) updateData.subject_area = newSubject;
+                        if (newSection) updateData.section = newSection;
+                        
+                        const response = await fetch(`/api/students/${studentId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(updateData)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                            console.error(`Error actualizando estudiante ${studentId}:`, result.message);
+                        }
+                        
+                        // Pequeña pausa para no sobrecargar el servidor
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                    } catch (error) {
+                        errorCount++;
+                        console.error(`Error actualizando estudiante ${studentId}:`, error);
+                    }
+                }
+                
+                progressDiv.style.display = 'none';
+                
+                if (errorCount === 0) {
+                    alert(`✅ ${successCount} estudiantes actualizados correctamente`);
+                    closeBulkGradeModal();
+                    clearStudentSelection();
+                    loadStudents(); // Recargar la lista
+                } else {
+                    alert(`⚠️ ${successCount} exitosos, ${errorCount} errores. Revise la consola para más detalles.`);
+                }
+                
+            } catch (error) {
+                console.error('Error en actualización masiva:', error);
+                alert('Error en la actualización masiva');
+                document.getElementById('bulkGradeProgress').style.display = 'none';
+            }
+        }
+
 
         // ========================================
         // FUNCIONES DEL COMBOBOX DE GRADOS
@@ -2387,48 +2619,55 @@
             document.getElementById('bulkAddModal').classList.remove('show');
             selectedCell = null;
         }
-
-        function addBulkRow() {
+       function addBulkRow() {
             const tbody = document.getElementById('bulkAddTableBody');
             const rowId = `bulkRow_${bulkRowCounter++}`;
+            
+            // Crear opciones de grados para el dropdown
+            const gradeOptions = availableGrades.map(grade => 
+                `<option value="${grade.name}">${grade.name}</option>`
+            ).join('');
             
             const row = document.createElement('tr');
             row.id = rowId;
             row.innerHTML = `
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="" name="cedula" 
+                        placeholder="123456789" name="cedula" 
                         data-row="${bulkRowCounter-1}" data-col="0"
                         onclick="selectCell(this)" onpaste="handlePaste(event)"
                         onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="" name="first_surname" required
+                        placeholder="Pérez" name="first_surname" required
                         data-row="${bulkRowCounter-1}" data-col="1"
                         onclick="selectCell(this)" onpaste="handlePaste(event)"
                         onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="" name="second_surname"
+                        placeholder="González" name="second_surname"
                         data-row="${bulkRowCounter-1}" data-col="2"
                         onclick="selectCell(this)" onpaste="handlePaste(event)"
                         onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
                     <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="" name="first_name" required
+                        placeholder="Juan" name="first_name" required
                         data-row="${bulkRowCounter-1}" data-col="3"
                         onclick="selectCell(this)" onpaste="handlePaste(event)"
                         onkeydown="handleKeyDown(event)">
                 </td>
                 <td style="padding: 8px;">
-                    <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="" name="grade_level"
-                        data-row="${bulkRowCounter-1}" data-col="4"
-                        onclick="selectCell(this)" onpaste="handlePaste(event)"
-                        onkeydown="handleKeyDown(event)">
+                    <select class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
+                            name="grade_level"
+                            data-row="${bulkRowCounter-1}" data-col="4"
+                            onclick="selectCell(this)"
+                            onkeydown="handleKeyDown(event)">
+                        <option value="">Seleccionar grado...</option>
+                        ${gradeOptions}
+                    </select>
                 </td>
                 <td style="padding: 8px; text-align: center;">
                     <button type="button" class="btn btn-danger btn-sm" 
@@ -2707,6 +2946,160 @@
             }
         }
 
+                // ========================================
+        // FUNCIONES ADICIONALES PARA EDICIÓN MASIVA
+        // ========================================
+
+        // Función para eliminar estudiantes seleccionados
+        async function deleteSelectedStudents() {
+            if (selectedStudentIds.length === 0) {
+                alert('No hay estudiantes seleccionados');
+                return;
+            }
+            
+            const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
+            const studentNames = selectedStudents.map(s => 
+                `${s.first_surname} ${s.second_surname}, ${s.first_name}`.trim()
+            ).join('\n');
+            
+            if (!confirm(`¿Eliminar ${selectedStudentIds.length} estudiantes seleccionados?\n\n${studentNames}`)) {
+                return;
+            }
+            
+            try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const studentId of selectedStudentIds) {
+                    try {
+                        const response = await fetch(`/api/students/${studentId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                    } catch (error) {
+                        errorCount++;
+                        console.error(`Error eliminando estudiante ${studentId}:`, error);
+                    }
+                }
+                
+                if (errorCount === 0) {
+                    alert(`✅ ${successCount} estudiantes eliminados correctamente`);
+                } else {
+                    alert(`⚠️ ${successCount} eliminados, ${errorCount} errores`);
+                }
+                
+                clearStudentSelection();
+                loadStudents();
+                
+            } catch (error) {
+                console.error('Error en eliminación masiva:', error);
+                alert('Error en la eliminación masiva');
+            }
+        }
+
+        // Función para seleccionar grado en el modal de edición masiva
+        function selectBulkGrade(gradeName) {
+            document.querySelector('#bulkGradeSelect .selected-text').textContent = gradeName;
+            document.getElementById('bulkNewGrade').value = gradeName;
+            
+            // Cerrar dropdown
+            document.querySelector('#bulkGradeSelect .select-button').classList.remove('open');
+            document.getElementById('bulkGradeDropdown').classList.remove('show');
+        }
+
+        // Función para renderizar opciones de grado en el modal de edición masiva
+        function renderBulkGradeOptions() {
+            const container = document.getElementById('bulkGradeOptions');
+            if (!container || !availableGrades) return;
+            
+            // Agregar opción para mantener grado actual
+            let optionsHTML = `
+                <div class="select-option" onclick="selectBulkGrade('')">
+                    <span style="color: #666; font-style: italic;">Mantener grado actual</span>
+                </div>
+            `;
+            
+            // Ordenar: prioritarios primero, luego por uso, luego alfabético
+            const sortedGrades = [...availableGrades].sort((a, b) => {
+                if (a.priority && !b.priority) return -1;
+                if (!a.priority && b.priority) return 1;
+                if (a.priority && b.priority) return b.usage - a.usage;
+                return a.name.localeCompare(b.name);
+            });
+            
+            optionsHTML += sortedGrades.map(grade => `
+                <div class="select-option" onclick="selectBulkGrade('${grade.name}')">
+                    <span>${grade.name}</span>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        ${grade.priority ? '<span class="priority-badge">PRIORIDAD</span>' : ''}
+                        ${grade.usage > 0 ? `<span class="usage-count">${grade.usage}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = optionsHTML;
+        }
+
+        // Función para filtrar grados en el modal de edición masiva
+        function filterBulkGrades(searchTerm) {
+            const container = document.getElementById('bulkGradeOptions');
+            if (!container) return;
+            
+            const options = container.querySelectorAll('.select-option');
+            options.forEach(option => {
+                const gradeName = option.textContent.toLowerCase();
+                const matches = gradeName.includes(searchTerm.toLowerCase());
+                option.style.display = matches ? 'flex' : 'none';
+            });
+        }
+
+        // Modificar la función openBulkGradeModal para cargar las opciones
+        function openBulkGradeModal() {
+            if (selectedStudentIds.length === 0) {
+                alert('Seleccione al menos un estudiante');
+                return;
+            }
+            
+            document.getElementById('bulkGradeModal').classList.add('show');
+            
+            // Renderizar opciones de grados
+            renderBulkGradeOptions();
+            
+            // Resetear valores del formulario
+            document.querySelector('#bulkGradeSelect .selected-text').textContent = 'Mantener grado actual...';
+            document.getElementById('bulkNewGrade').value = '';
+            document.getElementById('bulkNewSubject').value = '';
+            document.getElementById('bulkNewSection').value = '';
+            
+            // Mostrar información de estudiantes seleccionados
+            const selectedStudentsInfo = document.getElementById('selectedStudentsInfo');
+            const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
+            
+            selectedStudentsInfo.innerHTML = `
+                <h4>📋 Estudiantes Seleccionados: ${selectedStudents.length}</h4>
+                <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 10px 0;">
+                    ${selectedStudents.map(student => {
+                        const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+                        return `
+                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                                <span><strong>${fullName}</strong></span>
+                                <span style="color: #666;">Actual: ${student.grade_level || 'Sin grado'}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
 
         async function debugSubject(subjectId, subjectName) {
             try {
@@ -2776,6 +3169,12 @@
                     if (button) button.classList.remove('open');
                 });
             }
+
+
+            // Cerrar modal de edición masiva al hacer clic fuera
+            document.getElementById('bulkGradeModal').addEventListener('click', function(event) {
+                if (event.target === this) closeBulkGradeModal();
+            });
         });
     </script>
 </body>
