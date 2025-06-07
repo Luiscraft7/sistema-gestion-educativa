@@ -106,16 +106,19 @@ CREATE TABLE IF NOT EXISTS daily_grades (
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
--- Tabla de Tareas
+-- Tabla de Tareas (CORREGIDA)
 CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subject_id INTEGER,
     title TEXT NOT NULL,
     description TEXT,
     due_date DATE,
     max_points REAL DEFAULT 100,
+    percentage REAL DEFAULT 10,
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    teacher_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de Calificaciones de Tareas

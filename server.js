@@ -1016,7 +1016,182 @@ app.get('/api/debug/subjects/:id', async (req, res) => {
     }
 });
 
+// ========================================
+// RUTAS API PARA TAREAS
+// ========================================
 
+// Obtener tareas por grado y materia
+app.get('/api/tasks', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        if (!grade || !subject) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado y materia son requeridos'
+            });
+        }
+        
+        console.log('📝 GET /api/tasks:', { grade, subject });
+        
+        const tasks = await database.getTasksByGradeAndSubject(grade, subject);
+        res.json({
+            success: true,
+            data: tasks,
+            message: `${tasks.length} tareas encontradas`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo tareas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo tareas',
+            error: error.message
+        });
+    }
+});
+
+// Crear nueva tarea
+app.post('/api/tasks', async (req, res) => {
+    try {
+        console.log('📝 POST /api/tasks:', req.body);
+        
+        const result = await database.createTask(req.body);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Tarea creada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error creando tarea:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creando tarea',
+            error: error.message
+        });
+    }
+});
+
+// Actualizar tarea
+app.put('/api/tasks/:id', async (req, res) => {
+    try {
+        console.log('📝 PUT /api/tasks/' + req.params.id + ':', req.body);
+        
+        const result = await database.updateTask(req.params.id, req.body);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Tarea actualizada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error actualizando tarea:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error actualizando tarea',
+            error: error.message
+        });
+    }
+});
+
+// Eliminar tarea
+app.delete('/api/tasks/:id', async (req, res) => {
+    try {
+        console.log('🗑️ DELETE /api/tasks/' + req.params.id);
+        
+        const result = await database.deleteTask(req.params.id);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Tarea eliminada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error eliminando tarea:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error eliminando tarea',
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// RUTAS API PARA CALIFICACIONES DE TAREAS
+// ========================================
+
+// Obtener calificaciones de una tarea
+app.get('/api/task-grades/:taskId', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        
+        console.log('📊 GET /api/task-grades/' + taskId);
+        
+        const grades = await database.getTaskGrades(taskId);
+        res.json({
+            success: true,
+            data: grades,
+            message: `${grades.length} calificaciones encontradas`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo calificaciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo calificaciones',
+            error: error.message
+        });
+    }
+});
+
+// Guardar calificaciones de tarea
+app.post('/api/task-grades', async (req, res) => {
+    try {
+        const { grades } = req.body;
+        
+        if (!grades || !Array.isArray(grades)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Array de calificaciones es requerido'
+            });
+        }
+        
+        console.log('💾 POST /api/task-grades:', grades.length, 'calificaciones');
+        
+        const result = await database.saveTaskGrades(grades);
+        res.json({
+            success: true,
+            data: result,
+            message: `${result.savedCount} calificaciones guardadas correctamente`
+        });
+    } catch (error) {
+        console.error('❌ Error guardando calificaciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error guardando calificaciones',
+            error: error.message
+        });
+    }
+});
+
+// Obtener estadísticas de tareas por estudiante
+app.get('/api/task-stats/student/:studentId', async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const { grade, subject } = req.query;
+        
+        console.log('📈 GET /api/task-stats/student/' + studentId);
+        
+        const stats = await database.getStudentTaskStats(studentId, grade, subject);
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo estadísticas',
+            error: error.message
+        });
+    }
+});
 
 
 // ========================================
