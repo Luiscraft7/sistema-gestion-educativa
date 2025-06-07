@@ -737,11 +737,8 @@
             <div class="sidebar-header">
                 <h2>🎯 Indicadores de Evaluación</h2>
                 <div class="indicator-actions">
-                    <button class="btn btn-primary btn-sm" onclick="openIndicatorModal()">
-                        🎯 Principal
-                    </button>
-                    <button class="btn btn-primary btn-sm" onclick="openBulkIndicatorsModal()">
-                        ➕ Múltiples
+                    <button class="btn btn-primary btn-sm" onclick="openUnifiedIndicatorModal()">
+                        ➕ Agregar Indicadores
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="clearAllIndicators()">
                         🗑️ Limpiar
@@ -815,137 +812,100 @@
         </div>
     </div>
 
-    <!-- MODAL PARA INDICADOR PRINCIPAL -->
-    <div class="modal" id="indicatorModal">
+    <!-- MODAL UNIFICADO PARA AGREGAR INDICADORES -->
+    <div class="modal" id="unifiedIndicatorModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">🎯 Crear Indicador Principal</h2>
-                <button class="close-btn" onclick="closeIndicatorModal()">&times;</button>
+                <h2 class="modal-title">📋 Agregar Indicadores</h2>
+                <button class="close-btn" onclick="closeUnifiedIndicatorModal()">&times;</button>
             </div>
             
             <div class="modal-body">
-                <form id="indicatorForm" onsubmit="saveIndicator(event)">
-                    <!-- INDICADOR PRINCIPAL -->
-                    <div class="step-section">
-                        <h3>🎯 Indicador Principal</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="mainIndicatorName">Nombre del Indicador Principal *</label>
-                            <textarea class="form-input form-textarea" id="mainIndicatorName" name="main_indicator" required
-                                   placeholder="Escriba aquí el indicador principal para la clase de hoy. Este será el objetivo general que guiará toda la evaluación..."></textarea>
-                            <div class="help-text">Este será el indicador principal que agrupa los sub-indicadores</div>
-                        </div>
+                <!-- PASO 1: INDICADOR PRINCIPAL -->
+                <div class="step-section">
+                    <h3>🎯 Paso 1: Indicador Principal (Opcional)</h3>
+                    
+                    <div class="instruction-box">
+                        <p><strong>💡 ¿Qué es el indicador principal?</strong></p>
+                        <p>Es el objetivo general de la clase que agrupa varios sub-indicadores específicos. Por ejemplo: "Participación en Clase" puede incluir sub-indicadores como "Responde preguntas", "Hace preguntas", etc.</p>
                     </div>
-
-                    <!-- SUB-INDICADORES -->
-                    <div class="step-section">
-                        <h3>📋 Sub-Indicadores (Opcional)</h3>
-                        
-                        <div class="instruction-box">
-                            <p><strong>💡 Consejos:</strong> Los sub-indicadores son aspectos específicos que quieres evaluar dentro del indicador principal.</p>
-                            <p><strong>Ejemplo:</strong> Si tu indicador principal es "Participación en Clase", los sub-indicadores podrían ser: "Responde preguntas", "Hace preguntas", "Colabora en grupos".</p>
-                        </div>
-
-                        <div id="subIndicatorsContainer">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Indicador Principal</label>
+                        <textarea class="form-input form-textarea" id="unifiedMainIndicator" 
+                               placeholder="Ej: Describe la importancia histórica de figuras representativas de la Campaña Nacional..."
+                               style="min-height: 80px;"></textarea>
+                        <div class="help-text">Deje vacío si solo quiere agregar indicadores individuales</div>
+                    </div>
+                    
+                    <!-- SUB-INDICADORES DEL PRINCIPAL -->
+                    <div id="principalSubIndicators" style="display: none;">
+                        <h4 style="color: #667eea; margin: 20px 0 10px 0;">Sub-Indicadores del Principal:</h4>
+                        <div id="principalSubContainer">
                             <div class="sub-indicator-row">
                                 <div class="form-group">
                                     <label class="form-label">Sub-Indicador 1</label>
-                                    <input type="text" class="form-input" name="sub_indicator[]" 
+                                    <input type="text" class="form-input" name="principal_sub[]" 
                                            placeholder="Ej: Responde preguntas">
                                 </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                                    🗑️
-                                </button>
-                            </div>
-                            
-                            <div class="sub-indicator-row">
-                                <div class="form-group">
-                                    <label class="form-label">Sub-Indicador 2</label>
-                                    <input type="text" class="form-input" name="sub_indicator[]" 
-                                           placeholder="Ej: Hace preguntas">
-                                </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                                    🗑️
-                                </button>
-                            </div>
-                            
-                            <div class="sub-indicator-row">
-                                <div class="form-group">
-                                    <label class="form-label">Sub-Indicador 3</label>
-                                    <input type="text" class="form-input" name="sub_indicator[]" 
-                                           placeholder="Ej: Colabora en grupos">
-                                </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="removePrincipalSub(this)">
                                     🗑️
                                 </button>
                             </div>
                         </div>
-
-                        <div style="margin: 25px 0; text-align: center;">
-                            <button type="button" class="btn btn-primary" onclick="addSubIndicatorRow()">
-                                ➕ Agregar Otro Sub-Indicador
+                        <div style="margin: 15px 0; text-align: center;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="addPrincipalSubRow()">
+                                ➕ Agregar Sub-Indicador
                             </button>
                         </div>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeIndicatorModal()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">💾 Guardar Indicador Completo</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PARA AGREGAR MÚLTIPLES INDICADORES -->
-    <div class="modal" id="bulkIndicatorsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">📋 Agregar Múltiples Indicadores</h2>
-                <button class="close-btn" onclick="closeBulkIndicatorsModal()">&times;</button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="instruction-box">
-                    <p><strong>💡 Instrucciones:</strong></p>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>Escriba un indicador por línea</li>
-                        <li>Puede copiar y pegar desde Excel o Word</li>
-                        <li>Las líneas vacías serán ignoradas</li>
-                        <li>Máximo 20 indicadores</li>
-                    </ul>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Lista de Indicadores:</label>
-                    <textarea 
-                        id="bulkIndicatorsText" 
-                        class="form-input form-textarea" 
-                        rows="10" 
-                        placeholder="Ejemplo:
-Responde preguntas
-Colabora en grupos
-Respeta las normas
-Presenta materiales
-Participa activamente"
-                        style="min-height: 200px; font-family: monospace;"
-                        oninput="updateBulkPreview()">
-                    </textarea>
-                    <div class="help-text">
-                        <span id="bulkIndicatorCount">0</span> indicadores detectados
+                <!-- PASO 2: INDICADORES INDIVIDUALES -->
+                <div class="step-section">
+                    <h3>📝 Paso 2: Indicadores Individuales</h3>
+                    
+                    <div class="instruction-box">
+                        <p><strong>💡 Instrucciones:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Escriba un indicador por línea</li>
+                            <li>Puede copiar y pegar desde Excel o Word</li>
+                            <li>Las líneas vacías serán ignoradas</li>
+                            <li>Máximo 20 indicadores individuales</li>
+                        </ul>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Vista Previa:</label>
-                    <div id="bulkPreview" style="max-height: 150px; overflow-y: auto; border: 2px solid #e1e5e9; border-radius: 10px; padding: 15px; background: #f8f9fa; font-size: 14px;">
-                        <em style="color: #6c757d;">Escriba indicadores arriba para ver la vista previa...</em>
+                    <div class="form-group">
+                        <label class="form-label">Lista de Indicadores Individuales:</label>
+                        <textarea 
+                            id="unifiedBulkIndicators" 
+                            class="form-input form-textarea" 
+                            rows="8" 
+                            placeholder="Ejemplo:
+Responde preguntas correctamente
+Colabora efectivamente en grupos
+Respeta las normas de clase
+Presenta materiales completos
+Participa activamente en discusiones"
+                            style="min-height: 150px; font-family: monospace;"
+                            oninput="updateUnifiedPreview()">
+                        </textarea>
+                        <div class="help-text">
+                            <span id="unifiedIndicatorCount">0</span> indicadores individuales detectados
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Vista Previa:</label>
+                        <div id="unifiedPreview" style="max-height: 150px; overflow-y: auto; border: 2px solid #e1e5e9; border-radius: 10px; padding: 15px; background: #f8f9fa; font-size: 14px;">
+                            <em style="color: #6c757d;">Escriba indicadores arriba para ver la vista previa...</em>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeBulkIndicatorsModal()">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="saveBulkIndicators()">💾 Crear Indicadores</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUnifiedIndicatorModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUnifiedIndicators()">💾 Crear Todos los Indicadores</button>
                 </div>
             </div>
         </div>
@@ -976,45 +936,53 @@ Participa activamente"
         async function initializeSystem() {
             try {
                 showLoading();
+                console.log('🚀 Inicializando sistema...');
                 await loadSystemData();
                 updateStatusIndicator();
+                console.log('✅ Sistema inicializado correctamente');
                 hideLoading();
             } catch (error) {
-                console.error('Error inicializando sistema:', error);
-                alert('Error cargando datos del sistema');
+                console.error('❌ Error inicializando sistema:', error);
+                alert('Error cargando datos del sistema: ' + error.message);
                 hideLoading();
             }
         }
 
         async function loadSystemData() {
+            console.log('🔄 Iniciando carga de datos del sistema...');
+            
             // Cargar grados
             const gradesResponse = await fetch('/api/grades');
             const gradesData = await gradesResponse.json();
             if (gradesData.success) {
-                allGrades = gradesData.data;
+                // Filtrar duplicados por ID o nombre
+                const uniqueGrades = [];
+                const seenNames = new Set();
+                
+                gradesData.data.forEach(grade => {
+                    if (!seenNames.has(grade.name)) {
+                        seenNames.add(grade.name);
+                        uniqueGrades.push(grade);
+                    }
+                });
+                
+                allGrades = uniqueGrades;
+                console.log('✅ Grados cargados (después de filtrar duplicados):', allGrades.length);
+                console.log('📋 Grados únicos:', allGrades.map(g => `"${g.name}"`).join(', '));
                 populateGradeSelector();
+            } else {
+                console.error('❌ Error cargando grados:', gradesData.message);
             }
 
-            // Cargar materias
-            try {
-                const subjectsResponse = await fetch('/api/subjects');
-                if (subjectsResponse.ok) {
-                    const subjectsData = await subjectsResponse.json();
-                    if (subjectsData.success) {
-                        allSubjects = subjectsData.data;
-                    }
-                } else {
-                    // Intentar cargar desde custom_subjects
-                    const customSubjectsResponse = await fetch('/api/custom-subjects');
-                    if (customSubjectsResponse.ok) {
-                        const customSubjectsData = await customSubjectsResponse.json();
-                        if (customSubjectsData.success) {
-                            allSubjects = customSubjectsData.data;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.log('No se pudieron cargar materias desde la API');
+            // Cargar materias personalizadas
+            const subjectsResponse = await fetch('/api/custom-subjects');
+            const subjectsData = await subjectsResponse.json();
+            if (subjectsData.success) {
+                allSubjects = subjectsData.data;
+                console.log('✅ Materias cargadas:', allSubjects.length);
+                console.log('📚 Materias disponibles:', allSubjects.map(s => `"${s.name}"`).join(', '));
+            } else {
+                console.error('❌ Error cargando materias:', subjectsData.message);
                 allSubjects = [];
             }
 
@@ -1023,46 +991,88 @@ Participa activamente"
             const studentsData = await studentsResponse.json();
             if (studentsData.success) {
                 students = studentsData.data;
+                console.log('✅ Estudiantes cargados:', students.length);
+                
+                // Debug: Mostrar estructura de grados en estudiantes
+                const gradeFields = ['grade_level', 'grade', 'grado', 'nivel'];
+                console.log('📊 Análisis de grados en estudiantes:');
+                students.forEach((student, index) => {
+                    if (index < 3) { // Solo mostrar los primeros 3 para no saturar logs
+                        const name = `${student.first_surname} ${student.first_name}`;
+                        const gradeInfo = gradeFields.map(field => `${field}: "${student[field] || 'N/A'}"`).join(', ');
+                        console.log(`  👤 ${name} - ${gradeInfo}`);
+                    }
+                });
+                
+                // Mostrar resumen de grados detectados
+                const gradesInStudents = [...new Set(students.map(s => 
+                    s.grade_level || s.grade || s.grado || 'Sin grado'
+                ))];
+                console.log('🎓 Grados detectados en estudiantes:', gradesInStudents);
+            } else {
+                console.error('❌ Error cargando estudiantes:', studentsData.message);
             }
 
             // Cargar relaciones grado-materia
-            try {
-                const gradeSubjectsResponse = await fetch('/api/grade-subjects');
-                if (gradeSubjectsResponse.ok) {
-                    const gradeSubjectsData = await gradeSubjectsResponse.json();
-                    if (gradeSubjectsData.success) {
-                        // Organizar por grado
-                        gradeSubjects = {};
-                        gradeSubjectsData.data.forEach(relation => {
-                            if (!gradeSubjects[relation.grade_name]) {
-                                gradeSubjects[relation.grade_name] = [];
-                            }
-                            gradeSubjects[relation.grade_name].push(relation.subject_name);
-                        });
+            const gradeSubjectsResponse = await fetch('/api/grade-subjects');
+            const gradeSubjectsData = await gradeSubjectsResponse.json();
+            if (gradeSubjectsData.success && gradeSubjectsData.data.length > 0) {
+                // Organizar por grado
+                gradeSubjects = {};
+                gradeSubjectsData.data.forEach(relation => {
+                    if (!gradeSubjects[relation.grade_name]) {
+                        gradeSubjects[relation.grade_name] = [];
                     }
-                } else {
-                    throw new Error('Endpoint no disponible');
-                }
-            } catch (error) {
-                console.log('No se encontraron relaciones grado-materia configuradas, usando todas las materias para todos los grados');
-                // Si no hay relaciones o el endpoint no existe, usar todas las materias para todos los grados
+                    // Evitar duplicados de materias en el mismo grado
+                    if (!gradeSubjects[relation.grade_name].includes(relation.subject_name)) {
+                        gradeSubjects[relation.grade_name].push(relation.subject_name);
+                    }
+                });
+                console.log('✅ Relaciones grado-materia cargadas:', gradeSubjectsData.data.length);
+                console.log('📋 Relaciones por grado:', gradeSubjects);
+            } else {
+                console.log('⚠️ No hay relaciones grado-materia configuradas, usando todas las materias para todos los grados');
+                // Si no hay relaciones, permitir todas las materias para todos los grados
                 gradeSubjects = {};
                 allGrades.forEach(grade => {
                     gradeSubjects[grade.name] = allSubjects.map(subject => subject.name);
                 });
+                console.log('📋 Relaciones automáticas creadas:', gradeSubjects);
             }
         }
 
         function populateGradeSelector() {
             const gradoSelect = document.getElementById('grado');
-            gradoSelect.innerHTML = '<option value="">Seleccionar grado...</option>';
+            
+            // Limpiar selector completamente
+            gradoSelect.innerHTML = '';
+            
+            // Agregar opción por defecto
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Seleccionar grado...';
+            gradoSelect.appendChild(defaultOption);
+            
+            console.log('🎓 Poblando selector de grados con', allGrades.length, 'grados');
+            
+            // Filtro adicional por si hay duplicados en el DOM
+            const addedGrades = new Set();
             
             allGrades.forEach(grade => {
-                const option = document.createElement('option');
-                option.value = grade.name;
-                option.textContent = grade.name;
-                gradoSelect.appendChild(option);
+                if (!addedGrades.has(grade.name)) {
+                    const option = document.createElement('option');
+                    option.value = grade.name;
+                    option.textContent = grade.name;
+                    gradoSelect.appendChild(option);
+                    addedGrades.add(grade.name);
+                    console.log('  ➕ Agregado grado:', grade.name);
+                }
             });
+            
+            console.log('✅ Selector de grados actualizado con', addedGrades.size, 'grados únicos');
+            
+            // Verificar el contenido final del selector
+            console.log('🔍 Opciones finales en selector:', Array.from(gradoSelect.options).map(opt => opt.textContent));
         }
 
         function showLoading() {
@@ -1105,35 +1115,58 @@ Participa activamente"
             const materiaSelect = document.getElementById('materia');
             
             currentGrado = gradoSelect.value;
+            console.log('🎓 Grado seleccionado:', currentGrado);
             
             if (currentGrado) {
                 // Habilitar selector de materia
                 materiaSelect.disabled = false;
-                materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
+                materiaSelect.innerHTML = '';
+                
+                // Agregar opción por defecto
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Seleccionar materia...';
+                materiaSelect.appendChild(defaultOption);
                 
                 // Cargar materias del grado seleccionado desde los datos reales
                 const materiasDelGrado = gradeSubjects[currentGrado] || [];
+                console.log('📚 Materias disponibles para', currentGrado + ':', materiasDelGrado);
+                
+                // Filtro para evitar duplicados
+                const addedMaterias = new Set();
+                
                 materiasDelGrado.forEach(materia => {
-                    const option = document.createElement('option');
-                    option.value = materia;
-                    option.textContent = materia;
-                    materiaSelect.appendChild(option);
+                    if (!addedMaterias.has(materia)) {
+                        const option = document.createElement('option');
+                        option.value = materia;
+                        option.textContent = materia;
+                        materiaSelect.appendChild(option);
+                        addedMaterias.add(materia);
+                    }
                 });
                 
                 if (materiasDelGrado.length === 0) {
+                    console.log('⚠️ No hay materias asignadas al grado, mostrando todas las materias disponibles');
                     // Si no hay materias asignadas, mostrar todas las materias disponibles
                     allSubjects.forEach(subject => {
-                        const option = document.createElement('option');
-                        option.value = subject.name;
-                        option.textContent = subject.name;
-                        materiaSelect.appendChild(option);
+                        if (!addedMaterias.has(subject.name)) {
+                            const option = document.createElement('option');
+                            option.value = subject.name;
+                            option.textContent = subject.name;
+                            materiaSelect.appendChild(option);
+                            addedMaterias.add(subject.name);
+                        }
                     });
                 }
+                
+                console.log('✅ Selector de materias actualizado con', addedMaterias.size, 'materias únicas');
+                console.log('🔍 Opciones de materias:', Array.from(materiaSelect.options).map(opt => opt.textContent));
             } else {
                 // Deshabilitar selector de materia
                 materiaSelect.disabled = true;
                 materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
                 currentMateria = '';
+                console.log('🚫 Selector de materias deshabilitado');
             }
             
             resetInterface();
@@ -1143,9 +1176,14 @@ Participa activamente"
             const materiaSelect = document.getElementById('materia');
             currentMateria = materiaSelect.value;
             
+            console.log('📖 Materia seleccionada:', currentMateria);
+            console.log('📋 Estado actual - Grado:', currentGrado, 'Materia:', currentMateria);
+            
             if (currentGrado && currentMateria) {
+                console.log('✅ Grado y materia seleccionados, cargando datos...');
                 loadCurrentData();
             } else {
+                console.log('⚠️ Falta seleccionar grado o materia');
                 resetInterface();
             }
         }
@@ -1201,37 +1239,177 @@ Participa activamente"
         }
 
         // ========================================
-        // GESTIÓN DE MODALES
+        // GESTIÓN DEL MODAL UNIFICADO
         // ========================================
-        function openIndicatorModal() {
+        function openUnifiedIndicatorModal() {
             if (!currentGrado || !currentMateria) {
                 alert('Por favor seleccione grado y materia primero');
                 return;
             }
-            document.getElementById('indicatorModal').style.display = 'block';
+            document.getElementById('unifiedIndicatorModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
+            
+            // Mostrar/ocultar sub-indicadores del principal según tenga texto
+            const mainTextarea = document.getElementById('unifiedMainIndicator');
+            mainTextarea.addEventListener('input', togglePrincipalSubIndicators);
         }
 
-        function closeIndicatorModal() {
-            document.getElementById('indicatorModal').style.display = 'none';
+        function closeUnifiedIndicatorModal() {
+            document.getElementById('unifiedIndicatorModal').style.display = 'none';
             document.body.style.overflow = 'auto';
-            document.getElementById('indicatorForm').reset();
+            
+            // Limpiar campos
+            document.getElementById('unifiedMainIndicator').value = '';
+            document.getElementById('unifiedBulkIndicators').value = '';
+            document.getElementById('principalSubIndicators').style.display = 'none';
+            
+            // Limpiar sub-indicadores del principal
+            const container = document.getElementById('principalSubContainer');
+            container.innerHTML = `
+                <div class="sub-indicator-row">
+                    <div class="form-group">
+                        <label class="form-label">Sub-Indicador 1</label>
+                        <input type="text" class="form-input" name="principal_sub[]" 
+                               placeholder="Ej: Responde preguntas">
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="removePrincipalSub(this)">
+                        🗑️
+                    </button>
+                </div>
+            `;
+            
+            updateUnifiedPreview();
         }
 
-        function openBulkIndicatorsModal() {
-            if (!currentGrado || !currentMateria) {
-                alert('Por favor seleccione grado y materia primero');
+        function togglePrincipalSubIndicators() {
+            const mainText = document.getElementById('unifiedMainIndicator').value.trim();
+            const subSection = document.getElementById('principalSubIndicators');
+            
+            if (mainText.length > 0) {
+                subSection.style.display = 'block';
+            } else {
+                subSection.style.display = 'none';
+            }
+        }
+
+        function addPrincipalSubRow() {
+            const container = document.getElementById('principalSubContainer');
+            const currentRows = container.children.length;
+            const newRow = document.createElement('div');
+            newRow.className = 'sub-indicator-row';
+            newRow.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Sub-Indicador ${currentRows + 1}</label>
+                    <input type="text" class="form-input" name="principal_sub[]" 
+                           placeholder="Escriba el sub-indicador...">
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="removePrincipalSub(this)">
+                    🗑️
+                </button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function removePrincipalSub(button) {
+            const row = button.closest('.sub-indicator-row');
+            const container = document.getElementById('principalSubContainer');
+            
+            if (container.children.length > 1) {
+                row.remove();
+            } else {
+                // No eliminar el último, solo limpiar
+                row.querySelector('input').value = '';
+            }
+        }
+
+        function updateUnifiedPreview() {
+            const text = document.getElementById('unifiedBulkIndicators').value;
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            
+            document.getElementById('unifiedIndicatorCount').textContent = lines.length;
+            
+            const preview = document.getElementById('unifiedPreview');
+            if (lines.length === 0) {
+                preview.innerHTML = '<em style="color: #6c757d;">Escriba indicadores arriba para ver la vista previa...</em>';
                 return;
             }
-            document.getElementById('bulkIndicatorsModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
+            
+            const previewHTML = lines.map((line, index) => 
+                `<div style="margin-bottom: 8px; padding: 8px; background: white; border-radius: 6px; border-left: 3px solid #74b9ff;">
+                    <span style="background: #74b9ff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 10px;">${index + 1}</span>
+                    ${line.trim()}
+                </div>`
+            ).join('');
+            
+            preview.innerHTML = previewHTML;
         }
 
-        function closeBulkIndicatorsModal() {
-            document.getElementById('bulkIndicatorsModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            document.getElementById('bulkIndicatorsText').value = '';
-            updateBulkPreview();
+        function saveUnifiedIndicators() {
+            const mainIndicatorText = document.getElementById('unifiedMainIndicator').value.trim();
+            const bulkText = document.getElementById('unifiedBulkIndicators').value;
+            const individualIndicators = bulkText.split('\n').filter(line => line.trim() !== '');
+            
+            // Validaciones
+            if (!mainIndicatorText && individualIndicators.length === 0) {
+                alert('Por favor, escriba al menos un indicador principal o indicadores individuales');
+                return;
+            }
+            
+            if (individualIndicators.length > 20) {
+                alert('Máximo 20 indicadores individuales permitidos');
+                return;
+            }
+            
+            let totalIndicators = 0;
+            
+            // Crear indicador principal si existe
+            if (mainIndicatorText) {
+                mainIndicator = {
+                    id: Date.now(),
+                    text: mainIndicatorText
+                };
+                
+                // Obtener sub-indicadores del principal
+                const principalSubs = [];
+                const subInputs = document.querySelectorAll('input[name="principal_sub[]"]');
+                subInputs.forEach(input => {
+                    if (input.value.trim()) {
+                        principalSubs.push(input.value.trim());
+                    }
+                });
+                
+                // Agregar sub-indicadores
+                principalSubs.forEach((subText, index) => {
+                    indicators.push({
+                        id: Date.now() + index + 1,
+                        text: subText,
+                        isSubIndicator: true,
+                        parentId: mainIndicator.id
+                    });
+                    totalIndicators++;
+                });
+                
+                totalIndicators++; // Contar el principal
+            }
+            
+            // Agregar indicadores individuales
+            individualIndicators.forEach((indicatorText, index) => {
+                indicators.push({
+                    id: Date.now() + 1000 + index,
+                    text: indicatorText.trim()
+                });
+                totalIndicators++;
+            });
+            
+            renderIndicatorsList();
+            renderCalificacionesTable();
+            calculateSumaCotidiano();
+            
+            hasUnsavedChanges = true;
+            updateStatusIndicator();
+            
+            alert(`${totalIndicators} indicadores creados exitosamente`);
+            closeUnifiedIndicatorModal();
         }
 
         // ========================================
@@ -1381,7 +1559,7 @@ Participa activamente"
                     <div class="empty-state">
                         <h3>📝 No hay indicadores configurados</h3>
                         <p>Agregue indicadores para comenzar a evaluar</p>
-                        <button class="btn btn-primary" onclick="openIndicatorModal()">🎯 Crear Indicador Principal</button>
+                        <button class="btn btn-primary" onclick="openUnifiedIndicatorModal()">🎯 Crear Indicador Principal</button>
                     </div>
                 `;
                 return;
@@ -1493,6 +1671,56 @@ Participa activamente"
                 return;
             }
             
+            // 🎯 FILTRAR ESTUDIANTES POR GRADO SELECCIONADO
+            const studentsInGrade = students.filter(student => {
+                // Buscar coincidencias flexibles del grado
+                const studentGrade = student.grade_level || student.grade || student.grado || '';
+                const normalizedStudentGrade = studentGrade.toString().toLowerCase().trim();
+                const normalizedCurrentGrade = currentGrado.toLowerCase().trim();
+                
+                // Comparación flexible
+                return normalizedStudentGrade === normalizedCurrentGrade ||
+                       studentGrade === currentGrado ||
+                       normalizedStudentGrade.includes(normalizedCurrentGrade) ||
+                       normalizedCurrentGrade.includes(normalizedStudentGrade);
+            });
+            
+            console.log('👥 Filtrando estudiantes:');
+            console.log('  🎓 Grado seleccionado:', currentGrado);
+            console.log('  🔍 Buscando en campos: grade_level, grade, grado');
+            console.log('  📊 Total estudiantes en sistema:', students.length);
+            console.log('  ✅ Estudiantes del grado ' + currentGrado + ':', studentsInGrade.length);
+            
+            if (studentsInGrade.length > 0) {
+                console.log('  📋 Estudiantes encontrados:');
+                studentsInGrade.forEach(s => {
+                    const name = `${s.first_surname} ${s.second_surname || ''} ${s.first_name} ${s.second_name || ''}`.trim();
+                    const grade = s.grade_level || s.grade || s.grado || 'Sin grado';
+                    console.log(`    👤 ${name} (Grado: ${grade})`);
+                });
+            } else {
+                console.log('  ⚠️ No se encontraron estudiantes para este grado');
+                console.log('  🔍 Grados disponibles en estudiantes:', 
+                    [...new Set(students.map(s => s.grade_level || s.grade || s.grado || 'Sin grado'))]);
+            }
+            
+            if (studentsInGrade.length === 0) {
+                tableHeader.innerHTML = `
+                    <th class="student-header">👤 Estudiante</th>
+                    <th>📊 Cotidiano</th>
+                    <th>📈 Cotidiano Total</th>
+                `;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>⚠️ No hay estudiantes en ${currentGrado}</h3>
+                            <p>No se encontraron estudiantes asignados al grado seleccionado</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
             // Crear header con indicadores
             const headerHTML = `
                 <th class="student-header">👤 Estudiante</th>
@@ -1504,8 +1732,8 @@ Participa activamente"
             `;
             tableHeader.innerHTML = headerHTML;
             
-            // Crear filas de estudiantes
-            const bodyHTML = students.map(student => {
+            // Crear filas de estudiantes FILTRADOS
+            const bodyHTML = studentsInGrade.map(student => {
                 // Crear nombre completo del estudiante
                 const studentName = `${student.first_surname} ${student.second_surname || ''} ${student.first_name} ${student.second_name || ''}`.trim();
                 const studentKey = `student_${student.id}`;
@@ -1538,7 +1766,20 @@ Participa activamente"
                 !calificaciones[currentGrado][currentMateria][currentDate]) return;
             
             const dateData = calificaciones[currentGrado][currentMateria][currentDate];
-            students.forEach(student => {
+            
+            // Filtrar estudiantes por grado actual
+            const studentsInGrade = students.filter(student => {
+                const studentGrade = student.grade_level || student.grade || student.grado || '';
+                const normalizedStudentGrade = studentGrade.toString().toLowerCase().trim();
+                const normalizedCurrentGrade = currentGrado.toLowerCase().trim();
+                
+                return normalizedStudentGrade === normalizedCurrentGrade ||
+                       studentGrade === currentGrado ||
+                       normalizedStudentGrade.includes(normalizedCurrentGrade) ||
+                       normalizedCurrentGrade.includes(normalizedStudentGrade);
+            });
+            
+            studentsInGrade.forEach(student => {
                 const studentKey = `student_${student.id}`;
                 if (dateData.estudiantes && dateData.estudiantes[studentKey]) {
                     const studentGrades = dateData.estudiantes[studentKey];
@@ -1685,8 +1926,19 @@ Participa activamente"
         function aplicarConfiguracion() {
             const porcentaje = document.getElementById('porcentajeTotal').value;
             
-            // Recalcular todas las sumas con el nuevo porcentaje
-            students.forEach(student => {
+            // Filtrar estudiantes por grado actual y recalcular sumas
+            const studentsInGrade = students.filter(student => {
+                const studentGrade = student.grade_level || student.grade || student.grado || '';
+                const normalizedStudentGrade = studentGrade.toString().toLowerCase().trim();
+                const normalizedCurrentGrade = currentGrado.toLowerCase().trim();
+                
+                return normalizedStudentGrade === normalizedCurrentGrade ||
+                       studentGrade === currentGrado ||
+                       normalizedStudentGrade.includes(normalizedCurrentGrade) ||
+                       normalizedCurrentGrade.includes(normalizedStudentGrade);
+            });
+            
+            studentsInGrade.forEach(student => {
                 const studentKey = `student_${student.id}`;
                 updateStudentSums(studentKey);
             });
@@ -1831,25 +2083,22 @@ Participa activamente"
         // ========================================
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeIndicatorModal();
-                closeBulkIndicatorsModal();
+                closeUnifiedIndicatorModal();
             }
         });
 
         window.onclick = function(event) {
-            const indicatorModal = document.getElementById('indicatorModal');
-            const bulkModal = document.getElementById('bulkIndicatorsModal');
+            const unifiedModal = document.getElementById('unifiedIndicatorModal');
             
-            if (event.target === indicatorModal) {
-                closeIndicatorModal();
-            }
-            if (event.target === bulkModal) {
-                closeBulkIndicatorsModal();
+            if (event.target === unifiedModal) {
+                closeUnifiedIndicatorModal();
             }
         }
 
         // Actualizar suma del cotidiano al cargar
-        calculateSumaCotidiano();
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateSumaCotidiano();
+        });
     </script>
 </body>
 </html>
