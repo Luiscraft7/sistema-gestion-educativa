@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📝 Módulo de Tareas - Sistema Educativo</title>
+    <title>📝Evaluaciones - Sistema Educativo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -459,8 +459,8 @@
         <!-- Header -->
         <div class="header">
             <div>
-                <h1>📝 Módulo de Tareas</h1>
-                <p>Gestión y calificación de tareas por grado y materia</p>
+                <h1>📝 Módulo de Evaluaciones</h1>
+                <p>Gestión y calificación de Evaluaciones por grado y materia</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-success" onclick="exportGrades()" id="exportBtn" style="display: none;">
@@ -515,7 +515,7 @@
                         <div class="task-creator hidden" id="taskCreator">
                             <form id="taskForm" onsubmit="createTask(event)">
                                 <div class="form-group">
-                                    <label class="filter-label">Título de la Tarea:</label>
+                                    <label class="filter-label">Título de la evaluacion:</label>
                                     <input type="text" class="form-input" id="taskTitle" placeholder="Ej: Tarea de Matemáticas #1" required>
                                 </div>
                                 <div class="form-group">
@@ -581,7 +581,7 @@
                 <!-- Header Principal -->
                 <div class="main-header">
                     <div class="main-title" id="mainTitle">
-                        📝 Gestión de Tareas
+                        📝 Gestión de Evaluaciones
                     </div>
                     <div class="main-subtitle" id="mainSubtitle">
                         Seleccione grado y materia para comenzar
@@ -590,12 +590,12 @@
 
                 <!-- Estados de Carga -->
                 <div id="loadingState" class="loading-state">
-                    🔄 Seleccione grado y materia para cargar tareas...
+                    🔄 Seleccione grado y materia para cargar Evaluaciones...
                 </div>
                 
                 <div id="emptyState" class="empty-state" style="display: none;">
-                    <h3>📝 No hay tareas creadas</h3>
-                    <p>Cree la primera tarea para este curso</p>
+                    <h3>📝 No hay evaluaciones creadas</h3>
+                    <p>Cree la primera evaluacion para este curso</p>
                 </div>
 
                 <!-- Lista de Tareas -->
@@ -615,7 +615,7 @@
                                 💾 Guardar Todas las Calificaciones
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="closeGrading()">
-                                ← Volver a Tareas
+                                ← Volver a evaluaciones
                             </button>
                         </div>
                     </div>
@@ -650,7 +650,7 @@
             
             <form id="editTaskForm" onsubmit="updateTask(event)">
                 <div class="form-group">
-                    <label class="filter-label">Título de la Tarea:</label>
+                    <label class="filter-label">Título de la Evaluación:</label>
                     <input type="text" class="form-input" id="editTaskTitle" required>
                 </div>
                 <div class="form-group">
@@ -688,8 +688,8 @@
         let currentGrade = '';
         let currentSubject = '';
         let students = [];
-        let tasks = [];
-        let currentTask = null;
+        let evaluations = [];
+        let currentEvaluation = null;
         let currentTaskId = null;
 
         // ========================================
@@ -826,36 +826,32 @@
             }
         }
 
-        async function loadTasks() {
+        async function loadEvaluations() {
             try {
-                const response = await fetch(`/api/tasks?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
+                const response = await fetch(`/api/evaluations?grade=${currentGrade}&subject=${currentSubject}`);
                 const result = await response.json();
                 
                 if (result.success) {
-                    tasks = result.data;
-                    console.log('📝 Tareas cargadas:', tasks.length);
-                    renderTasks();
+                    evaluations = result.data || [];
+                    console.log('📝 Evaluaciones cargadas:', evaluations.length);
+                    
                     updateStats();
+                    renderEvaluations();
                 } else {
-                    tasks = [];
-                    renderTasks();
+                    showMessage('error', 'Error: ' + result.message);
                 }
-                
-                document.getElementById('loadingState').style.display = 'none';
-                
             } catch (error) {
-                console.error('❌ Error cargando tareas:', error);
-                tasks = [];
-                renderTasks();
-                document.getElementById('loadingState').style.display = 'none';
+                console.error('❌ Error cargando evaluaciones:', error);
+                showMessage('error', 'Error de conexión al cargar evaluaciones');
             }
         }
+
 
         // ========================================
         // RENDERIZADO
         // ========================================
-        function renderTasks() {
-            if (!tasks.length) {
+        function renderEvaluations() {
+            if (!evaluations.length) {
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('tasksContainer').style.display = 'none';
                 return;
@@ -864,27 +860,34 @@
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('tasksContainer').style.display = 'block';
             
-            document.getElementById('tasksList').innerHTML = tasks.map(task => {
-                const dueDate = task.due_date ? 
-                    new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
-                const createdDate = new Date(task.created_at).toLocaleDateString('es-ES');
+            document.getElementById('tasksList').innerHTML = evaluations.map(evaluation => {
+                const dueDate = evaluation.due_date ? 
+                    new Date(evaluation.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
+                const createdDate = new Date(evaluation.created_at).toLocaleDateString('es-ES');
                 
-                // ✅ USAR EL TOTAL CORRECTO DE ESTUDIANTES
-                const totalStudents = task.total_students || 0;
-                const graded = task.total_grades || 0;
-                const pending = Math.max(0, totalStudents - graded); // ✅ Evitar números negativos
+                const totalStudents = evaluation.total_students || 0;
+                const graded = evaluation.total_grades || 0;
+                const pending = Math.max(0, totalStudents - graded);
+                
+                // Determinar icono por tipo
+                const typeIcon = {
+                    'tarea': '📋',
+                    'examen': '📊', 
+                    'proyecto': '🎯',
+                    'quiz': '⚡'
+                }[evaluation.type] || '📝';
                 
                 return `
-                    <div class="task-item" onclick="selectTask(${task.id})">
+                    <div class="task-item" onclick="selectEvaluation(${evaluation.id})">
                         <div class="task-header">
-                            <div class="task-title">${task.title}</div>
+                            <div class="task-title">${typeIcon} ${evaluation.title}</div>
                             <div class="task-meta">
-                                <span>📅 ${task.due_date ? 'Entrega: ' + dueDate : 'Creada: ' + createdDate}</span>
-                                <span>⚖️ ${task.percentage}% de la nota</span>
-                                <span>📊 ${task.max_points} pts máx</span>
+                                <span>📅 ${evaluation.due_date ? 'Entrega: ' + dueDate : 'Creada: ' + createdDate}</span>
+                                <span>⚖️ ${evaluation.percentage}% de la nota</span>
+                                <span>📊 ${evaluation.max_points} pts máx</span>
                             </div>
                         </div>
-                        <div class="task-description">${task.description || 'Sin descripción'}</div>
+                        <div class="task-description">${evaluation.description || 'Sin descripción'}</div>
                         <div class="task-stats">
                             <div class="task-stat">
                                 <div class="task-stat-number">${graded}</div>
@@ -895,8 +898,8 @@
                                 <div class="task-stat-label">Pendientes</div>
                             </div>
                             <div class="task-stat">
-                                <div class="task-stat-number">${task.avg_grade ? 
-                                    task.avg_grade.toFixed(1) + '%' : '-'}</div>
+                                <div class="task-stat-number">${evaluation.avg_grade ? 
+                                    evaluation.avg_grade.toFixed(1) + '%' : '-'}</div>
                                 <div class="task-stat-label">Promedio</div>
                             </div>
                         </div>
