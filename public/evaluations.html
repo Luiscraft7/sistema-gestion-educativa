@@ -855,22 +855,24 @@
         // RENDERIZADO
         // ========================================
         function renderTasks() {
-            const container = document.getElementById('tasksContainer');
-            const emptyState = document.getElementById('emptyState');
-            const tasksList = document.getElementById('tasksList');
-            
-            if (tasks.length === 0) {
-                container.style.display = 'none';
-                emptyState.style.display = 'block';
+            if (!tasks.length) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tasksContainer').style.display = 'none';
                 return;
             }
             
-            emptyState.style.display = 'none';
-            container.style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tasksContainer').style.display = 'block';
             
-            tasksList.innerHTML = tasks.map(task => {
-                const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
+            document.getElementById('tasksList').innerHTML = tasks.map(task => {
+                const dueDate = task.due_date ? 
+                    new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
                 const createdDate = new Date(task.created_at).toLocaleDateString('es-ES');
+                
+                // ✅ USAR EL TOTAL CORRECTO DE ESTUDIANTES
+                const totalStudents = task.total_students || 0;
+                const graded = task.total_grades || 0;
+                const pending = Math.max(0, totalStudents - graded); // ✅ Evitar números negativos
                 
                 return `
                     <div class="task-item" onclick="selectTask(${task.id})">
@@ -885,15 +887,16 @@
                         <div class="task-description">${task.description || 'Sin descripción'}</div>
                         <div class="task-stats">
                             <div class="task-stat">
-                                <div class="task-stat-number">${task.total_grades || 0}</div>
+                                <div class="task-stat-number">${graded}</div>
                                 <div class="task-stat-label">Calificados</div>
                             </div>
                             <div class="task-stat">
-                                <div class="task-stat-number">${students.length - (task.total_grades || 0)}</div>
+                                <div class="task-stat-number">${pending}</div>
                                 <div class="task-stat-label">Pendientes</div>
                             </div>
                             <div class="task-stat">
-                                <div class="task-stat-number">${task.avg_grade ? task.avg_grade.toFixed(1) + '%' : '-'}</div>
+                                <div class="task-stat-number">${task.avg_grade ? 
+                                    task.avg_grade.toFixed(1) + '%' : '-'}</div>
                                 <div class="task-stat-label">Promedio</div>
                             </div>
                         </div>
@@ -936,7 +939,7 @@
 
         function showTaskActions(task) {
             const actionsHtml = `
-                <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                <div class="task-actions" style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
                     <button class="btn btn-primary btn-sm" onclick="startGrading(${task.id})">
                         ✏️ Calificar Estudiantes
                     </button>
@@ -950,12 +953,13 @@
             `;
             
             const taskItem = event.currentTarget;
-            let actionsDiv = taskItem.querySelector('.task-actions');
             
-            if (actionsDiv) {
-                actionsDiv.remove();
-            }
+            // ✅ CORREGIR: Limpiar TODOS los botones anteriores de TODAS las tareas
+            document.querySelectorAll('.task-actions').forEach(actions => {
+                actions.remove();
+            });
             
+            // Agregar nuevos botones
             taskItem.insertAdjacentHTML('beforeend', actionsHtml);
         }
 
@@ -1305,7 +1309,7 @@
                         const percentage = Math.round((pointsEarned / currentTask.max_points) * 100);
                         
                         gradesToSave.push({
-                            task_id: currentTaskId,
+                            assignment_id: currentTaskId,  // ✅ CAMBIAR: era task_id, debe ser assignment_id
                             student_id: studentId,
                             points_earned: pointsEarned,
                             percentage: percentage,

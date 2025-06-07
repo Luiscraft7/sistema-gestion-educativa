@@ -993,7 +993,13 @@ class Database {
                         WHEN ag.points_earned IS NOT NULL AND a.max_points > 0 
                         THEN (ag.points_earned * 100.0 / a.max_points) 
                         ELSE NULL 
-                    END) as avg_grade
+                    END) as avg_grade,
+                    (SELECT COUNT(*) 
+                    FROM students s 
+                    WHERE s.status = 'active' 
+                    AND s.grade_level = a.grade_level 
+                    AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                    ) as total_students
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
                 WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
@@ -1223,8 +1229,11 @@ async getTaskGrades(taskId) {
                 return;
             }
 
-            this.db.serialize(() => {
-                this.db.run('BEGIN TRANSACTION');
+            // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
+            const db = this.db;
+
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
                 
                 let savedCount = 0;
                 let errorCount = 0;
@@ -1257,7 +1266,7 @@ async getTaskGrades(taskId) {
                         grade.feedback || null
                     ];
                     
-                    this.db.run(query, values, function(err) {
+                    db.run(query, values, function(err) {
                         completedOperations++;
                         
                         if (err) {
@@ -1271,7 +1280,7 @@ async getTaskGrades(taskId) {
                         // Verificar si todas las operaciones han terminado
                         if (completedOperations === grades.length) {
                             if (errorCount === 0) {
-                                this.db.run('COMMIT', (err) => {
+                                db.run('COMMIT', (err) => {  // ✅ USAR db EN LUGAR DE this.db
                                     if (err) {
                                         console.error('❌ Error en commit:', err);
                                         reject(err);
@@ -1281,7 +1290,7 @@ async getTaskGrades(taskId) {
                                     }
                                 });
                             } else {
-                                this.db.run('ROLLBACK', (err) => {
+                                db.run('ROLLBACK', (err) => {  // ✅ USAR db EN LUGAR DE this.db
                                     console.log(`⚠️ Rollback ejecutado: ${savedCount} intentos, ${errorCount} errores`);
                                     reject(new Error(`${errorCount} errores al guardar calificaciones`));
                                 });
@@ -1292,7 +1301,6 @@ async getTaskGrades(taskId) {
             });
         });
     }
-
     // Obtener estadísticas de tareas por estudiante
     async getStudentTaskStats(studentId, gradeLevel, subjectArea) {
         this.ensureConnection();
