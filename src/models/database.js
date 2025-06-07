@@ -540,24 +540,29 @@ class Database {
     // ========================================
 
     // Asignar múltiples materias a un grado
+    // Asignar múltiples materias a un grado
     async assignSubjectsToGrade(gradeData) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const { gradeName, subjects, teacherName } = gradeData;
             
+            // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
+            const db = this.db;
+            
             // Usar transacción para asegurar consistencia
-            this.db.serialize(() => {
-                this.db.run('BEGIN TRANSACTION');
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
                 
                 let successCount = 0;
                 let errorCount = 0;
                 const errors = [];
+                let completed = 0;
 
-                subjects.forEach((subject, index) => {
-                    this.db.run(
+                subjects.forEach((subject) => {
+                    db.run(
                         `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, is_active) 
-                         VALUES (?, ?, ?, 1)`,
+                        VALUES (?, ?, ?, 1)`,
                         [gradeName, subject, teacherName || null],
                         function(err) {
                             if (err) {
@@ -567,10 +572,12 @@ class Database {
                                 successCount++;
                             }
 
-                            // Si es el último elemento, finalizar transacción
-                            if (index === subjects.length - 1) {
+                            completed++;
+
+                            // Si hemos procesado todos los subjects
+                            if (completed === subjects.length) {
                                 if (errorCount === 0) {
-                                    this.db.run('COMMIT', (err) => {
+                                    db.run('COMMIT', (err) => {  // ✅ USAR db EN LUGAR DE this.db
                                         if (err) {
                                             reject(err);
                                         } else {
@@ -583,7 +590,7 @@ class Database {
                                         }
                                     });
                                 } else {
-                                    this.db.run('ROLLBACK', () => {
+                                    db.run('ROLLBACK', () => {  // ✅ USAR db EN LUGAR DE this.db
                                         reject(new Error(`Errores en la asignación: ${errors.join(', ')}`));
                                     });
                                 }
@@ -596,25 +603,30 @@ class Database {
     }
 
     // Asignar materias a múltiples grados
+    // Asignar materias a múltiples grados
     async assignSubjectsToMultipleGrades(assignmentData) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const { grades, subjects, teacherName } = assignmentData;
             
-            this.db.serialize(() => {
-                this.db.run('BEGIN TRANSACTION');
+            // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
+            const db = this.db;
+            
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
                 
                 let totalSuccessCount = 0;
                 let totalErrorCount = 0;
                 const errors = [];
-                let completedGrades = 0;
+                let completedOperations = 0;
+                const totalOperations = grades.length * subjects.length;
 
                 grades.forEach((gradeName) => {
-                    subjects.forEach((subject, subjectIndex) => {
-                        this.db.run(
+                    subjects.forEach((subject) => {
+                        db.run(
                             `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, is_active) 
-                             VALUES (?, ?, ?, 1)`,
+                            VALUES (?, ?, ?, 1)`,
                             [gradeName, subject, teacherName || null],
                             function(err) {
                                 if (err) {
@@ -624,31 +636,29 @@ class Database {
                                     totalSuccessCount++;
                                 }
 
+                                completedOperations++;
+                                
                                 // Verificar si hemos procesado todo
-                                if (subjectIndex === subjects.length - 1) {
-                                    completedGrades++;
-                                    
-                                    if (completedGrades === grades.length) {
-                                        // Finalizar transacción
-                                        if (totalErrorCount === 0) {
-                                            this.db.run('COMMIT', (err) => {
-                                                if (err) {
-                                                    reject(err);
-                                                } else {
-                                                    resolve({
-                                                        success: true,
-                                                        totalSuccessCount,
-                                                        totalErrorCount,
-                                                        affectedGrades: grades.length,
-                                                        message: `${totalSuccessCount} asignaciones completadas en ${grades.length} grados`
-                                                    });
-                                                }
-                                            });
-                                        } else {
-                                            this.db.run('ROLLBACK', () => {
-                                                reject(new Error(`Errores en la asignación: ${errors.slice(0, 5).join(', ')}${errors.length > 5 ? '...' : ''}`));
-                                            });
-                                        }
+                                if (completedOperations === totalOperations) {
+                                    // Finalizar transacción
+                                    if (totalErrorCount === 0) {
+                                        db.run('COMMIT', (err) => {  // ✅ USAR db EN LUGAR DE this.db
+                                            if (err) {
+                                                reject(err);
+                                            } else {
+                                                resolve({
+                                                    success: true,
+                                                    totalSuccessCount,
+                                                    totalErrorCount,
+                                                    affectedGrades: grades.length,
+                                                    message: `${totalSuccessCount} asignaciones completadas en ${grades.length} grados`
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        db.run('ROLLBACK', () => {  // ✅ USAR db EN LUGAR DE this.db
+                                            reject(new Error(`Errores en la asignación: ${errors.slice(0, 5).join(', ')}${errors.length > 5 ? '...' : ''}`));
+                                        });
                                     }
                                 }
                             }

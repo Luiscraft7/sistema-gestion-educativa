@@ -974,6 +974,8 @@
                     return;
                 }
 
+                console.log('📤 Enviando asignación:', { gradeName, subjects: selectedSubjects });
+
                 const response = await fetch('/api/grade-subjects/assign', {
                     method: 'POST',
                     headers: {
@@ -981,11 +983,19 @@
                     },
                     body: JSON.stringify({
                         gradeName: gradeName,
-                        subjects: selectedSubjects
+                        subjects: selectedSubjects,
+                        teacherName: null  // ← AGREGAR ESTE CAMPO
                     })
                 });
 
+                console.log('📡 Respuesta HTTP:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
+                console.log('📥 Resultado:', result);
 
                 if (result.success) {
                     closeAssignmentModal();
@@ -993,11 +1003,11 @@
                     updateStats();
                     showMessage('success', `${result.data.successCount} materias asignadas a ${gradeName}`);
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showMessage('error', 'Error del servidor: ' + result.message);
                 }
             } catch (error) {
-                console.error('❌ Error guardando asignación:', error);
-                showMessage('error', 'Error de conexión al guardar asignación');
+                console.error('❌ Error completo:', error);
+                showMessage('error', 'Error: ' + error.message);
             }
         }
 
@@ -1072,6 +1082,8 @@
                     return;
                 }
 
+                console.log('📤 Enviando asignación masiva:', { grades: selectedGrades, subjects: selectedSubjects });
+
                 const response = await fetch('/api/grade-subjects/assign-multiple', {
                     method: 'POST',
                     headers: {
@@ -1079,11 +1091,19 @@
                     },
                     body: JSON.stringify({
                         grades: selectedGrades,
-                        subjects: selectedSubjects
+                        subjects: selectedSubjects,
+                        teacherName: null  // ← AGREGAR ESTE CAMPO
                     })
                 });
 
+                console.log('📡 Respuesta HTTP:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
+                console.log('📥 Resultado:', result);
 
                 if (result.success) {
                     closeBulkAssignmentModal();
@@ -1091,11 +1111,11 @@
                     updateStats();
                     showMessage('success', `${result.data.totalSuccessCount} asignaciones completadas en ${result.data.affectedGrades} grados`);
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showMessage('error', 'Error del servidor: ' + result.message);
                 }
             } catch (error) {
-                console.error('❌ Error guardando asignación masiva:', error);
-                showMessage('error', 'Error de conexión al guardar asignación masiva');
+                console.error('❌ Error completo:', error);
+                showMessage('error', 'Error: ' + error.message);
             }
         }
 
@@ -1158,6 +1178,22 @@
         document.getElementById('bulkAssignmentModal').addEventListener('click', function(event) {
             if (event.target === this) closeBulkAssignmentModal();
         });
+
+        // ========================================
+        // FUNCIÓN DE DEBUG
+        // ========================================
+        function testConnection() {
+            fetch('/api/debug/connection')
+                .then(response => response.json())
+                .then(result => {
+                    console.log('🔍 Test de conexión:', result);
+                    alert('Conexión: ' + (result.connection.canExecuteQuery ? 'OK' : 'ERROR'));
+                })
+                .catch(error => {
+                    console.error('❌ Error de conexión:', error);
+                    alert('Error de conexión: ' + error.message);
+                });
+        }
     </script>
 </body>
 </html>
