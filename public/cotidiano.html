@@ -960,6 +960,9 @@
                             <button class="btn btn-success" onclick="addNewIndicator()">
                                 ⚡ Agregar Rápido
                             </button>
+                            <button class="btn btn-primary" onclick="openBulkIndicatorsModal()">
+                                📋 Agregar Múltiples
+                            </button>
                         </div>
                     </div>
                     
@@ -1119,6 +1122,60 @@
             </form>
         </div>
     </div>
+
+<!-- Modal para Agregar Múltiples Indicadores -->
+    <div class="modal" id="bulkIndicatorsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📋 Agregar Múltiples Indicadores</h2>
+                <button class="close-btn" onclick="closeBulkIndicatorsModal()">&times;</button>
+            </div>
+            
+            <div style="padding: 30px;">
+                <div class="instruction-box">
+                    <p><strong>💡 Instrucciones:</strong></p>
+                    <p>• Escriba un indicador por línea</p>
+                    <p>• Puede copiar y pegar desde Excel o Word</p>
+                    <p>• Las líneas vacías serán ignoradas</p>
+                    <p>• Máximo 50 indicadores a la vez</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Lista de Indicadores (uno por línea):</label>
+                    <textarea 
+                        id="bulkIndicatorsText" 
+                        class="form-input" 
+                        rows="12" 
+                        placeholder="Ejemplo:
+Participación en clase
+Responde preguntas
+Colabora en grupos
+Respeta las normas
+Presenta materiales"
+                        style="resize: vertical; min-height: 200px; font-family: monospace;">
+                    </textarea>
+                    <div class="help-text">
+                        <span id="bulkIndicatorCount">0</span> indicadores detectados
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vista Previa:</label>
+                    <div id="bulkPreview" style="max-height: 150px; overflow-y: auto; border: 1px solid #e1e1e1; border-radius: 6px; padding: 10px; background: #f8f9fa; font-size: 14px;">
+                        <em style="color: #666;">Escriba indicadores arriba para ver la vista previa</em>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkIndicatorsModal()">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="saveBulkIndicators()" id="bulkSaveBtn" disabled>
+                        💾 Guardar Todos los Indicadores
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // ========================================
@@ -2120,6 +2177,165 @@
         function goBack() {
             window.location.href = 'dashboard.html';
         }
+
+        // ========================================
+        // FUNCIONES PARA INDICADORES MÚLTIPLES
+        // ========================================
+        
+        function openBulkIndicatorsModal() {
+            document.getElementById('bulkIndicatorsModal').style.display = 'block';
+            document.getElementById('bulkIndicatorsText').focus();
+            updateBulkPreview(); // Limpiar vista previa
+        }
+
+        function closeBulkIndicatorsModal() {
+            document.getElementById('bulkIndicatorsModal').style.display = 'none';
+            document.getElementById('bulkIndicatorsText').value = '';
+            updateBulkPreview();
+        }
+
+        function updateBulkPreview() {
+            const text = document.getElementById('bulkIndicatorsText').value;
+            const lines = text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .slice(0, 50); // Máximo 50 indicadores
+            
+            const countElement = document.getElementById('bulkIndicatorCount');
+            const previewElement = document.getElementById('bulkPreview');
+            const saveBtn = document.getElementById('bulkSaveBtn');
+            
+            countElement.textContent = lines.length;
+            
+            if (lines.length === 0) {
+                previewElement.innerHTML = '<em style="color: #666;">Escriba indicadores arriba para ver la vista previa</em>';
+                saveBtn.disabled = true;
+            } else {
+                const preview = lines.map((line, index) => 
+                    `<div style="padding: 4px 0; border-bottom: 1px solid #eee;">
+                        <strong>${index + 1}.</strong> ${escapeHtml(line)}
+                    </div>`
+                ).join('');
+                
+                previewElement.innerHTML = preview;
+                saveBtn.disabled = false;
+            }
+            
+            // Warning si hay más de 50
+            if (text.split('\n').filter(line => line.trim().length > 0).length > 50) {
+                previewElement.innerHTML += '<div style="color: #e74c3c; font-weight: bold; margin-top: 10px;">⚠️ Solo se procesarán los primeros 50 indicadores</div>';
+            }
+        }
+
+        async function saveBulkIndicators() {
+            const text = document.getElementById('bulkIndicatorsText').value;
+            const lines = text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .slice(0, 50);
+                
+            if (lines.length === 0) {
+                alert('No hay indicadores para guardar');
+                return;
+            }
+            
+            if (!currentGrade || !currentSubject) {
+                alert('Debe seleccionar grado y materia primero');
+                return;
+            }
+            
+            const saveBtn = document.getElementById('bulkSaveBtn');
+            const originalText = saveBtn.textContent;
+            
+            try {
+                saveBtn.disabled = true;
+                saveBtn.textContent = '⏳ Guardando...';
+                
+                // Preparar datos para el API
+                const indicators = lines.map(line => ({
+                    indicator_name: line,
+                    parent_indicator_id: null
+                }));
+                
+                const response = await fetch('/api/cotidiano/indicators/bulk', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        grade_level: currentGrade,
+                        subject_area: currentSubject,
+                        indicators: indicators
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const { success, errors, total } = result.data.summary;
+                    
+                    let message = `✅ Proceso completado:\n`;
+                    message += `• ${success} indicadores creados exitosamente\n`;
+                    if (errors > 0) {
+                        message += `• ${errors} errores encontrados\n`;
+                    }
+                    message += `• Total procesados: ${total}`;
+                    
+                    alert(message);
+                    
+                    // Mostrar detalles si hay errores
+                    if (errors > 0) {
+                        const errorDetails = result.data.results
+                            .filter(r => !r.success)
+                            .map(r => `❌ "${r.indicator_name}": ${r.error}`)
+                            .join('\n');
+                        
+                        if (confirm('¿Desea ver los detalles de los errores?')) {
+                            alert('Errores encontrados:\n\n' + errorDetails);
+                        }
+                    }
+                    
+                    closeBulkIndicatorsModal();
+                    await loadIndicators(); // Recargar la lista
+                    
+                } else {
+                    alert('Error al guardar indicadores: ' + (result.message || 'Error desconocido'));
+                }
+                
+            } catch (error) {
+                console.error('Error guardando indicadores múltiples:', error);
+                alert('Error al conectar con el servidor: ' + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        }
+
+        // Event listener para actualizar vista previa en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar el event listener cuando el DOM esté listo
+            setTimeout(() => {
+                const textarea = document.getElementById('bulkIndicatorsText');
+                if (textarea) {
+                    textarea.addEventListener('input', updateBulkPreview);
+                    textarea.addEventListener('paste', () => {
+                        setTimeout(updateBulkPreview, 100); // Delay para que el paste se procese
+                    });
+                }
+            }, 1000);
+        });
+
+        // Cerrar modal al hacer clic fuera
+        window.addEventListener('click', function(event) {
+            const bulkModal = document.getElementById('bulkIndicatorsModal');
+            if (event.target === bulkModal) {
+                closeBulkIndicatorsModal();
+            }
+        });
+
+
+
+
     </script>
 </body>
 </html>
