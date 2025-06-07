@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Cotidiano - Sistema Educativo</title>
+    <title>Sistema Cotidiano - Diseño Mejorado</title>
     <style>
-        /* ========================================
-           ESTILOS BASE DEL SISTEMA
-           ======================================== */
         * {
             margin: 0;
             padding: 0;
@@ -16,28 +13,106 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: #333;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 30px;
-            height: calc(100vh - 40px);
+            grid-template-columns: 380px 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            height: 100vh;
         }
 
-        /* ========================================
-           PANEL LATERAL DE CONTROL
-           ======================================== */
+        /* HEADER */
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .header h1 {
+            font-size: 26px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.95;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.95);
+            min-width: 160px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+
+        /* SIDEBAR - INDICADORES MEJORADO */
         .sidebar {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
             overflow: hidden;
+            max-height: calc(100vh - 160px);
             display: flex;
             flex-direction: column;
         }
@@ -45,672 +120,327 @@
         .sidebar-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px;
+            padding: 20px;
             text-align: center;
         }
 
-        .sidebar-title {
-            font-size: 24px;
+        .sidebar-header h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
             font-weight: 700;
-            margin-bottom: 8px;
         }
 
-        .sidebar-subtitle {
-            font-size: 14px;
-            opacity: 0.9;
+        .indicator-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .sidebar-content {
-            padding: 25px;
             flex: 1;
             overflow-y: auto;
-        }
-
-        /* ========================================
-           FILTROS Y CONTROLES
-           ======================================== */
-        .filter-group {
-            margin-bottom: 25px;
-        }
-
-        .filter-label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .filter-select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            cursor: pointer;
-            transition: border-color 0.3s ease;
-        }
-
-        .filter-select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .filter-select:disabled {
-            background: #f8f9fa;
-            cursor: not-allowed;
-        }
-
-        /* ========================================
-           CALENDARIO COMPACTO
-           ======================================== */
-        .calendar-container {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .calendar-month {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .calendar-nav {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            color: #667eea;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .calendar-nav:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-
-        .calendar-day-header {
-            text-align: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #666;
-            padding: 8px 4px;
-        }
-
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 500;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .calendar-day:hover {
-            background: #e3f2fd;
-            transform: scale(1.1);
-        }
-
-        .calendar-day.selected {
-            background: #667eea;
-            color: white;
-            font-weight: 700;
-        }
-
-        .calendar-day.today {
-            background: #28a745;
-            color: white;
-            font-weight: 700;
-        }
-
-        .calendar-day.has-cotidiano {
-            border: 2px solid #ffc107;
-        }
-
-        .calendar-day.has-cotidiano::after {
-            content: '📊';
-            position: absolute;
-            top: 1px;
-            right: 1px;
-            font-size: 8px;
-        }
-
-        .calendar-day.other-month {
-            color: #adb5bd;
-            font-weight: 400;
-        }
-
-        /* ========================================
-           CONFIGURACIÓN DE COTIDIANO
-           ======================================== */
-        .config-section {
-            background: #f8f9fa;
-            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 25px;
         }
 
-        .config-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
+        /* INDICADORES LISTA MEJORADA */
+        .indicators-list {
             display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .grade-weight-config {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .weight-input {
-            width: 80px;
-            padding: 8px;
-            border: 2px solid #e1e1e1;
-            border-radius: 6px;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        .weight-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        /* ========================================
-           ESTADÍSTICAS DEL PANEL
-           ======================================== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr;
+            flex-direction: column;
             gap: 15px;
         }
 
-        .stat-card {
-            background: #f8f9fa;
-            padding: 15px;
+        .indicator-main-item {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
             border-radius: 12px;
-            text-align: center;
+            padding: 18px;
+            border-left: 5px solid #ff6b6b;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
 
-        .stat-number {
-            font-size: 24px;
+        .indicator-main-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .indicator-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .indicator-principal-label {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
             font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
+            text-transform: uppercase;
         }
 
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            font-weight: 500;
+        .indicator-main-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #d63031;
+            line-height: 1.4;
+            margin-bottom: 10px;
         }
 
-        /* ========================================
-           ÁREA PRINCIPAL
-           ======================================== */
+        .indicator-main-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .indicator-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 3px solid #74b9ff;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .indicator-item:hover {
+            background: #e3f2fd;
+            transform: translateX(2px);
+        }
+
+        .indicator-content {
+            flex: 1;
+        }
+
+        .indicator-number {
+            background: #74b9ff;
+            color: white;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+
+        .indicator-text {
+            font-size: 13px;
+            line-height: 1.3;
+            color: #2d3436;
+        }
+
+        .indicator-actions-inline {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* SUB-INDICADORES */
+        .sub-indicators {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(214, 48, 49, 0.2);
+        }
+
+        .sub-indicator-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #74b9ff;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sub-indicator-item:hover {
+            background: rgba(255,255,255,0.95);
+            transform: translateX(3px);
+        }
+
+        .sub-indicator-content {
+            flex: 1;
+        }
+
+        .sub-indicator-number {
+            background: #74b9ff;
+            color: white;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+
+        .sub-indicator-text {
+            font-size: 13px;
+            line-height: 1.3;
+            color: #2d3436;
+        }
+
+        .sub-indicator-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* ÁREA PRINCIPAL - CALIFICACIONES */
         .main-area {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
         .main-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f0f2f5;
         }
 
-        .main-title {
-            font-size: 28px;
+        .main-header h2 {
+            color: #2d3436;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 8px;
         }
 
-        .main-subtitle {
-            font-size: 16px;
-            opacity: 0.9;
+        .quick-actions {
+            display: flex;
+            gap: 12px;
         }
 
-        .main-content {
+        /* TABLA DE CALIFICACIONES */
+        .table-container {
             flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        /* ========================================
-           ESTADOS DE CARGA
-           ======================================== */
-        .loading-state, .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: #666;
-        }
-
-        .empty-state h3 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .empty-state p {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        /* ========================================
-           GESTIÓN DE INDICADORES
-           ======================================== */
-        .indicators-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .indicators-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .indicators-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-
-        .indicators-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .indicator-item {
-            background: white;
-            border: 2px solid #e9ecef;
+            overflow: auto;
             border-radius: 10px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            border: 1px solid #e0e6ed;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .indicator-item:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-        }
-
-        .indicator-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .indicator-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .indicator-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .sub-indicators {
-            margin-left: 20px;
-        }
-
-        .sub-indicator {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .sub-indicator-name {
-            font-size: 14px;
-            color: #555;
-        }
-
-        /* ========================================
-           FORMULARIOS DE INDICADORES
-           ======================================== */
-        .indicator-form {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        /* ========================================
-           TABLA DE EVALUACIÓN
-           ======================================== */
-        .evaluation-table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .evaluation-table {
+        .calificaciones-table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            font-size: 13px;
         }
 
-        .evaluation-table th,
-        .evaluation-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .evaluation-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
+        .calificaciones-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 12px;
             position: sticky;
             top: 0;
             z-index: 10;
         }
 
-        .evaluation-table tr:hover {
-            background: #f8f9fa;
+        .calificaciones-table th.student-header {
+            text-align: left;
+            min-width: 220px;
         }
 
-        .student-name {
-            font-weight: 600;
-            color: #333;
-            min-width: 200px;
+        .calificaciones-table th.indicator-header {
+            min-width: 70px;
+            max-width: 90px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 140px;
+            font-size: 11px;
+            line-height: 1.3;
         }
 
-        /* ========================================
-           SISTEMA DE CALIFICACIÓN
-           ======================================== */
-        .score-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .score-btn {
-            width: 40px;
-            height: 40px;
-            border: 2px solid transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .score-btn-1 {
-            background: #ffeaa7;
-            color: #d63031;
-            border-color: #fdcb6e;
-        }
-
-        .score-btn-2 {
-            background: #81ecec;
-            color: #0984e3;
-            border-color: #74b9ff;
-        }
-
-        .score-btn-3 {
-            background: #55a3ff;
-            color: white;
-            border-color: #0984e3;
-        }
-
-        .score-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .score-btn.selected {
-            transform: scale(1.2);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
-        }
-
-        .total-score {
-            background: #e8f5e8;
-            color: #2d5a2d;
-            font-weight: 700;
+        .calificaciones-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f2f5;
             text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 18px;
         }
 
-        .final-grade {
-            background: #667eea;
-            color: white;
-            font-weight: 700;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 18px;
-        }
-
-        /* ========================================
-           ACCIONES RÁPIDAS
-           ======================================== */
-        .quick-actions {
+        .calificaciones-table td.student-name {
+            text-align: left;
+            font-weight: 600;
             background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
+            border-right: 2px solid #dee2e6;
+            position: sticky;
+            left: 0;
+            z-index: 5;
         }
 
-        .quick-actions-title {
-            font-weight: 600;
-            color: #333;
-            margin-right: 10px;
+        .calificaciones-table tr:hover td {
+            background: #e3f2fd;
         }
 
-        /* ========================================
-           HISTORIAL DE FECHAS
-           ======================================== */
-        .history-section {
-            margin-top: 30px;
+        .calificaciones-table tr:hover td.student-name {
+            background: #bbdefb;
         }
 
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .history-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .history-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .history-item {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
-            cursor: pointer;
+        .grade-input {
+            width: 45px;
+            height: 35px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
             transition: all 0.3s ease;
         }
 
-        .history-item:hover {
+        .grade-input:focus {
+            outline: none;
             border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
 
-        .history-date {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
+        .grade-1 { background: #ffebee; color: #c62828; border-color: #ef5350; }
+        .grade-2 { background: #fff3e0; color: #ef6c00; border-color: #ff9800; }
+        .grade-3 { background: #e8f5e8; color: #2e7d32; border-color: #4caf50; }
 
-        .history-stats {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        /* ========================================
-           MODAL PARA INDICADORES
-           ======================================== */
+        /* MODALES */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
         }
 
         .modal-content {
-            background-color: white;
+            background: #fefefe;
             margin: 3% auto;
             padding: 0;
-            border-radius: 15px;
+            border-radius: 20px;
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
             animation: modalSlideIn 0.3s ease-out;
         }
 
         @keyframes modalSlideIn {
             from {
                 opacity: 0;
-                transform: translateY(-50px) scale(0.9);
+                transform: translateY(-50px) scale(0.95);
             }
             to {
                 opacity: 1;
@@ -721,409 +451,453 @@
         .modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px;
-            border-radius: 15px 15px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            position: relative;
         }
 
         .modal-title {
-            font-size: 24px;
-            font-weight: 700;
             margin: 0;
+            font-size: 26px;
+            font-weight: 700;
         }
 
         .close-btn {
+            position: absolute;
+            right: 25px;
+            top: 25px;
             background: none;
             border: none;
             color: white;
-            font-size: 30px;
+            font-size: 35px;
             cursor: pointer;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             transition: all 0.3s ease;
         }
 
         .close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
             transform: scale(1.1);
+            color: #ffcdd2;
         }
 
-        .modal form {
-            padding: 30px;
+        .modal-body {
+            padding: 35px;
+        }
+
+        /* FORMULARIOS */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
         }
 
         .help-text {
             font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-            font-style: italic;
+            color: #6c757d;
+            margin-top: 6px;
         }
 
         .instruction-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
             padding: 20px;
+            border-radius: 12px;
             margin-bottom: 25px;
+            border-left: 5px solid #2196F3;
         }
 
-        .instruction-box p {
-            margin: 8px 0;
-            font-size: 14px;
-            line-height: 1.5;
+        .step-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
         }
 
+        .step-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* SUB-INDICATOR ROWS */
         .sub-indicator-row {
             display: flex;
             gap: 10px;
             align-items: end;
             margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e1e5e9;
         }
 
-        /* ========================================
-           RESPONSIVE DESIGN
-           ======================================== */
-        @media (max-width: 1200px) {
-            .container {
-                grid-template-columns: 280px 1fr;
-                gap: 20px;
-            }
+        .sub-indicator-row .form-group {
+            flex: 1;
+            margin: 0;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .sidebar {
-                order: 2;
-            }
-            
-            .main-area {
-                order: 1;
-            }
-
-            .quick-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .score-buttons {
-                gap: 5px;
-            }
-
-            .score-btn {
-                width: 35px;
-                height: 35px;
-                font-size: 14px;
-            }
+        /* FORM ACTIONS */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f2f5;
         }
 
-        /* ========================================
-           UTILIDADES
-           ======================================== */
-        .hidden {
-            display: none !important;
+        /* NOTAS TOTALES */
+        .totals-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
         }
 
-        .text-center {
+        .totals-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .percentage-input {
+            width: 90px;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
             text-align: center;
+            font-weight: 600;
         }
 
-        .mb-20 {
+        /* FOOTER ACTIONS */
+        .footer-actions {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 3px solid #f0f2f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .save-section {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-saved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-unsaved {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .empty-state p {
+            font-size: 14px;
             margin-bottom: 20px;
         }
 
-        .mt-20 {
-            margin-top: 20px;
+        /* BTN XS */
+        .btn-xs {
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            
+            .sidebar {
+                max-height: 400px;
+            }
+        }
+
+        /* ANIMACIONES */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Panel Lateral -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">📊 Cotidiano</div>
-                <div class="sidebar-subtitle">Evaluación diaria por indicadores</div>
-            </div>
-            
-            <div class="sidebar-content">
-                <!-- Filtros de Contexto -->
-                <div class="filter-group">
-                    <label class="filter-label">🏫 Grado:</label>
-                    <select class="filter-select" id="gradeSelect">
+        <!-- HEADER -->
+        <div class="header fade-in">
+            <h1>📚 Sistema de Evaluación Cotidiana</h1>
+            <div class="header-controls">
+                <div class="control-group">
+                    <label>Grado</label>
+                    <select id="grado" onchange="cambiarGrado()">
                         <option value="">Seleccionar grado...</option>
+                        <option value="1">Primer Grado</option>
+                        <option value="2">Segundo Grado</option>
+                        <option value="3">Tercer Grado</option>
+                        <option value="4">Cuarto Grado</option>
+                        <option value="5">Quinto Grado</option>
+                        <option value="6">Sexto Grado</option>
                     </select>
                 </div>
-
-                <div class="filter-group">
-                    <label class="filter-label">📚 Materia:</label>
-                    <select class="filter-select" id="subjectSelect" disabled>
+                <div class="control-group">
+                    <label>Materia</label>
+                    <select id="materia" onchange="cambiarMateria()" disabled>
                         <option value="">Seleccionar materia...</option>
                     </select>
                 </div>
-
-                <!-- Calendario -->
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <button class="calendar-nav" id="prevMonth">‹</button>
-                        <div class="calendar-month" id="calendarMonth">Junio 2025</div>
-                        <button class="calendar-nav" id="nextMonth">›</button>
-                    </div>
-                    <div class="calendar-grid" id="calendarGrid">
-                        <!-- Días de la semana -->
-                        <div class="calendar-day-header">D</div>
-                        <div class="calendar-day-header">L</div>
-                        <div class="calendar-day-header">M</div>
-                        <div class="calendar-day-header">M</div>
-                        <div class="calendar-day-header">J</div>
-                        <div class="calendar-day-header">V</div>
-                        <div class="calendar-day-header">S</div>
-                        <!-- Los días se generan dinámicamente -->
+                <div class="control-group">
+                    <label>Fecha</label>
+                    <input type="date" id="fecha" value="2025-06-07" onchange="cambiarFecha()">
+                </div>
+                <div class="control-group">
+                    <label>Acciones</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary">📊 Reportes</button>
+                        <button class="btn btn-secondary" onclick="verHistorial()">📚 Historial</button>
                     </div>
                 </div>
-
-                <!-- Configuración de Peso -->
-                <div class="config-section">
-                    <div class="config-title">⚖️ Configuración</div>
-                    <div class="grade-weight-config">
-                        <label for="gradeWeight">Peso de nota:</label>
-                        <input type="number" id="gradeWeight" class="weight-input" 
-                               value="100" min="1" max="100" step="1">
-                        <span>%</span>
-                    </div>
-                </div>
-
-                <!-- Estadísticas -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalStudents">0</div>
-                        <div class="stat-label">Estudiantes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalIndicators">0</div>
-                        <div class="stat-label">Indicadores</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="avgScore">0</div>
-                        <div class="stat-label">Promedio</div>
-                    </div>
-                </div>
-
-                <!-- Botón Historial -->
-                <button class="btn btn-secondary" style="width: 100%; margin-top: 20px;" onclick="toggleHistory()">
-                    📅 Ver Historial
-                </button>
-
-                <!-- Botón Volver -->
-                <button class="btn btn-primary" style="width: 100%; margin-top: 15px;" onclick="goBack()">
-                    🏠 Dashboard
-                </button>
             </div>
         </div>
 
-        <!-- Área Principal -->
-        <div class="main-area">
+        <!-- SIDEBAR - INDICADORES MEJORADO -->
+        <div class="sidebar fade-in">
+            <div class="sidebar-header">
+                <h2>🎯 Indicadores de Evaluación</h2>
+                <div class="indicator-actions">
+                    <button class="btn btn-primary btn-sm" onclick="openIndicatorModal()">
+                        🎯 Principal
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="openBulkIndicatorsModal()">
+                        ➕ Múltiples
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearAllIndicators()">
+                        🗑️ Limpiar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-content">
+                <div id="indicatorsList" class="indicators-list">
+                    <div class="empty-state">
+                        <h3>📝 Seleccione grado y materia</h3>
+                        <p>Primero seleccione el grado y materia para configurar indicadores</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÁREA PRINCIPAL - CALIFICACIONES -->
+        <div class="main-area fade-in">
             <div class="main-header">
-                <div class="main-title" id="mainTitle">📊 Cotidiano Diario</div>
-                <div class="main-subtitle" id="mainSubtitle">Seleccione grado, materia y fecha para comenzar</div>
+                <h2>📊 Matriz de Calificaciones</h2>
+                <div class="quick-actions">
+                    <button class="btn btn-secondary" onclick="verHistorial()">📚 Ver Historial</button>
+                </div>
             </div>
 
-            <div class="main-content">
-                <!-- Estado de Carga -->
-                <div id="loadingState" class="loading-state">
-                    🔄 Seleccione grado, materia y fecha para comenzar la evaluación...
+            <div class="table-container">
+                <table class="calificaciones-table" id="calificacionesTable">
+                    <thead>
+                        <tr id="tableHeader">
+                            <th class="student-header">👤 Estudiante</th>
+                            <th>📊 Cotidiano</th>
+                            <th>📈 Cotidiano Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 40px; color: #6c757d;">
+                                <h3>📝 Seleccione grado y materia</h3>
+                                <p>Configure el grado y materia en el panel superior para comenzar</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CONFIGURACIÓN DE NOTAS TOTALES -->
+            <div class="totals-section">
+                <div class="totals-controls">
+                    <span><strong>⚙️ Configuración de Notas:</strong></span>
+                    <label>Suma del Cotidiano:</label>
+                    <span id="sumaCotidiano" style="font-weight: 700; color: #667eea;">0</span>
+                    <label>Porcentaje Total:</label>
+                    <input type="number" class="percentage-input" id="porcentajeTotal" value="65" min="0" max="100">%
+                    <button class="btn btn-primary btn-sm" onclick="aplicarConfiguracion()">💾 Aplicar</button>
                 </div>
+            </div>
 
-                <!-- Estado Vacío -->
-                <div id="emptyState" class="empty-state hidden">
-                    <h3>📝 No hay estudiantes registrados</h3>
-                    <p>Agregue estudiantes al grado seleccionado para comenzar a evaluar.</p>
+            <!-- FOOTER ACTIONS -->
+            <div class="footer-actions">
+                <div class="save-section">
+                    <button class="btn btn-primary" style="padding: 15px 30px; font-size: 16px; font-weight: 700;" onclick="guardarTodo()">💾 GUARDAR TODO</button>
+                    <div class="status-indicator status-unsaved" id="statusIndicator">⚠️ Sin cambios</div>
                 </div>
-
-                <!-- Gestión de Indicadores -->
-                <div id="indicatorsSection" class="indicators-section hidden">
-                    <div class="indicators-header">
-                        <div class="indicators-title">🎯 Indicadores de Evaluación</div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-primary" onclick="openIndicatorModal()">
-                                ➕ Agregar Indicador Completo
-                            </button>
-                            <button class="btn btn-success" onclick="addNewIndicator()">
-                                ⚡ Agregar Rápido
-                            </button>
-                            <button class="btn btn-primary" onclick="openBulkIndicatorsModal()">
-                                📋 Agregar Múltiples
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="indicatorsList" class="indicators-list">
-                        <!-- Los indicadores se cargan dinámicamente -->
-                    </div>
-
-                    <!-- Formulario rápido para nuevo indicador -->
-                    <div id="newIndicatorForm" class="indicator-form hidden">
-                        <div class="form-group">
-                            <label class="form-label">Nombre del Indicador Principal:</label>
-                            <input type="text" id="newIndicatorName" class="form-input" 
-                                   placeholder="Ej: Participación en Clase">
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" onclick="cancelNewIndicator()">Cancelar</button>
-                            <button class="btn btn-success" onclick="saveNewIndicator()">Guardar</button>
-                        </div>
-                    </div>
-
-                    <!-- Formulario para sub-indicador -->
-                    <div id="newSubIndicatorForm" class="indicator-form hidden">
-                        <div class="form-group">
-                            <label class="form-label">Sub-Indicador para: <span id="parentIndicatorName"></span></label>
-                            <input type="text" id="newSubIndicatorName" class="form-input" 
-                                   placeholder="Ej: Responde preguntas">
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" onclick="cancelNewSubIndicator()">Cancelar</button>
-                            <button class="btn btn-success" onclick="saveNewSubIndicator()">Guardar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tabla de Evaluación -->
-                <div id="evaluationSection" class="hidden">
-                    <!-- Acciones Rápidas -->
-                    <div class="quick-actions">
-                        <span class="quick-actions-title">⚡ Acciones Rápidas:</span>
-                        <button class="btn btn-success" onclick="markAllScore(3)">Todos: 3 puntos</button>
-                        <button class="btn btn-primary" onclick="markAllScore(2)">Todos: 2 puntos</button>
-                        <button class="btn btn-secondary" onclick="markAllScore(1)">Todos: 1 punto</button>
-                        <button class="btn btn-secondary" onclick="clearAllScores()">🧹 Limpiar Todo</button>
-                        <button class="btn btn-success" onclick="saveEvaluation()" style="margin-left: auto;">
-                            💾 Guardar Evaluación
-                        </button>
-                    </div>
-
-                    <!-- Tabla de Evaluación -->
-                    <div class="evaluation-table-container">
-                        <table class="evaluation-table" id="evaluationTable">
-                            <thead>
-                                <tr>
-                                    <th>Estudiante</th>
-                                    <!-- Los indicadores se agregan dinámicamente -->
-                                    <th>Total</th>
-                                    <th>Nota Final</th>
-                                </tr>
-                            </thead>
-                            <tbody id="evaluationTableBody">
-                                <!-- Los estudiantes se cargan dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Historial de Evaluaciones -->
-                <div id="historySection" class="history-section hidden">
-                    <div class="history-header">
-                        <div class="history-title">📅 Historial de Evaluaciones</div>
-                        <button class="btn btn-secondary" onclick="toggleHistory()">Ocultar</button>
-                    </div>
-                    <div id="historyList" class="history-list">
-                        <!-- El historial se carga dinámicamente -->
-                    </div>
+                <div>
+                    <span style="font-size: 12px; color: #6c757d;" id="lastUpdate">
+                        Última actualización: --
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para Agregar Indicador Completo -->
+    <!-- MODAL PARA INDICADOR PRINCIPAL -->
     <div class="modal" id="indicatorModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">🎯 Crear Indicador Completo</h2>
+                <h2 class="modal-title">🎯 Crear Indicador Principal</h2>
                 <button class="close-btn" onclick="closeIndicatorModal()">&times;</button>
             </div>
             
-            <form id="indicatorForm" onsubmit="saveCompleteIndicator(event)">
-                <!-- Indicador Principal -->
-                <h4 style="color: #333; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    🎯 Indicador Principal
-                </h4>
-                
-                <div class="form-group">
-                    <label class="form-label" for="mainIndicatorName">Nombre del Indicador Principal *</label>
-                    <input type="text" class="form-input" id="mainIndicatorName" name="main_indicator" required
-                           placeholder="Ej: Participación en Clase">
-                    <div class="help-text">Este será el indicador principal que agrupa los sub-indicadores</div>
-                </div>
-
-                <!-- Sub-Indicadores -->
-                <h4 style="color: #333; margin: 25px 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    📋 Sub-Indicadores (Opcional)
-                </h4>
-                
-                <div class="instruction-box">
-                    <p><strong>💡 Tip:</strong> Los sub-indicadores son aspectos específicos que quieres evaluar dentro del indicador principal.</p>
-                    <p><strong>Ejemplo:</strong> Si tu indicador principal es "Participación en Clase", los sub-indicadores podrían ser: "Responde preguntas", "Hace preguntas", "Colabora en grupos".</p>
-                </div>
-
-                <div id="subIndicatorsContainer">
-                    <div class="sub-indicator-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">Sub-Indicador 1</label>
-                            <input type="text" class="form-input" name="sub_indicator[]" 
-                                   placeholder="Ej: Responde preguntas">
+            <div class="modal-body">
+                <form id="indicatorForm" onsubmit="saveIndicator(event)">
+                    <!-- INDICADOR PRINCIPAL -->
+                    <div class="step-section">
+                        <h3>🎯 Indicador Principal</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="mainIndicatorName">Nombre del Indicador Principal *</label>
+                            <textarea class="form-input form-textarea" id="mainIndicatorName" name="main_indicator" required
+                                   placeholder="Escriba aquí el indicador principal para la clase de hoy. Este será el objetivo general que guiará toda la evaluación..."></textarea>
+                            <div class="help-text">Este será el indicador principal que agrupa los sub-indicadores</div>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                            🗑️
-                        </button>
                     </div>
-                    
-                    <div class="sub-indicator-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">Sub-Indicador 2</label>
-                            <input type="text" class="form-input" name="sub_indicator[]" 
-                                   placeholder="Ej: Hace preguntas">
-                        </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                            🗑️
-                        </button>
-                    </div>
-                    
-                    <div class="sub-indicator-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">Sub-Indicador 3</label>
-                            <input type="text" class="form-input" name="sub_indicator[]" 
-                                   placeholder="Ej: Colabora en grupos">
-                        </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                            🗑️
-                        </button>
-                    </div>
-                </div>
 
-                <div style="margin: 20px 0; text-align: center;">
-                    <button type="button" class="btn btn-primary" onclick="addSubIndicatorRow()">
-                        ➕ Agregar Otro Sub-Indicador
-                    </button>
-                </div>
+                    <!-- SUB-INDICADORES -->
+                    <div class="step-section">
+                        <h3>📋 Sub-Indicadores (Opcional)</h3>
+                        
+                        <div class="instruction-box">
+                            <p><strong>💡 Consejos:</strong> Los sub-indicadores son aspectos específicos que quieres evaluar dentro del indicador principal.</p>
+                            <p><strong>Ejemplo:</strong> Si tu indicador principal es "Participación en Clase", los sub-indicadores podrían ser: "Responde preguntas", "Hace preguntas", "Colabora en grupos".</p>
+                        </div>
 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeIndicatorModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-success">💾 Guardar Indicador Completo</button>
-                </div>
-            </form>
+                        <div id="subIndicatorsContainer">
+                            <div class="sub-indicator-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sub-Indicador 1</label>
+                                    <input type="text" class="form-input" name="sub_indicator[]" 
+                                           placeholder="Ej: Responde preguntas">
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                                    🗑️
+                                </button>
+                            </div>
+                            
+                            <div class="sub-indicator-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sub-Indicador 2</label>
+                                    <input type="text" class="form-input" name="sub_indicator[]" 
+                                           placeholder="Ej: Hace preguntas">
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                                    🗑️
+                                </button>
+                            </div>
+                            
+                            <div class="sub-indicator-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sub-Indicador 3</label>
+                                    <input type="text" class="form-input" name="sub_indicator[]" 
+                                           placeholder="Ej: Colabora en grupos">
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin: 25px 0; text-align: center;">
+                            <button type="button" class="btn btn-primary" onclick="addSubIndicatorRow()">
+                                ➕ Agregar Otro Sub-Indicador
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeIndicatorModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">💾 Guardar Indicador Completo</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-<!-- Modal para Agregar Múltiples Indicadores -->
+    <!-- MODAL PARA AGREGAR MÚLTIPLES INDICADORES -->
     <div class="modal" id="bulkIndicatorsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1131,28 +905,31 @@
                 <button class="close-btn" onclick="closeBulkIndicatorsModal()">&times;</button>
             </div>
             
-            <div style="padding: 30px;">
+            <div class="modal-body">
                 <div class="instruction-box">
                     <p><strong>💡 Instrucciones:</strong></p>
-                    <p>• Escriba un indicador por línea</p>
-                    <p>• Puede copiar y pegar desde Excel o Word</p>
-                    <p>• Las líneas vacías serán ignoradas</p>
-                    <p>• Máximo 50 indicadores a la vez</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Escriba un indicador por línea</li>
+                        <li>Puede copiar y pegar desde Excel o Word</li>
+                        <li>Las líneas vacías serán ignoradas</li>
+                        <li>Máximo 20 indicadores</li>
+                    </ul>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Lista de Indicadores (uno por línea):</label>
+                    <label class="form-label">Lista de Indicadores:</label>
                     <textarea 
                         id="bulkIndicatorsText" 
-                        class="form-input" 
-                        rows="12" 
+                        class="form-input form-textarea" 
+                        rows="10" 
                         placeholder="Ejemplo:
-Participación en clase
 Responde preguntas
 Colabora en grupos
 Respeta las normas
-Presenta materiales"
-                        style="resize: vertical; min-height: 200px; font-family: monospace;">
+Presenta materiales
+Participa activamente"
+                        style="min-height: 200px; font-family: monospace;"
+                        oninput="updateBulkPreview()">
                     </textarea>
                     <div class="help-text">
                         <span id="bulkIndicatorCount">0</span> indicadores detectados
@@ -1161,1181 +938,918 @@ Presenta materiales"
 
                 <div class="form-group">
                     <label class="form-label">Vista Previa:</label>
-                    <div id="bulkPreview" style="max-height: 150px; overflow-y: auto; border: 1px solid #e1e1e1; border-radius: 6px; padding: 10px; background: #f8f9fa; font-size: 14px;">
-                        <em style="color: #666;">Escriba indicadores arriba para ver la vista previa</em>
+                    <div id="bulkPreview" style="max-height: 150px; overflow-y: auto; border: 2px solid #e1e5e9; border-radius: 10px; padding: 15px; background: #f8f9fa; font-size: 14px;">
+                        <em style="color: #6c757d;">Escriba indicadores arriba para ver la vista previa...</em>
                     </div>
                 </div>
 
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeBulkIndicatorsModal()">Cancelar</button>
-                    <button type="button" class="btn btn-success" onclick="saveBulkIndicators()" id="bulkSaveBtn" disabled>
-                        💾 Guardar Todos los Indicadores
-                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveBulkIndicators()">💾 Crear Indicadores</button>
                 </div>
             </div>
         </div>
     </div>
 
-
     <script>
-        // ========================================
-        // VARIABLES GLOBALES
-        // ========================================
-        let currentDate = new Date();
-        let selectedDate = new Date();
-        let currentGrade = '';
-        let currentSubject = '';
-        let students = [];
+        // Variables globales
         let indicators = [];
-        let currentEvaluation = null;
-        let newIndicatorParentId = null;
+        let mainIndicator = null;
+        let students = []; // Se carga desde la API
+        let allGrades = []; // Se carga desde la API
+        let allSubjects = []; // Se carga desde la API
+        let gradeSubjects = {}; // Se carga desde la API
+        let calificaciones = {}; // {grado: {materia: {fecha: {estudiante: {indicador: nota}}}}}
+        let currentGrado = '';
+        let currentMateria = '';
+        let currentDate = '2025-06-07';
+        let hasUnsavedChanges = false;
+        let subIndicatorCounter = 3;
 
         // ========================================
         // INICIALIZACIÓN
         // ========================================
         document.addEventListener('DOMContentLoaded', function() {
-            loadGrades();
-            renderCalendar();
-            updateDateDisplay();
-            
-            // Event listeners
-            document.getElementById('gradeSelect').addEventListener('change', onGradeChange);
-            document.getElementById('subjectSelect').addEventListener('change', onSubjectChange);
-            document.getElementById('prevMonth').addEventListener('click', () => navigateMonth(-1));
-            document.getElementById('nextMonth').addEventListener('click', () => navigateMonth(1));
-            document.getElementById('gradeWeight').addEventListener('input', function() {
-                updateAllTotals();
-            });
+            initializeSystem();
         });
 
-        // ========================================
-        // FUNCIONES DE CARGA DE DATOS
-        // ========================================
-        async function loadGrades() {
+        async function initializeSystem() {
             try {
-                const response = await fetch('/api/grades');
-                const result = await response.json();
+                showLoading();
+                await loadSystemData();
+                updateStatusIndicator();
+                hideLoading();
+            } catch (error) {
+                console.error('Error inicializando sistema:', error);
+                alert('Error cargando datos del sistema');
+                hideLoading();
+            }
+        }
+
+        async function loadSystemData() {
+            // Cargar grados
+            const gradesResponse = await fetch('/api/grades');
+            const gradesData = await gradesResponse.json();
+            if (gradesData.success) {
+                allGrades = gradesData.data;
+                populateGradeSelector();
+            }
+
+            // Cargar materias
+            try {
+                const subjectsResponse = await fetch('/api/subjects');
+                if (subjectsResponse.ok) {
+                    const subjectsData = await subjectsResponse.json();
+                    if (subjectsData.success) {
+                        allSubjects = subjectsData.data;
+                    }
+                } else {
+                    // Intentar cargar desde custom_subjects
+                    const customSubjectsResponse = await fetch('/api/custom-subjects');
+                    if (customSubjectsResponse.ok) {
+                        const customSubjectsData = await customSubjectsResponse.json();
+                        if (customSubjectsData.success) {
+                            allSubjects = customSubjectsData.data;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('No se pudieron cargar materias desde la API');
+                allSubjects = [];
+            }
+
+            // Cargar estudiantes
+            const studentsResponse = await fetch('/api/students');
+            const studentsData = await studentsResponse.json();
+            if (studentsData.success) {
+                students = studentsData.data;
+            }
+
+            // Cargar relaciones grado-materia
+            try {
+                const gradeSubjectsResponse = await fetch('/api/grade-subjects');
+                if (gradeSubjectsResponse.ok) {
+                    const gradeSubjectsData = await gradeSubjectsResponse.json();
+                    if (gradeSubjectsData.success) {
+                        // Organizar por grado
+                        gradeSubjects = {};
+                        gradeSubjectsData.data.forEach(relation => {
+                            if (!gradeSubjects[relation.grade_name]) {
+                                gradeSubjects[relation.grade_name] = [];
+                            }
+                            gradeSubjects[relation.grade_name].push(relation.subject_name);
+                        });
+                    }
+                } else {
+                    throw new Error('Endpoint no disponible');
+                }
+            } catch (error) {
+                console.log('No se encontraron relaciones grado-materia configuradas, usando todas las materias para todos los grados');
+                // Si no hay relaciones o el endpoint no existe, usar todas las materias para todos los grados
+                gradeSubjects = {};
+                allGrades.forEach(grade => {
+                    gradeSubjects[grade.name] = allSubjects.map(subject => subject.name);
+                });
+            }
+        }
+
+        function populateGradeSelector() {
+            const gradoSelect = document.getElementById('grado');
+            gradoSelect.innerHTML = '<option value="">Seleccionar grado...</option>';
+            
+            allGrades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade.name;
+                option.textContent = grade.name;
+                gradoSelect.appendChild(option);
+            });
+        }
+
+        function showLoading() {
+            // Agregar indicador de carga simple
+            const container = document.querySelector('.container');
+            if (container && !document.getElementById('loading')) {
+                const loading = document.createElement('div');
+                loading.id = 'loading';
+                loading.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                    color: white;
+                    font-size: 18px;
+                `;
+                loading.innerHTML = '⏳ Cargando datos del sistema...';
+                document.body.appendChild(loading);
+            }
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        // ========================================
+        // GESTIÓN DE GRADO Y MATERIA
+        // ========================================
+        function cambiarGrado() {
+            const gradoSelect = document.getElementById('grado');
+            const materiaSelect = document.getElementById('materia');
+            
+            currentGrado = gradoSelect.value;
+            
+            if (currentGrado) {
+                // Habilitar selector de materia
+                materiaSelect.disabled = false;
+                materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
                 
-                if (!result.success) {
-                    console.error('Error en la respuesta:', result.message);
+                // Cargar materias del grado seleccionado desde los datos reales
+                const materiasDelGrado = gradeSubjects[currentGrado] || [];
+                materiasDelGrado.forEach(materia => {
+                    const option = document.createElement('option');
+                    option.value = materia;
+                    option.textContent = materia;
+                    materiaSelect.appendChild(option);
+                });
+                
+                if (materiasDelGrado.length === 0) {
+                    // Si no hay materias asignadas, mostrar todas las materias disponibles
+                    allSubjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.name;
+                        option.textContent = subject.name;
+                        materiaSelect.appendChild(option);
+                    });
+                }
+            } else {
+                // Deshabilitar selector de materia
+                materiaSelect.disabled = true;
+                materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
+                currentMateria = '';
+            }
+            
+            resetInterface();
+        }
+
+        function cambiarMateria() {
+            const materiaSelect = document.getElementById('materia');
+            currentMateria = materiaSelect.value;
+            
+            if (currentGrado && currentMateria) {
+                loadCurrentData();
+            } else {
+                resetInterface();
+            }
+        }
+
+        function cambiarFecha() {
+            const fechaInput = document.getElementById('fecha');
+            const nuevaFecha = fechaInput.value;
+            
+            if (hasUnsavedChanges) {
+                if (!confirm('Tiene cambios sin guardar. ¿Desea continuar sin guardar?')) {
+                    fechaInput.value = currentDate;
                     return;
                 }
-                
-                const grades = result.data;
-                const gradeSelect = document.getElementById('gradeSelect');
-                gradeSelect.innerHTML = '<option value="">Seleccionar grado...</option>';
-                
-                grades.forEach(grade => {
-                    const option = document.createElement('option');
-                    option.value = grade.name;
-                    option.textContent = grade.name;
-                    gradeSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error cargando grados:', error);
             }
+            
+            currentDate = nuevaFecha;
+            
+            if (currentGrado && currentMateria) {
+                loadCurrentData();
+            }
+            
+            updateStatusIndicator();
         }
 
-        async function loadSubjects(grade) {
-            try {
-                const response = await fetch(`/api/grade-subjects/${encodeURIComponent(grade)}`);
-                const result = await response.json();
-                
-                if (!result.success) {
-                    console.error('Error en la respuesta:', result.message);
-                    return;
-                }
-                
-                const subjects = result.data;
-                const subjectSelect = document.getElementById('subjectSelect');
-                subjectSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
-                
-                subjects.forEach(subject => {
-                    const option = document.createElement('option');
-                    option.value = subject.subject_name;
-                    option.textContent = subject.subject_name;
-                    subjectSelect.appendChild(option);
-                });
-                
-                subjectSelect.disabled = false;
-            } catch (error) {
-                console.error('Error cargando materias:', error);
-            }
+        function resetInterface() {
+            indicators = [];
+            mainIndicator = null;
+            renderIndicatorsList();
+            renderCalificacionesTable();
+            calculateSumaCotidiano();
+            hasUnsavedChanges = false;
+            updateStatusIndicator();
         }
 
-        async function loadStudents() {
-            try {
-                const response = await fetch(`/api/students?grade_level=${encodeURIComponent(currentGrade)}&subject_area=${encodeURIComponent(currentSubject)}`);
-                const result = await response.json();
+        function loadCurrentData() {
+            // Cargar datos de grado + materia + fecha actual
+            if (calificaciones[currentGrado] && 
+                calificaciones[currentGrado][currentMateria] && 
+                calificaciones[currentGrado][currentMateria][currentDate]) {
                 
-                if (!result.success) {
-                    console.error('Error en la respuesta:', result.message);
-                    students = [];
-                } else {
-                    students = result.data || [];
-                }
-                
-                document.getElementById('totalStudents').textContent = students.length;
-                
-                if (students.length === 0) {
-                    showEmptyState();
-                } else {
-                    hideAllStates();
-                    showIndicatorsSection();
-                }
-            } catch (error) {
-                console.error('Error cargando estudiantes:', error);
-                students = [];
-                document.getElementById('totalStudents').textContent = 0;
-                showEmptyState();
-            }
-        }
-
-        async function loadIndicators() {
-            if (!currentGrade || !currentSubject) {
-                console.warn('Grado o materia no seleccionados');
-                indicators = [];
+                const data = calificaciones[currentGrado][currentMateria][currentDate];
+                indicators = data.indicators || [];
+                mainIndicator = data.mainIndicator || null;
                 renderIndicatorsList();
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/cotidiano/indicators?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    indicators = result.data || [];
-                    console.log(`Indicadores cargados: ${indicators.length}`);
-                } else {
-                    console.error('Error en la respuesta:', result.message);
-                    indicators = [];
-                }
-                
-                // Actualizar estadísticas
-                const mainIndicators = indicators.filter(i => !i.parent_indicator_id);
-                document.getElementById('totalIndicators').textContent = mainIndicators.length;
-                
-                // Renderizar la lista
-                renderIndicatorsList();
-                
-                // Si hay indicadores, mostrar la tabla de evaluación
-                if (indicators.length > 0) {
-                    loadEvaluationTable();
-                }
-                
-            } catch (error) {
-                console.error('Error cargando indicadores:', error);
-                indicators = [];
-                document.getElementById('totalIndicators').textContent = 0;
-                renderIndicatorsList();
-            }
-        }
-
-        // ========================================
-        // MANEJADORES DE EVENTOS
-        // ========================================
-        function onGradeChange() {
-            const gradeSelect = document.getElementById('gradeSelect');
-            currentGrade = gradeSelect.value;
-            
-            if (currentGrade) {
-                loadSubjects(currentGrade);
-                document.getElementById('subjectSelect').disabled = false;
+                renderCalificacionesTable();
+                calculateSumaCotidiano();
             } else {
-                document.getElementById('subjectSelect').disabled = true;
-                currentSubject = '';
-                showLoadingState();
+                resetInterface();
             }
             
-            updateMainTitle();
-        }
-
-        function onSubjectChange() {
-            const subjectSelect = document.getElementById('subjectSelect');
-            currentSubject = subjectSelect.value;
-            
-            if (currentSubject && currentGrade) {
-                loadStudents();
-                loadIndicators();
-            } else {
-                showLoadingState();
-            }
-            
-            updateMainTitle();
-        }
-
-        function onDateSelect(day, month, year) {
-            selectedDate = new Date(year, month, day);
-            renderCalendar();
-            updateDateDisplay();
-            
-            if (currentGrade && currentSubject) {
-                loadEvaluationForDate();
-            }
+            hasUnsavedChanges = false;
+            updateStatusIndicator();
         }
 
         // ========================================
-        // GESTIÓN DE ESTADOS DE LA UI
-        // ========================================
-        function showLoadingState() {
-            hideAllStates();
-            document.getElementById('loadingState').classList.remove('hidden');
-        }
-
-        function showEmptyState() {
-            hideAllStates();
-            document.getElementById('emptyState').classList.remove('hidden');
-        }
-
-        function showIndicatorsSection() {
-            hideAllStates();
-            document.getElementById('indicatorsSection').classList.remove('hidden');
-        }
-
-        function showEvaluationSection() {
-            document.getElementById('evaluationSection').classList.remove('hidden');
-        }
-
-        function hideAllStates() {
-            document.getElementById('loadingState').classList.add('hidden');
-            document.getElementById('emptyState').classList.add('hidden');
-            document.getElementById('indicatorsSection').classList.add('hidden');
-            document.getElementById('evaluationSection').classList.add('hidden');
-        }
-
-        function updateMainTitle() {
-            const title = document.getElementById('mainTitle');
-            const subtitle = document.getElementById('mainSubtitle');
-            
-            if (currentGrade && currentSubject) {
-                title.textContent = `📊 Cotidiano - ${currentGrade}`;
-                subtitle.textContent = `${currentSubject} • ${formatDate(selectedDate)}`;
-            } else if (currentGrade) {
-                title.textContent = `📊 Cotidiano - ${currentGrade}`;
-                subtitle.textContent = 'Seleccione materia para continuar';
-            } else {
-                title.textContent = '📊 Cotidiano Diario';
-                subtitle.textContent = 'Seleccione grado, materia y fecha para comenzar';
-            }
-        }
-
-        function updateDateDisplay() {
-            updateMainTitle();
-        }
-
-        // ========================================
-        // GESTIÓN DEL CALENDARIO
-        // ========================================
-        function navigateMonth(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
-            renderCalendar();
-        }
-
-        function renderCalendar() {
-            const monthNames = [
-                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-            ];
-            
-            document.getElementById('calendarMonth').textContent = 
-                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-            
-            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            const calendarGrid = document.getElementById('calendarGrid');
-            // Mantener headers
-            const headers = calendarGrid.querySelectorAll('.calendar-day-header');
-            calendarGrid.innerHTML = '';
-            headers.forEach(header => calendarGrid.appendChild(header));
-            
-            const today = new Date();
-            
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                
-                const dayElement = document.createElement('div');
-                dayElement.className = 'calendar-day';
-                dayElement.textContent = date.getDate();
-                
-                // Clases CSS
-                if (date.getMonth() !== currentDate.getMonth()) {
-                    dayElement.classList.add('other-month');
-                }
-                
-                if (date.toDateString() === today.toDateString()) {
-                    dayElement.classList.add('today');
-                }
-                
-                if (date.toDateString() === selectedDate.toDateString()) {
-                    dayElement.classList.add('selected');
-                }
-                
-                // TODO: Agregar clase has-cotidiano si hay evaluaciones
-                
-                dayElement.addEventListener('click', () => {
-                    onDateSelect(date.getDate(), date.getMonth(), date.getFullYear());
-                });
-                
-                calendarGrid.appendChild(dayElement);
-            }
-        }
-
-        // ========================================
-        // GESTIÓN DEL MODAL DE INDICADORES
+        // GESTIÓN DE MODALES
         // ========================================
         function openIndicatorModal() {
+            if (!currentGrado || !currentMateria) {
+                alert('Por favor seleccione grado y materia primero');
+                return;
+            }
             document.getElementById('indicatorModal').style.display = 'block';
-            document.getElementById('mainIndicatorName').focus();
+            document.body.style.overflow = 'hidden';
         }
 
         function closeIndicatorModal() {
             document.getElementById('indicatorModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
             document.getElementById('indicatorForm').reset();
-            // Resetear sub-indicadores a 3 por defecto
-            resetSubIndicators();
         }
 
-        function resetSubIndicators() {
-            const container = document.getElementById('subIndicatorsContainer');
-            container.innerHTML = `
-                <div class="sub-indicator-row">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">Sub-Indicador 1</label>
-                        <input type="text" class="form-input" name="sub_indicator[]" 
-                               placeholder="Ej: Responde preguntas">
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                        🗑️
-                    </button>
-                </div>
-                
-                <div class="sub-indicator-row">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">Sub-Indicador 2</label>
-                        <input type="text" class="form-input" name="sub_indicator[]" 
-                               placeholder="Ej: Hace preguntas">
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                        🗑️
-                    </button>
-                </div>
-                
-                <div class="sub-indicator-row">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">Sub-Indicador 3</label>
-                        <input type="text" class="form-input" name="sub_indicator[]" 
-                               placeholder="Ej: Colabora en grupos">
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
-                        🗑️
-                    </button>
-                </div>
-            `;
+        function openBulkIndicatorsModal() {
+            if (!currentGrado || !currentMateria) {
+                alert('Por favor seleccione grado y materia primero');
+                return;
+            }
+            document.getElementById('bulkIndicatorsModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
+        function closeBulkIndicatorsModal() {
+            document.getElementById('bulkIndicatorsModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            document.getElementById('bulkIndicatorsText').value = '';
+            updateBulkPreview();
+        }
+
+        // ========================================
+        // GESTIÓN DE SUB-INDICADORES EN MODAL
+        // ========================================
         function addSubIndicatorRow() {
+            subIndicatorCounter++;
             const container = document.getElementById('subIndicatorsContainer');
-            const currentRows = container.children.length;
-            const newNumber = currentRows + 1;
-            
             const newRow = document.createElement('div');
             newRow.className = 'sub-indicator-row';
             newRow.innerHTML = `
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">Sub-Indicador ${newNumber}</label>
+                <div class="form-group">
+                    <label class="form-label">Sub-Indicador ${subIndicatorCounter}</label>
                     <input type="text" class="form-input" name="sub_indicator[]" 
-                           placeholder="Ej: Nombre del sub-indicador">
+                           placeholder="Escriba el sub-indicador...">
                 </div>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
                     🗑️
                 </button>
             `;
-            
             container.appendChild(newRow);
         }
 
         function removeSubIndicator(button) {
-            const row = button.parentElement;
-            const container = document.getElementById('subIndicatorsContainer');
-            
-            // No permitir eliminar si solo hay una fila
-            if (container.children.length > 1) {
-                row.remove();
-                // Renumerar las etiquetas
-                updateSubIndicatorLabels();
-            } else {
-                alert('Debe tener al menos un sub-indicador');
-            }
-        }
-
-        function updateSubIndicatorLabels() {
-            const container = document.getElementById('subIndicatorsContainer');
-            const rows = container.children;
-            
-            for (let i = 0; i < rows.length; i++) {
-                const label = rows[i].querySelector('.form-label');
-                label.textContent = `Sub-Indicador ${i + 1}`;
-            }
-        }
-
-        async function saveCompleteIndicator(event) {
-            event.preventDefault();
-            
-            const mainIndicatorName = document.getElementById('mainIndicatorName').value.trim();
-            if (!mainIndicatorName) {
-                alert('Por favor ingrese el nombre del indicador principal');
-                return;
-            }
-            
-            const subIndicatorInputs = document.querySelectorAll('input[name="sub_indicator[]"]');
-            const subIndicators = Array.from(subIndicatorInputs)
-                .map(input => input.value.trim())
-                .filter(value => value !== '');
-            
-            try {
-                // Crear indicador principal
-                const mainResponse = await fetch('/api/cotidiano/indicators', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        grade_level: currentGrade,
-                        subject_area: currentSubject,
-                        indicator_name: mainIndicatorName,
-                        parent_indicator_id: null
-                    })
-                });
-                
-                const mainResult = await mainResponse.json();
-                if (!mainResult.success) {
-                    alert('Error al crear el indicador principal: ' + mainResult.message);
-                    return;
-                }
-                
-                const mainIndicatorId = mainResult.data.id;
-                
-                // Crear sub-indicadores si existen
-                if (subIndicators.length > 0) {
-                    for (const subIndicatorName of subIndicators) {
-                        const subResponse = await fetch('/api/cotidiano/indicators', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                grade_level: currentGrade,
-                                subject_area: currentSubject,
-                                indicator_name: subIndicatorName,
-                                parent_indicator_id: mainIndicatorId
-                            })
-                        });
-                        
-                        const subResult = await subResponse.json();
-                        if (!subResult.success) {
-                            console.warn('Error creando sub-indicador:', subIndicatorName, subResult.message);
-                        }
-                    }
-                }
-                
-                alert(`Indicador creado exitosamente con ${subIndicators.length} sub-indicadores`);
-                closeIndicatorModal();
-                loadIndicators(); // Recargar la lista
-                
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al guardar el indicador');
-            }
-        }
-
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('indicatorModal');
-            if (event.target === modal) {
-                closeIndicatorModal();
-            }
+            const row = button.closest('.sub-indicator-row');
+            row.remove();
         }
 
         // ========================================
-        // GESTIÓN DE INDICADORES
+        // BULK INDICATORS
+        // ========================================
+        function updateBulkPreview() {
+            const text = document.getElementById('bulkIndicatorsText').value;
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            
+            document.getElementById('bulkIndicatorCount').textContent = lines.length;
+            
+            const preview = document.getElementById('bulkPreview');
+            if (lines.length === 0) {
+                preview.innerHTML = '<em style="color: #6c757d;">Escriba indicadores arriba para ver la vista previa...</em>';
+                return;
+            }
+            
+            const previewHTML = lines.map((line, index) => 
+                `<div style="margin-bottom: 8px; padding: 8px; background: white; border-radius: 6px; border-left: 3px solid #74b9ff;">
+                    <span style="background: #74b9ff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 10px;">${index + 1}</span>
+                    ${line.trim()}
+                </div>`
+            ).join('');
+            
+            preview.innerHTML = previewHTML;
+        }
+
+        function saveBulkIndicators() {
+            const text = document.getElementById('bulkIndicatorsText').value;
+            const newIndicators = text.split('\n').filter(line => line.trim() !== '');
+            
+            if (newIndicators.length === 0) {
+                alert('Por favor, escriba al menos un indicador');
+                return;
+            }
+            
+            if (newIndicators.length > 20) {
+                alert('Máximo 20 indicadores permitidos');
+                return;
+            }
+            
+            // Agregar nuevos indicadores
+            newIndicators.forEach((indicatorText, index) => {
+                indicators.push({
+                    id: Date.now() + index,
+                    text: indicatorText.trim()
+                });
+            });
+            
+            renderIndicatorsList();
+            renderCalificacionesTable();
+            calculateSumaCotidiano();
+            
+            hasUnsavedChanges = true;
+            updateStatusIndicator();
+            
+            alert(`${newIndicators.length} indicadores agregados exitosamente`);
+            closeBulkIndicatorsModal();
+        }
+
+        // ========================================
+        // GUARDADO DE INDICADOR PRINCIPAL
+        // ========================================
+        function saveIndicator(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const mainIndicatorText = formData.get('main_indicator').trim();
+            const subIndicators = formData.getAll('sub_indicator[]').filter(sub => sub.trim() !== '');
+            
+            if (!mainIndicatorText) {
+                alert('Por favor, escriba el indicador principal');
+                return;
+            }
+            
+            // Crear indicador principal
+            mainIndicator = {
+                id: Date.now(),
+                text: mainIndicatorText
+            };
+            
+            // Agregar sub-indicadores
+            subIndicators.forEach((subText, index) => {
+                indicators.push({
+                    id: Date.now() + index + 1,
+                    text: subText.trim(),
+                    isSubIndicator: true,
+                    parentId: mainIndicator.id
+                });
+            });
+            
+            renderIndicatorsList();
+            renderCalificacionesTable();
+            calculateSumaCotidiano();
+            
+            hasUnsavedChanges = true;
+            updateStatusIndicator();
+            
+            alert(`Indicador principal creado con ${subIndicators.length} sub-indicadores`);
+            closeIndicatorModal();
+        }
+
+        // ========================================
+        // RENDERIZADO DE INDICADORES
         // ========================================
         function renderIndicatorsList() {
             const container = document.getElementById('indicatorsList');
-            container.innerHTML = '';
             
-            if (indicators.length === 0) {
+            if (!currentGrado || !currentMateria) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
+                    <div class="empty-state">
+                        <h3>📝 Seleccione grado y materia</h3>
+                        <p>Primero seleccione el grado y materia para configurar indicadores</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (!mainIndicator && indicators.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
                         <h3>📝 No hay indicadores configurados</h3>
                         <p>Agregue indicadores para comenzar a evaluar</p>
+                        <button class="btn btn-primary" onclick="openIndicatorModal()">🎯 Crear Indicador Principal</button>
                     </div>
                 `;
                 return;
             }
             
-            const mainIndicators = indicators.filter(ind => !ind.parent_indicator_id);
+            let html = '';
             
-            mainIndicators.forEach(indicator => {
-                const subIndicators = indicators.filter(sub => sub.parent_indicator_id === indicator.id);
+            // Mostrar indicador principal si existe
+            if (mainIndicator) {
+                const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
                 
-                const indicatorElement = document.createElement('div');
-                indicatorElement.className = 'indicator-item';
-                indicatorElement.innerHTML = `
-                    <div class="indicator-main">
-                        <div class="indicator-name">${escapeHtml(indicator.indicator_name)}</div>
-                        <div class="indicator-actions">
-                            <button class="btn btn-primary btn-sm" onclick="addSubIndicator(${indicator.id}, '${escapeHtml(indicator.indicator_name)}')">
-                                ➕ Sub-indicador
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="editIndicator(${indicator.id})">
-                                ✏️ Editar
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="deleteIndicator(${indicator.id})">
-                                🗑️ Eliminar
-                            </button>
+                html += `
+                    <div class="indicator-main-item">
+                        <div class="indicator-main-header">
+                            <div class="indicator-principal-label">📌 Principal</div>
+                            <div class="indicator-main-actions">
+                                <button class="btn btn-secondary btn-xs" onclick="editMainIndicator()">✏️</button>
+                                <button class="btn btn-secondary btn-xs" onclick="deleteMainIndicator()">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="indicator-main-name">${mainIndicator.text}</div>
+                        
+                        ${subIndicators.length > 0 ? `
+                            <div class="sub-indicators">
+                                ${subIndicators.map((sub, index) => `
+                                    <div class="sub-indicator-item">
+                                        <div class="sub-indicator-content">
+                                            <div class="sub-indicator-number">${index + 1}</div>
+                                            <div class="sub-indicator-text">${sub.text}</div>
+                                        </div>
+                                        <div class="sub-indicator-actions">
+                                            <button class="btn btn-secondary btn-xs" onclick="editIndicator(${sub.id})">✏️</button>
+                                            <button class="btn btn-secondary btn-xs" onclick="deleteIndicator(${sub.id})">🗑️</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // Mostrar indicadores individuales (que no son sub-indicadores)
+            const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
+            individualIndicators.forEach((indicator, index) => {
+                html += `
+                    <div class="indicator-item">
+                        <div class="indicator-content">
+                            <div class="indicator-number">${index + 1}</div>
+                            <div class="indicator-text">${indicator.text}</div>
+                        </div>
+                        <div class="indicator-actions-inline">
+                            <button class="btn btn-secondary btn-xs" onclick="editIndicator(${indicator.id})">✏️</button>
+                            <button class="btn btn-secondary btn-xs" onclick="deleteIndicator(${indicator.id})">🗑️</button>
                         </div>
                     </div>
-                    ${subIndicators.length > 0 ? `
-                    <div class="sub-indicators">
-                        ${subIndicators.map(sub => `
-                            <div class="sub-indicator">
-                                <div class="sub-indicator-name">• ${escapeHtml(sub.indicator_name)}</div>
-                                <div class="indicator-actions">
-                                    <button class="btn btn-secondary btn-sm" onclick="editIndicator(${sub.id})">✏️</button>
-                                    <button class="btn btn-secondary btn-sm" onclick="deleteIndicator(${sub.id})">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
                 `;
-                
-                container.appendChild(indicatorElement);
             });
             
-            // Mostrar tabla de evaluación si hay indicadores
-            if (indicators.length > 0) {
-                showEvaluationSection();
-                loadEvaluationTable();
-            }
+            container.innerHTML = html;
         }
 
-        function addNewIndicator() {
-            document.getElementById('newIndicatorForm').classList.remove('hidden');
-            document.getElementById('newIndicatorName').focus();
-        }
-
-        function cancelNewIndicator() {
-            document.getElementById('newIndicatorForm').classList.add('hidden');
-            document.getElementById('newIndicatorName').value = '';
-        }
-
-        async function saveNewIndicator() {
-            const name = document.getElementById('newIndicatorName').value.trim();
-            if (!name) {
-                alert('Por favor ingrese el nombre del indicador');
+        // ========================================
+        // RENDERIZADO DE TABLA DE CALIFICACIONES
+        // ========================================
+        function renderCalificacionesTable() {
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+            
+            if (!currentGrado || !currentMateria) {
+                tableHeader.innerHTML = `
+                    <th class="student-header">👤 Estudiante</th>
+                    <th>📊 Cotidiano</th>
+                    <th>📈 Cotidiano Total</th>
+                `;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>📝 Seleccione grado y materia</h3>
+                            <p>Configure el grado y materia en el panel superior para comenzar</p>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
-            try {
-                const response = await fetch('/api/cotidiano/indicators', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        grade_level: currentGrade,
-                        subject_area: currentSubject,
-                        indicator_name: name,
-                        parent_indicator_id: null
-                    })
-                });
+            const allIndicators = [];
+            if (mainIndicator) {
+                const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
+                allIndicators.push(...subIndicators);
+            }
+            const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
+            allIndicators.push(...individualIndicators);
+            
+            if (allIndicators.length === 0) {
+                tableHeader.innerHTML = `
+                    <th class="student-header">👤 Estudiante</th>
+                    <th>📊 Cotidiano</th>
+                    <th>📈 Cotidiano Total</th>
+                `;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>📝 Agregue indicadores para comenzar</h3>
+                            <p>Configure los indicadores en el panel izquierdo para ver la matriz de calificaciones</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Crear header con indicadores
+            const headerHTML = `
+                <th class="student-header">👤 Estudiante</th>
+                ${allIndicators.map((indicator, index) => 
+                    `<th class="indicator-header">Ind. ${index + 1}</th>`
+                ).join('')}
+                <th>📊 Cotidiano</th>
+                <th>📈 Cotidiano Total</th>
+            `;
+            tableHeader.innerHTML = headerHTML;
+            
+            // Crear filas de estudiantes
+            const bodyHTML = students.map(student => {
+                // Crear nombre completo del estudiante
+                const studentName = `${student.first_surname} ${student.second_surname || ''} ${student.first_name} ${student.second_name || ''}`.trim();
+                const studentKey = `student_${student.id}`;
                 
-                const result = await response.json();
+                const indicatorCells = allIndicators.map((indicator, index) => 
+                    `<td><input type="number" class="grade-input" min="1" max="3" 
+                        onchange="updateGrade('${studentKey}', ${indicator.id}, this.value)"
+                        value=""></td>`
+                ).join('');
                 
-                if (result.success) {
-                    alert('Indicador creado exitosamente');
-                    cancelNewIndicator();
-                    await loadIndicators();
-                } else {
-                    alert('Error al guardar el indicador: ' + (result.message || 'Error desconocido'));
+                return `
+                    <tr>
+                        <td class="student-name">${studentName}</td>
+                        ${indicatorCells}
+                        <td><strong id="cotidiano-${studentKey}">0</strong></td>
+                        <td><strong id="total-${studentKey}">0</strong></td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tableBody.innerHTML = bodyHTML;
+            
+            // Cargar calificaciones existentes si las hay
+            loadExistingGrades();
+        }
+
+        function loadExistingGrades() {
+            if (!calificaciones[currentGrado] || 
+                !calificaciones[currentGrado][currentMateria] || 
+                !calificaciones[currentGrado][currentMateria][currentDate]) return;
+            
+            const dateData = calificaciones[currentGrado][currentMateria][currentDate];
+            students.forEach(student => {
+                const studentKey = `student_${student.id}`;
+                if (dateData.estudiantes && dateData.estudiantes[studentKey]) {
+                    const studentGrades = dateData.estudiantes[studentKey];
+                    
+                    const allIndicators = [];
+                    if (mainIndicator) {
+                        const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
+                        allIndicators.push(...subIndicators);
+                    }
+                    const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
+                    allIndicators.push(...individualIndicators);
+                    
+                    allIndicators.forEach(indicator => {
+                        if (studentGrades[indicator.id]) {
+                            const input = document.querySelector(`input[onchange*="'${studentKey}', ${indicator.id}"]`);
+                            if (input) {
+                                input.value = studentGrades[indicator.id];
+                                updateGradeStyle(input, studentGrades[indicator.id]);
+                            }
+                        }
+                    });
+                    updateStudentSums(studentKey);
                 }
-            } catch (error) {
-                console.error('Error completo:', error);
-                alert('Error al conectar con el servidor: ' + error.message);
-            }
+            });
         }
 
-        function addSubIndicator(parentId, parentName) {
-            if (!parentId || !parentName) {
-                console.error('ID del indicador padre o nombre no válido');
-                return;
+        // ========================================
+        // GESTIÓN DE CALIFICACIONES
+        // ========================================
+        function updateGrade(studentKey, indicatorId, value) {
+            if (!calificaciones[currentGrado]) {
+                calificaciones[currentGrado] = {};
+            }
+            if (!calificaciones[currentGrado][currentMateria]) {
+                calificaciones[currentGrado][currentMateria] = {};
+            }
+            if (!calificaciones[currentGrado][currentMateria][currentDate]) {
+                calificaciones[currentGrado][currentMateria][currentDate] = {
+                    indicators: [...indicators],
+                    mainIndicator: mainIndicator,
+                    estudiantes: {}
+                };
             }
             
-            newIndicatorParentId = parentId;
-            document.getElementById('parentIndicatorName').textContent = parentName;
-            document.getElementById('newSubIndicatorForm').classList.remove('hidden');
-            
-            // Limpiar campo anterior
-            const input = document.getElementById('newSubIndicatorName');
-            if (input) {
-                input.value = '';
-                input.focus();
+            if (!calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey] = {};
             }
+            
+            if (value && value >= 1 && value <= 3) {
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey][indicatorId] = parseInt(value);
+            } else {
+                delete calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey][indicatorId];
+            }
+            
+            // Actualizar estilo del input
+            const input = event.target;
+            updateGradeStyle(input, value);
+            
+            // Actualizar sumas
+            updateStudentSums(studentKey);
+            
+            hasUnsavedChanges = true;
+            updateStatusIndicator();
         }
 
-        function cancelNewSubIndicator() {
-            document.getElementById('newSubIndicatorForm').classList.add('hidden');
-            document.getElementById('newSubIndicatorName').value = '';
-            newIndicatorParentId = null;
+        function updateGradeStyle(input, value) {
+            input.className = 'grade-input';
+            const val = parseInt(value);
+            if (val === 1) input.classList.add('grade-1');
+            else if (val === 2) input.classList.add('grade-2');
+            else if (val === 3) input.classList.add('grade-3');
         }
 
-        async function saveNewSubIndicator() {
-            const name = document.getElementById('newSubIndicatorName').value.trim();
+        function updateStudentSums(studentKey) {
+            let cotidianoDay = 0;
+            let cotidianoTotal = 0;
             
-            if (!name) {
-                alert('Por favor ingrese el nombre del sub-indicador');
-                return;
-            }
-            
-            if (!newIndicatorParentId) {
-                alert('Error: No se ha seleccionado un indicador padre');
-                cancelNewSubIndicator();
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/cotidiano/indicators', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        grade_level: currentGrade,
-                        subject_area: currentSubject,
-                        indicator_name: name,
-                        parent_indicator_id: newIndicatorParentId
-                    })
-                });
+            // Suma del día actual (porcentaje)
+            if (calificaciones[currentGrado] && 
+                calificaciones[currentGrado][currentMateria] && 
+                calificaciones[currentGrado][currentMateria][currentDate] &&
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
                 
-                const result = await response.json();
+                const grades = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
+                const sumaTotal = Object.values(grades).reduce((sum, grade) => sum + grade, 0);
+                const maxPosible = Object.keys(grades).length * 3;
                 
-                if (result.success) {
-                    alert('Sub-indicador creado exitosamente');
-                    cancelNewSubIndicator();
-                    await loadIndicators(); // Recargar indicadores
-                } else {
-                    alert('Error al guardar el sub-indicador: ' + (result.message || 'Error desconocido'));
+                if (maxPosible > 0) {
+                    cotidianoDay = Math.round((sumaTotal / maxPosible) * 100);
                 }
-            } catch (error) {
-                console.error('Error completo:', error);
-                alert('Error al conectar con el servidor: ' + error.message);
+            }
+            
+            // Cotidiano total (promedio de todas las fechas con porcentaje configurado)
+            const porcentajeTotal = parseInt(document.getElementById('porcentajeTotal').value) || 65;
+            let totalFechas = 0;
+            let sumaPromedios = 0;
+            
+            if (calificaciones[currentGrado] && calificaciones[currentGrado][currentMateria]) {
+                Object.keys(calificaciones[currentGrado][currentMateria]).forEach(fecha => {
+                    const dateData = calificaciones[currentGrado][currentMateria][fecha];
+                    if (dateData.estudiantes && dateData.estudiantes[studentKey]) {
+                        const grades = dateData.estudiantes[studentKey];
+                        const sumaFecha = Object.values(grades).reduce((sum, grade) => sum + grade, 0);
+                        const maxPosibleFecha = Object.keys(grades).length * 3;
+                        
+                        if (maxPosibleFecha > 0) {
+                            const promedioFecha = (sumaFecha / maxPosibleFecha) * 100;
+                            sumaPromedios += promedioFecha;
+                            totalFechas++;
+                        }
+                    }
+                });
+            }
+            
+            if (totalFechas > 0) {
+                const promedioGeneral = sumaPromedios / totalFechas;
+                cotidianoTotal = Math.round((promedioGeneral * porcentajeTotal) / 100);
+            }
+            
+            // Actualizar en la tabla
+            const cotidianoElement = document.getElementById(`cotidiano-${studentKey}`);
+            const totalElement = document.getElementById(`total-${studentKey}`);
+            
+            if (cotidianoElement) cotidianoElement.textContent = cotidianoDay;
+            if (totalElement) totalElement.textContent = cotidianoTotal;
+        }
+
+        // ========================================
+        // CONFIGURACIÓN DE NOTAS
+        // ========================================
+        function calculateSumaCotidiano() {
+            const allIndicators = [];
+            if (mainIndicator) {
+                const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
+                allIndicators.push(...subIndicators);
+            }
+            const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
+            allIndicators.push(...individualIndicators);
+            
+            const suma = allIndicators.length * 3; // Cada indicador vale máximo 3
+            document.getElementById('sumaCotidiano').textContent = suma;
+        }
+
+        function aplicarConfiguracion() {
+            const porcentaje = document.getElementById('porcentajeTotal').value;
+            
+            // Recalcular todas las sumas con el nuevo porcentaje
+            students.forEach(student => {
+                const studentKey = `student_${student.id}`;
+                updateStudentSums(studentKey);
+            });
+            
+            alert(`Configuración aplicada: ${porcentaje}% del total`);
+            hasUnsavedChanges = true;
+            updateStatusIndicator();
+        }
+
+        // ========================================
+        // GESTIÓN DE INDICADORES INDIVIDUALES
+        // ========================================
+        function editMainIndicator() {
+            if (!mainIndicator) return;
+            
+            const newText = prompt('Nuevo texto del indicador principal:', mainIndicator.text);
+            if (newText && newText.trim()) {
+                mainIndicator.text = newText.trim();
+                renderIndicatorsList();
+                hasUnsavedChanges = true;
+                updateStatusIndicator();
+            }
+        }
+
+        function deleteMainIndicator() {
+            if (confirm('¿Está seguro de que desea eliminar el indicador principal y todos sus sub-indicadores?')) {
+                // Eliminar sub-indicadores del indicador principal
+                indicators = indicators.filter(ind => !(ind.isSubIndicator && ind.parentId === mainIndicator.id));
+                mainIndicator = null;
+                
+                renderIndicatorsList();
+                renderCalificacionesTable();
+                calculateSumaCotidiano();
+                hasUnsavedChanges = true;
+                updateStatusIndicator();
             }
         }
 
         function editIndicator(indicatorId) {
-            // Función placeholder para editar indicador
-            alert('Función de edición en desarrollo. Use eliminar y volver a crear por ahora.');
+            const indicator = indicators.find(ind => ind.id === indicatorId);
+            if (!indicator) return;
+            
+            const newText = prompt('Nuevo texto del indicador:', indicator.text);
+            if (newText && newText.trim()) {
+                indicator.text = newText.trim();
+                renderIndicatorsList();
+                hasUnsavedChanges = true;
+                updateStatusIndicator();
+            }
         }
 
-        async function deleteIndicator(indicatorId) {
-            if (!confirm('¿Está seguro de eliminar este indicador? Esta acción no se puede deshacer.')) {
+        function deleteIndicator(indicatorId) {
+            if (confirm('¿Está seguro de que desea eliminar este indicador?')) {
+                indicators = indicators.filter(ind => ind.id !== indicatorId);
+                renderIndicatorsList();
+                renderCalificacionesTable();
+                calculateSumaCotidiano();
+                hasUnsavedChanges = true;
+                updateStatusIndicator();
+            }
+        }
+
+        function clearAllIndicators() {
+            if (confirm('¿Está seguro de que desea eliminar TODOS los indicadores? Esta acción no se puede deshacer.')) {
+                indicators = [];
+                mainIndicator = null;
+                renderIndicatorsList();
+                renderCalificacionesTable();
+                calculateSumaCotidiano();
+                hasUnsavedChanges = true;
+                updateStatusIndicator();
+            }
+        }
+
+        // ========================================
+        // GUARDADO Y ESTADO
+        // ========================================
+        function guardarTodo() {
+            if (!currentGrado || !currentMateria) {
+                alert('Por favor seleccione grado y materia primero');
                 return;
             }
             
-            try {
-                const response = await fetch(`/api/cotidiano/indicators/${indicatorId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Indicador eliminado exitosamente');
-                    await loadIndicators();
-                } else {
-                    alert('Error al eliminar el indicador: ' + (result.message || 'Error desconocido'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al eliminar el indicador: ' + error.message);
-            }
-        }
-
-        // ========================================
-        // TABLA DE EVALUACIÓN
-        // ========================================
-        function loadEvaluationTable() {
-            const table = document.getElementById('evaluationTable');
-            const thead = table.querySelector('thead tr');
-            const tbody = document.getElementById('evaluationTableBody');
-            
-            // Limpiar tabla
-            thead.innerHTML = '<th>Estudiante</th>';
-            tbody.innerHTML = '';
-            
-            // Agregar columnas de indicadores
-            indicators.forEach(indicator => {
-                const th = document.createElement('th');
-                th.textContent = indicator.indicator_name;
-                th.style.textAlign = 'center';
-                thead.insertBefore(th, thead.lastElementChild.previousElementSibling);
+            // Aquí iría la lógica para guardar en el servidor
+            console.log('Guardando datos:', {
+                grado: currentGrado,
+                materia: currentMateria,
+                fecha: currentDate,
+                mainIndicator: mainIndicator,
+                indicators: indicators,
+                calificaciones: calificaciones[currentGrado] && calificaciones[currentGrado][currentMateria] ? calificaciones[currentGrado][currentMateria][currentDate] : null
             });
             
-            // Agregar filas de estudiantes
-            students.forEach((student, studentIndex) => {
-                const row = document.createElement('tr');
-                
-                // Columna del estudiante
-                const studentCell = document.createElement('td');
-                studentCell.className = 'student-name';
-                studentCell.textContent = `${student.first_name} ${student.first_surname}`;
-                row.appendChild(studentCell);
-                
-                // Columnas de indicadores
-                indicators.forEach((indicator, indicatorIndex) => {
-                    const cell = document.createElement('td');
-                    cell.innerHTML = `
-                        <div class="score-buttons">
-                            <button class="score-btn score-btn-1" 
-                                    onclick="setScore(${studentIndex}, ${indicatorIndex}, 1)">1</button>
-                            <button class="score-btn score-btn-2" 
-                                    onclick="setScore(${studentIndex}, ${indicatorIndex}, 2)">2</button>
-                            <button class="score-btn score-btn-3" 
-                                    onclick="setScore(${studentIndex}, ${indicatorIndex}, 3)">3</button>
-                        </div>
-                    `;
-                    row.appendChild(cell);
-                });
-                
-                // Columna de total
-                const totalCell = document.createElement('td');
-                totalCell.innerHTML = '<div class="total-score" id="total-' + studentIndex + '">0</div>';
-                row.appendChild(totalCell);
-                
-                // Columna de nota final
-                const gradeCell = document.createElement('td');
-                gradeCell.innerHTML = '<div class="final-grade" id="grade-' + studentIndex + '">0</div>';
-                row.appendChild(gradeCell);
-                
-                tbody.appendChild(row);
-            });
+            hasUnsavedChanges = false;
+            updateStatusIndicator();
             
-            // Inicializar evaluación vacía
-            initializeEmptyEvaluation();
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `Última actualización: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+            
+            // Efecto visual
+            const btn = event.target;
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => btn.style.transform = 'scale(1)', 150);
         }
 
-        function initializeEmptyEvaluation() {
-            currentEvaluation = {
-                date: formatDateForDB(selectedDate),
-                grades: students.map(() => ({
-                    scores: new Array(indicators.length).fill(0),
-                    total: 0,
-                    finalGrade: 0
-                }))
-            };
-            updateAllTotals();
-        }
-
-        async function loadEvaluationForDate() {
-            try {
-                const dateStr = formatDateForDB(selectedDate);
-                const response = await fetch(`/api/cotidiano/evaluation?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}&date=${dateStr}`);
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    loadExistingEvaluation(result.data);
-                } else {
-                    initializeEmptyEvaluation();
-                }
-            } catch (error) {
-                console.error('Error cargando evaluación:', error);
-                initializeEmptyEvaluation();
-            }
-        }
-
-        function loadExistingEvaluation(evaluation) {
-            // TODO: Implementar carga de evaluación existente
-            // Por ahora inicializamos vacía
-            initializeEmptyEvaluation();
-        }
-
-        function setScore(studentIndex, indicatorIndex, score) {
-            if (!currentEvaluation || !currentEvaluation.grades[studentIndex]) return;
-            
-            // Actualizar puntuación
-            currentEvaluation.grades[studentIndex].scores[indicatorIndex] = score;
-            
-            // Actualizar UI - remover selección previa
-            const row = document.querySelector(`#evaluationTableBody tr:nth-child(${studentIndex + 1})`);
-            if (!row) return;
-            
-            const cell = row.querySelector(`td:nth-child(${indicatorIndex + 2})`);
-            if (!cell) return;
-            
-            const scoreButtons = cell.querySelectorAll('.score-btn');
-            scoreButtons.forEach(btn => btn.classList.remove('selected'));
-            
-            // Marcar botón seleccionado
-            const selectedButton = cell.querySelector(`.score-btn-${score}`);
-            if (selectedButton) {
-                selectedButton.classList.add('selected');
-            }
-            
-            // Actualizar totales
-            updateStudentTotal(studentIndex);
-            updateOverallStats();
-        }
-
-        function updateStudentTotal(studentIndex) {
-            if (!currentEvaluation) return;
-            
-            const scores = currentEvaluation.grades[studentIndex].scores;
-            const total = scores.reduce((sum, score) => sum + score, 0);
-            const maxPossible = indicators.length * 3;
-            const percentage = maxPossible > 0 ? (total / maxPossible) * 100 : 0;
-            const gradeWeight = parseInt(document.getElementById('gradeWeight').value) || 100;
-            const finalGrade = (percentage * gradeWeight) / 100;
-            
-            currentEvaluation.grades[studentIndex].total = total;
-            currentEvaluation.grades[studentIndex].finalGrade = finalGrade;
-            
-            // Actualizar UI
-            const totalElement = document.getElementById(`total-${studentIndex}`);
-            const gradeElement = document.getElementById(`grade-${studentIndex}`);
-            
-            if (totalElement) totalElement.textContent = total;
-            if (gradeElement) gradeElement.textContent = finalGrade.toFixed(1);
-        }
-
-        function updateAllTotals() {
-            students.forEach((student, index) => {
-                updateStudentTotal(index);
-            });
-        }
-
-        function updateOverallStats() {
-            if (!currentEvaluation || currentEvaluation.grades.length === 0) return;
-            
-            const totalScores = currentEvaluation.grades.map(g => g.total);
-            const avgScore = totalScores.reduce((sum, score) => sum + score, 0) / totalScores.length;
-            
-            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
-        }
-
-        // ========================================
-        // ACCIONES RÁPIDAS
-        // ========================================
-        function markAllScore(score) {
-            if (!currentEvaluation || !students.length || !indicators.length) return;
-            
-            students.forEach((student, studentIndex) => {
-                indicators.forEach((indicator, indicatorIndex) => {
-                    setScore(studentIndex, indicatorIndex, score);
-                });
-            });
-        }
-
-        function clearAllScores() {
-            if (!confirm('¿Está seguro de limpiar todas las calificaciones?')) return;
-            
-            if (!currentEvaluation) return;
-            
-            // Limpiar datos
-            initializeEmptyEvaluation();
-            
-            // Limpiar UI
-            document.querySelectorAll('.score-btn.selected').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-        }
-
-        async function saveEvaluation() {
-            if (!currentEvaluation) {
-                alert('No hay evaluación para guardar');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/cotidiano/evaluation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        grade_level: currentGrade,
-                        subject_area: currentSubject,
-                        evaluation_date: currentEvaluation.date,
-                        grade_weight: parseInt(document.getElementById('gradeWeight').value) || 100,
-                        students: students.map((student, index) => ({
-                            student_id: student.id,
-                            scores: currentEvaluation.grades[index].scores,
-                            total_points: currentEvaluation.grades[index].total,
-                            final_grade: currentEvaluation.grades[index].finalGrade
-                        }))
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Evaluación guardada exitosamente');
-                    renderCalendar(); // Actualizar calendario
-                } else {
-                    alert('Error al guardar la evaluación: ' + (result.message || 'Error desconocido'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al guardar la evaluación: ' + error.message);
-            }
-        }
-
-        // ========================================
-        // HISTORIAL
-        // ========================================
-        function toggleHistory() {
-            const historySection = document.getElementById('historySection');
-            if (historySection.classList.contains('hidden')) {
-                loadHistory();
-                historySection.classList.remove('hidden');
+        function updateStatusIndicator() {
+            const indicator = document.getElementById('statusIndicator');
+            if (hasUnsavedChanges) {
+                indicator.className = 'status-indicator status-unsaved';
+                indicator.textContent = '⚠️ Cambios sin guardar';
             } else {
-                historySection.classList.add('hidden');
+                indicator.className = 'status-indicator status-saved';
+                indicator.textContent = '✅ Guardado';
             }
         }
 
-        async function loadHistory() {
-            if (!currentGrade || !currentSubject) return;
+        function verHistorial() {
+            let mensaje = 'Historial de fechas guardadas:\n\n';
+            let hayDatos = false;
             
-            try {
-                const response = await fetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
-                const result = await response.json();
-                
-                const historyList = document.getElementById('historyList');
-                historyList.innerHTML = '';
-                
-                if (!result.success || !result.data || result.data.length === 0) {
-                    historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No hay evaluaciones guardadas</p>';
-                    return;
-                }
-                
-                const history = result.data;
-                
-                history.forEach(item => {
-                    const historyItem = document.createElement('div');
-                    historyItem.className = 'history-item';
-                    historyItem.onclick = () => loadHistoryItem(item.evaluation_date);
-                    historyItem.innerHTML = `
-                        <div class="history-date">${formatDate(new Date(item.evaluation_date))}</div>
-                        <div class="history-stats">
-                            <span>Estudiantes: ${item.total_students}</span>
-                            <span>Promedio: ${item.average_grade.toFixed(1)}</span>
-                            <span>Peso: ${item.grade_weight}%</span>
-                        </div>
-                    `;
-                    historyList.appendChild(historyItem);
-                });
-            } catch (error) {
-                console.error('Error cargando historial:', error);
-                const historyList = document.getElementById('historyList');
-                historyList.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 40px;">Error cargando historial</p>';
-            }
-        }
-
-        function loadHistoryItem(date) {
-            selectedDate = new Date(date);
-            renderCalendar();
-            updateDateDisplay();
-            loadEvaluationForDate();
-            document.getElementById('historySection').classList.add('hidden');
-        }
-
-        // ========================================
-        // UTILIDADES
-        // ========================================
-        function formatDate(date) {
-            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                           'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            
-            return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
-        }
-
-        function formatDateForDB(date) {
-            return date.toISOString().split('T')[0];
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function goBack() {
-            window.location.href = 'dashboard.html';
-        }
-
-        // ========================================
-        // FUNCIONES PARA INDICADORES MÚLTIPLES
-        // ========================================
-        
-        function openBulkIndicatorsModal() {
-            document.getElementById('bulkIndicatorsModal').style.display = 'block';
-            document.getElementById('bulkIndicatorsText').focus();
-            updateBulkPreview(); // Limpiar vista previa
-        }
-
-        function closeBulkIndicatorsModal() {
-            document.getElementById('bulkIndicatorsModal').style.display = 'none';
-            document.getElementById('bulkIndicatorsText').value = '';
-            updateBulkPreview();
-        }
-
-        function updateBulkPreview() {
-            const text = document.getElementById('bulkIndicatorsText').value;
-            const lines = text.split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 0)
-                .slice(0, 50); // Máximo 50 indicadores
-            
-            const countElement = document.getElementById('bulkIndicatorCount');
-            const previewElement = document.getElementById('bulkPreview');
-            const saveBtn = document.getElementById('bulkSaveBtn');
-            
-            countElement.textContent = lines.length;
-            
-            if (lines.length === 0) {
-                previewElement.innerHTML = '<em style="color: #666;">Escriba indicadores arriba para ver la vista previa</em>';
-                saveBtn.disabled = true;
-            } else {
-                const preview = lines.map((line, index) => 
-                    `<div style="padding: 4px 0; border-bottom: 1px solid #eee;">
-                        <strong>${index + 1}.</strong> ${escapeHtml(line)}
-                    </div>`
-                ).join('');
-                
-                previewElement.innerHTML = preview;
-                saveBtn.disabled = false;
-            }
-            
-            // Warning si hay más de 50
-            if (text.split('\n').filter(line => line.trim().length > 0).length > 50) {
-                previewElement.innerHTML += '<div style="color: #e74c3c; font-weight: bold; margin-top: 10px;">⚠️ Solo se procesarán los primeros 50 indicadores</div>';
-            }
-        }
-
-        async function saveBulkIndicators() {
-            const text = document.getElementById('bulkIndicatorsText').value;
-            const lines = text.split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 0)
-                .slice(0, 50);
-                
-            if (lines.length === 0) {
-                alert('No hay indicadores para guardar');
-                return;
-            }
-            
-            if (!currentGrade || !currentSubject) {
-                alert('Debe seleccionar grado y materia primero');
-                return;
-            }
-            
-            const saveBtn = document.getElementById('bulkSaveBtn');
-            const originalText = saveBtn.textContent;
-            
-            try {
-                saveBtn.disabled = true;
-                saveBtn.textContent = '⏳ Guardando...';
-                
-                // Preparar datos para el API
-                const indicators = lines.map(line => ({
-                    indicator_name: line,
-                    parent_indicator_id: null
-                }));
-                
-                const response = await fetch('/api/cotidiano/indicators/bulk', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        grade_level: currentGrade,
-                        subject_area: currentSubject,
-                        indicators: indicators
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    const { success, errors, total } = result.data.summary;
-                    
-                    let message = `✅ Proceso completado:\n`;
-                    message += `• ${success} indicadores creados exitosamente\n`;
-                    if (errors > 0) {
-                        message += `• ${errors} errores encontrados\n`;
-                    }
-                    message += `• Total procesados: ${total}`;
-                    
-                    alert(message);
-                    
-                    // Mostrar detalles si hay errores
-                    if (errors > 0) {
-                        const errorDetails = result.data.results
-                            .filter(r => !r.success)
-                            .map(r => `❌ "${r.indicator_name}": ${r.error}`)
-                            .join('\n');
-                        
-                        if (confirm('¿Desea ver los detalles de los errores?')) {
-                            alert('Errores encontrados:\n\n' + errorDetails);
-                        }
-                    }
-                    
-                    closeBulkIndicatorsModal();
-                    await loadIndicators(); // Recargar la lista
-                    
-                } else {
-                    alert('Error al guardar indicadores: ' + (result.message || 'Error desconocido'));
-                }
-                
-            } catch (error) {
-                console.error('Error guardando indicadores múltiples:', error);
-                alert('Error al conectar con el servidor: ' + error.message);
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = originalText;
-            }
-        }
-
-        // Event listener para actualizar vista previa en tiempo real
-        document.addEventListener('DOMContentLoaded', function() {
-            // Agregar el event listener cuando el DOM esté listo
-            setTimeout(() => {
-                const textarea = document.getElementById('bulkIndicatorsText');
-                if (textarea) {
-                    textarea.addEventListener('input', updateBulkPreview);
-                    textarea.addEventListener('paste', () => {
-                        setTimeout(updateBulkPreview, 100); // Delay para que el paste se procese
+            Object.keys(calificaciones).forEach(grado => {
+                Object.keys(calificaciones[grado]).forEach(materia => {
+                    Object.keys(calificaciones[grado][materia]).forEach(fecha => {
+                        const data = calificaciones[grado][materia][fecha];
+                        const numIndicadores = (data.indicators ? data.indicators.length : 0) + (data.mainIndicator ? 1 : 0);
+                        mensaje += `📅 ${fecha} - Grado ${grado} - ${materia} - ${numIndicadores} indicadores\n`;
+                        hayDatos = true;
                     });
-                }
-            }, 1000);
-        });
+                });
+            });
+            
+            if (!hayDatos) {
+                mensaje = 'No hay fechas guardadas en el historial';
+            }
+            
+            alert(mensaje);
+        }
 
-        // Cerrar modal al hacer clic fuera
-        window.addEventListener('click', function(event) {
-            const bulkModal = document.getElementById('bulkIndicatorsModal');
-            if (event.target === bulkModal) {
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeIndicatorModal();
                 closeBulkIndicatorsModal();
             }
         });
 
+        window.onclick = function(event) {
+            const indicatorModal = document.getElementById('indicatorModal');
+            const bulkModal = document.getElementById('bulkIndicatorsModal');
+            
+            if (event.target === indicatorModal) {
+                closeIndicatorModal();
+            }
+            if (event.target === bulkModal) {
+                closeBulkIndicatorsModal();
+            }
+        }
 
-
-
+        // Actualizar suma del cotidiano al cargar
+        calculateSumaCotidiano();
     </script>
 </body>
 </html>
