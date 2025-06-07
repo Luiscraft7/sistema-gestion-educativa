@@ -948,98 +948,46 @@ Participa activamente en discusiones"
             }
         }
 
-        async function loadSystemData() {
-            console.log('🔄 Iniciando carga de datos del sistema...');
+       async function loadSystemData() {
+        console.log('🔄 Iniciando carga de datos del sistema...');
+        
+        // Cargar grados
+        const gradesResponse = await fetch('/api/grades');
+        const gradesData = await gradesResponse.json();
+        if (gradesData.success) {
+            const uniqueGrades = [];
+            const seenNames = new Set();
             
-            // Cargar grados
-            const gradesResponse = await fetch('/api/grades');
-            const gradesData = await gradesResponse.json();
-            if (gradesData.success) {
-                // Filtrar duplicados por ID o nombre
-                const uniqueGrades = [];
-                const seenNames = new Set();
-                
-                gradesData.data.forEach(grade => {
-                    if (!seenNames.has(grade.name)) {
-                        seenNames.add(grade.name);
-                        uniqueGrades.push(grade);
-                    }
-                });
-                
-                allGrades = uniqueGrades;
-                console.log('✅ Grados cargados (después de filtrar duplicados):', allGrades.length);
-                console.log('📋 Grados únicos:', allGrades.map(g => `"${g.name}"`).join(', '));
-                populateGradeSelector();
-            } else {
-                console.error('❌ Error cargando grados:', gradesData.message);
-            }
-
-            // Cargar materias personalizadas
-            const subjectsResponse = await fetch('/api/custom-subjects');
-            const subjectsData = await subjectsResponse.json();
-            if (subjectsData.success) {
-                allSubjects = subjectsData.data;
-                console.log('✅ Materias cargadas:', allSubjects.length);
-                console.log('📚 Materias disponibles:', allSubjects.map(s => `"${s.name}"`).join(', '));
-            } else {
-                console.error('❌ Error cargando materias:', subjectsData.message);
-                allSubjects = [];
-            }
-
-            // Cargar estudiantes
-            const studentsResponse = await fetch('/api/students');
-            const studentsData = await studentsResponse.json();
-            if (studentsData.success) {
-                students = studentsData.data;
-                console.log('✅ Estudiantes cargados:', students.length);
-                
-                // Debug: Mostrar estructura de grados en estudiantes
-                const gradeFields = ['grade_level', 'grade', 'grado', 'nivel'];
-                console.log('📊 Análisis de grados en estudiantes:');
-                students.forEach((student, index) => {
-                    if (index < 3) { // Solo mostrar los primeros 3 para no saturar logs
-                        const name = `${student.first_surname} ${student.first_name}`;
-                        const gradeInfo = gradeFields.map(field => `${field}: "${student[field] || 'N/A'}"`).join(', ');
-                        console.log(`  👤 ${name} - ${gradeInfo}`);
-                    }
-                });
-                
-                // Mostrar resumen de grados detectados
-                const gradesInStudents = [...new Set(students.map(s => 
-                    s.grade_level || s.grade || s.grado || 'Sin grado'
-                ))];
-                console.log('🎓 Grados detectados en estudiantes:', gradesInStudents);
-            } else {
-                console.error('❌ Error cargando estudiantes:', studentsData.message);
-            }
-
-            // Cargar relaciones grado-materia
-            const gradeSubjectsResponse = await fetch('/api/grade-subjects');
-            const gradeSubjectsData = await gradeSubjectsResponse.json();
-            if (gradeSubjectsData.success && gradeSubjectsData.data.length > 0) {
-                // Organizar por grado
-                gradeSubjects = {};
-                gradeSubjectsData.data.forEach(relation => {
-                    if (!gradeSubjects[relation.grade_name]) {
-                        gradeSubjects[relation.grade_name] = [];
-                    }
-                    // Evitar duplicados de materias en el mismo grado
-                    if (!gradeSubjects[relation.grade_name].includes(relation.subject_name)) {
-                        gradeSubjects[relation.grade_name].push(relation.subject_name);
-                    }
-                });
-                console.log('✅ Relaciones grado-materia cargadas:', gradeSubjectsData.data.length);
-                console.log('📋 Relaciones por grado:', gradeSubjects);
-            } else {
-                console.log('⚠️ No hay relaciones grado-materia configuradas, usando todas las materias para todos los grados');
-                // Si no hay relaciones, permitir todas las materias para todos los grados
-                gradeSubjects = {};
-                allGrades.forEach(grade => {
-                    gradeSubjects[grade.name] = allSubjects.map(subject => subject.name);
-                });
-                console.log('📋 Relaciones automáticas creadas:', gradeSubjects);
-            }
+            gradesData.data.forEach(grade => {
+                if (!seenNames.has(grade.name)) {
+                    seenNames.add(grade.name);
+                    uniqueGrades.push(grade);
+                }
+            });
+            
+            allGrades = uniqueGrades;
+            console.log('✅ Grados cargados:', allGrades.length);
+            populateGradeSelector();
         }
+
+        // Cargar materias
+        const subjectsResponse = await fetch('/api/custom-subjects');
+        const subjectsData = await subjectsResponse.json();
+        if (subjectsData.success) {
+            allSubjects = subjectsData.data;
+            console.log('✅ Materias cargadas:', allSubjects.length);
+        }
+
+        // Cargar estudiantes
+        const studentsResponse = await fetch('/api/students');
+        const studentsData = await studentsResponse.json();
+        if (studentsData.success) {
+            students = studentsData.data;
+            console.log('✅ Estudiantes cargados:', students.length);
+        }
+        
+       
+    }
 
         function populateGradeSelector() {
             const gradoSelect = document.getElementById('grado');
@@ -1110,7 +1058,7 @@ Participa activamente en discusiones"
         // ========================================
         // GESTIÓN DE GRADO Y MATERIA
         // ========================================
-        function cambiarGrado() {
+        async function cambiarGrado() {
             const gradoSelect = document.getElementById('grado');
             const materiaSelect = document.getElementById('materia');
             
@@ -1118,49 +1066,40 @@ Participa activamente en discusiones"
             console.log('🎓 Grado seleccionado:', currentGrado);
             
             if (currentGrado) {
-                // Habilitar selector de materia
+                // Habilitar selector de materia pero mostrar "Cargando..."
                 materiaSelect.disabled = false;
-                materiaSelect.innerHTML = '';
+                materiaSelect.innerHTML = '<option value="">Cargando materias...</option>';
                 
-                // Agregar opción por defecto
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = 'Seleccionar materia...';
-                materiaSelect.appendChild(defaultOption);
-                
-                // Cargar materias del grado seleccionado desde los datos reales
-                const materiasDelGrado = gradeSubjects[currentGrado] || [];
-                console.log('📚 Materias disponibles para', currentGrado + ':', materiasDelGrado);
-                
-                // Filtro para evitar duplicados
-                const addedMaterias = new Set();
-                
-                materiasDelGrado.forEach(materia => {
-                    if (!addedMaterias.has(materia)) {
-                        const option = document.createElement('option');
-                        option.value = materia;
-                        option.textContent = materia;
-                        materiaSelect.appendChild(option);
-                        addedMaterias.add(materia);
-                    }
-                });
-                
-                if (materiasDelGrado.length === 0) {
-                    console.log('⚠️ No hay materias asignadas al grado, mostrando todas las materias disponibles');
-                    // Si no hay materias asignadas, mostrar todas las materias disponibles
-                    allSubjects.forEach(subject => {
-                        if (!addedMaterias.has(subject.name)) {
+                try {
+                    // USAR EL MISMO APPROACH QUE EVALUACIONES
+                    console.log('📖 Cargando materias para grado:', currentGrado);
+                    
+                    const response = await fetch(`/api/grade-subjects/${encodeURIComponent(currentGrado)}`);
+                    const result = await response.json();
+                    
+                    materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
+                    
+                    if (result.success && result.data.length > 0) {
+                        result.data.forEach(assignment => {
                             const option = document.createElement('option');
-                            option.value = subject.name;
-                            option.textContent = subject.name;
+                            option.value = assignment.subject_name;
+                            option.textContent = assignment.subject_name;
                             materiaSelect.appendChild(option);
-                            addedMaterias.add(subject.name);
-                        }
-                    });
+                        });
+                        
+                        console.log('✅ Materias cargadas:', result.data.length);
+                        console.log('🔍 Materias disponibles:', result.data.map(a => a.subject_name));
+                    } else {
+                        materiaSelect.innerHTML = '<option value="">No hay materias asignadas a este grado</option>';
+                        materiaSelect.disabled = true;
+                        console.log('⚠️ No hay materias asignadas al grado');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error cargando materias:', error);
+                    materiaSelect.innerHTML = '<option value="">Error cargando materias</option>';
+                    materiaSelect.disabled = true;
                 }
-                
-                console.log('✅ Selector de materias actualizado con', addedMaterias.size, 'materias únicas');
-                console.log('🔍 Opciones de materias:', Array.from(materiaSelect.options).map(opt => opt.textContent));
             } else {
                 // Deshabilitar selector de materia
                 materiaSelect.disabled = true;
@@ -2016,33 +1955,82 @@ Participa activamente en discusiones"
         // ========================================
         // GUARDADO Y ESTADO
         // ========================================
-        function guardarTodo() {
+        async function guardarTodo() {
             if (!currentGrado || !currentMateria) {
                 alert('Por favor seleccione grado y materia primero');
                 return;
             }
             
-            // Aquí iría la lógica para guardar en el servidor
-            console.log('Guardando datos:', {
-                grado: currentGrado,
-                materia: currentMateria,
-                fecha: currentDate,
-                mainIndicator: mainIndicator,
-                indicators: indicators,
-                calificaciones: calificaciones[currentGrado] && calificaciones[currentGrado][currentMateria] ? calificaciones[currentGrado][currentMateria][currentDate] : null
+            // Preparar datos para enviar
+            const estudiantesData = {};
+            
+            // Recopilar calificaciones de todos los estudiantes
+            const estudiantesDelGrado = students.filter(student => {
+                const gradeField = student.grade_level || student.grade || student.grado;
+                return gradeField === currentGrado;
             });
             
-            hasUnsavedChanges = false;
-            updateStatusIndicator();
+            estudiantesDelGrado.forEach(student => {
+                const studentKey = `${student.first_surname} ${student.second_surname || ''} ${student.first_name} ${student.second_name || ''}`.trim();
+                
+                if (calificaciones[currentGrado] && 
+                    calificaciones[currentGrado][currentMateria] && 
+                    calificaciones[currentGrado][currentMateria][currentDate] &&
+                    calificaciones[currentGrado][currentMateria][currentDate].estudiantes &&
+                    calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
+                    
+                    estudiantesData[studentKey] = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
+                }
+            });
             
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = 
-                `Última actualización: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+            const dataToSend = {
+                grade_level: currentGrado,
+                subject_area: currentMateria,
+                evaluation_date: currentDate,
+                main_indicator: mainIndicator,
+                indicators: indicators,
+                students: estudiantesData
+            };
             
-            // Efecto visual
-            const btn = event.target;
-            btn.style.transform = 'scale(0.95)';
-            setTimeout(() => btn.style.transform = 'scale(1)', 150);
+            console.log('📤 Enviando datos al servidor:', dataToSend);
+            
+            try {
+                // Mostrar indicador de guardando
+                const saveButton = document.querySelector('button[onclick="guardarTodo()"]');
+                const originalText = saveButton.textContent;
+                saveButton.disabled = true;
+                saveButton.textContent = '💾 Guardando...';
+                
+                const response = await fetch('/api/cotidiano/evaluation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataToSend)
+                });
+                
+                const result = await response.json();
+                console.log('📥 Respuesta del servidor:', result);
+                
+                if (result.success) {
+                    hasUnsavedChanges = false;
+                    updateStatusIndicator();
+                    alert('✅ Datos guardados correctamente');
+                    console.log('✅ Evaluación guardada exitosamente');
+                } else {
+                    alert('❌ Error guardando: ' + result.message);
+                    console.error('❌ Error del servidor:', result);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error enviando datos:', error);
+                alert('❌ Error de conexión al guardar');
+            } finally {
+                // Restaurar botón
+                const saveButton = document.querySelector('button[onclick="guardarTodo()"]');
+                saveButton.disabled = false;
+                saveButton.textContent = originalText;
+            }
         }
 
         function updateStatusIndicator() {

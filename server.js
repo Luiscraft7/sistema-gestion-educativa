@@ -1464,36 +1464,106 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
     }
 });
 
-// Guardar evaluación
+// Guardar evaluación del cotidiano
 app.post('/api/cotidiano/evaluation', async (req, res) => {
     try {
-        const { grade_level, subject_area, evaluation_date, grade_weight, students } = req.body;
+        const { grade_level, subject_area, evaluation_date, main_indicator, indicators, students } = req.body;
         
-        if (!grade_level || !subject_area || !evaluation_date || !students) {
+        if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Missing required fields' 
+                message: 'Grado, materia y fecha son requeridos' 
             });
         }
         
+        console.log('💾 Guardando evaluación cotidiano:', {
+            grade_level,
+            subject_area,
+            evaluation_date,
+            indicators: indicators?.length || 0,
+            students: Object.keys(students || {}).length
+        });
+        
         database.ensureConnection();
         
-        // TODO: Implementar guardado de evaluación completa
-        // Por ahora solo confirmamos que los datos llegaron correctamente
+        // 1. Primero, guardar/actualizar indicadores
+        if (main_indicator) {
+            const mainQuery = `
+                INSERT OR REPLACE INTO daily_indicators 
+                (id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
+                VALUES (?, ?, ?, ?, NULL, datetime('now'))
+            `;
+            database.db.run(mainQuery, [main_indicator.id, grade_level, subject_area, main_indicator.text]);
+        }
+        
+        if (indicators && indicators.length > 0) {
+            indicators.forEach(indicator => {
+                const query = `
+                    INSERT OR REPLACE INTO daily_indicators 
+                    (id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, datetime('now'))
+                `;
+                const parentId = indicator.isSubIndicator ? indicator.parentId : null;
+                database.db.run(query, [indicator.id, grade_level, subject_area, indicator.text, parentId]);
+            });
+        }
+        
+        // 2. Guardar evaluaciones de estudiantes
+        let savedStudents = 0;
+        
+        if (students && Object.keys(students).length > 0) {
+            for (const [studentName, scores] of Object.entries(students)) {
+                // Buscar ID del estudiante por nombre
+                const studentQuery = `
+                    SELECT id FROM students 
+                    WHERE (first_surname || ' ' || COALESCE(second_surname, '') || ' ' || first_name || ' ' || COALESCE(second_name, '')) 
+                    LIKE ?
+                `;
+                
+                database.db.get(studentQuery, [`%${studentName.trim()}%`], (err, student) => {
+                    if (!err && student) {
+                        // Crear/actualizar evaluación del estudiante
+                        const evalQuery = `
+                            INSERT OR REPLACE INTO daily_evaluations 
+                            (student_id, grade_level, subject_area, evaluation_date, created_at)
+                            VALUES (?, ?, ?, ?, datetime('now'))
+                        `;
+                        
+                        database.db.run(evalQuery, [student.id, grade_level, subject_area, evaluation_date], function(evalErr) {
+                            if (!evalErr) {
+                                const evaluationId = this.lastID;
+                                
+                                // Guardar calificaciones por indicador
+                                for (const [indicatorId, score] of Object.entries(scores)) {
+                                    const scoreQuery = `
+                                        INSERT OR REPLACE INTO daily_indicator_scores 
+                                        (daily_evaluation_id, indicator_id, score, created_at)
+                                        VALUES (?, ?, ?, datetime('now'))
+                                    `;
+                                    database.db.run(scoreQuery, [evaluationId, indicatorId, score]);
+                                }
+                                savedStudents++;
+                            }
+                        });
+                    }
+                });
+            }
+        }
         
         res.json({ 
             success: true,
             data: {
-                saved: students.length,
+                saved_students: savedStudents,
                 date: evaluation_date,
                 grade: grade_level,
-                subject: subject_area
+                subject: subject_area,
+                indicators: indicators?.length || 0
             },
-            message: 'Evaluación guardada exitosamente (funcionalidad en desarrollo)' 
+            message: `Evaluación guardada: ${savedStudents} estudiantes, ${indicators?.length || 0} indicadores` 
         });
         
     } catch (error) {
-        console.error('Error in save evaluation API:', error);
+        console.error('❌ Error guardando evaluación cotidiano:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Error guardando evaluación',
