@@ -520,6 +520,12 @@
                 <button class="btn btn-primary" onclick="openAddModal()">
                     ➕ Agregar Individual
                 </button>
+                <button class="btn btn-warning" onclick="openGradesManagement()" title="Gestionar grados del sistema">
+                    🎓 Gestionar Grados
+                </button>
+                <button class="btn btn-warning" onclick="openCleanupModal()" style="margin-right: 10px;" title="Limpiar datos de prueba">
+                    🧹 Limpiar Sistema
+                </button>
                 <a href="dashboard.html" class="btn btn-secondary">
                     ← Dashboard
                 </a>
@@ -695,6 +701,64 @@
         </div>
     </div>
 
+    <!-- Modal de Limpieza del Sistema -->
+    <div class="modal" id="cleanupModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🧹 Limpiar Sistema</h2>
+                <button class="close-btn" onclick="closeCleanupModal()">&times;</button>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin-bottom: 10px;">⚠️ ADVERTENCIA</h4>
+                <p style="color: #856404; margin: 0;">
+                    Esta función eliminará datos de prueba del sistema. Use solo si tiene estudiantes duplicados o datos de prueba que desea limpiar.
+                </p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4>Opciones de Limpieza:</h4>
+                
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="cleanDuplicates">
+                        <div>
+                            <strong>Eliminar estudiantes duplicados</strong>
+                            <div style="font-size: 12px; color: #666;">Eliminará estudiantes con nombres idénticos, manteniendo solo el más reciente</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="cleanTestData">
+                        <div>
+                            <strong>Eliminar datos de prueba</strong>
+                            <div style="font-size: 12px; color: #666;">Eliminará estudiantes con nombres como "Prueba", "Test", "Juan", "María", etc.</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ffc107; border-radius: 8px; cursor: pointer; background: #fff3cd;">
+                        <input type="checkbox" id="cleanAllStudents">
+                        <div>
+                            <strong style="color: #856404;">⚠️ Eliminar TODOS los estudiantes</strong>
+                            <div style="font-size: 12px; color: #856404;">CUIDADO: Esto eliminará todos los estudiantes del sistema</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeCleanupModal()">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="executeCleanup()">
+                    🧹 Ejecutar Limpieza
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Agregar Masivo -->
     <div class="modal" id="bulkAddModal">
         <div class="bulk-modal-content">
@@ -707,14 +771,27 @@
                 <h4>📝 Instrucciones de Uso</h4>
                 <p><strong>Opción 1:</strong> Completa manualmente los campos en la tabla</p>
                 <p><strong>Opción 2:</strong> Pega datos desde Excel/Google Sheets directamente en las celdas</p>
-                <p><strong>Opción 3:</strong> Pega todo el bloque de datos en el área de texto abajo</p>
+                <p><strong>⚠️ IMPORTANTE:</strong> El grado seleccionado abajo se aplicará a <strong>TODOS</strong> los estudiantes de la tabla</p>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Grado para TODOS los estudiantes:</label>
-                <select class="form-input" id="bulkGrade" required>
-                    <option value="">Seleccionar grado...</option>
-                </select>
+            <div class="form-group" style="background: #fff3cd; padding: 20px; border-radius: 10px; border: 2px solid #ffeaa7; margin-bottom: 25px;">
+                <label class="form-label" style="font-size: 16px; font-weight: 700; color: #856404;">
+                    🎓 GRADO PARA <span style="color: #dc3545; text-decoration: underline;">TODOS</span> LOS ESTUDIANTES:
+                </label>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                    <select class="form-input" id="bulkGrade" required style="flex: 1;">
+                        <option value="">Seleccionar grado...</option>
+                    </select>
+                    <button type="button" class="btn btn-success" onclick="openQuickGradeModal()" title="Crear nuevo grado">
+                        ➕ Nuevo Grado
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="refreshGrades()" title="Actualizar lista de grados">
+                        🔄
+                    </button>
+                </div>
+                <div class="help-text" style="color: #856404; font-weight: 600; margin-top: 8px;">
+                    ⚠️ Todos los estudiantes agregados tendrán este mismo grado asignado
+                </div>
             </div>
 
             <!-- Tabla tipo Excel -->
@@ -746,6 +823,9 @@
 
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeBulkAddModal()">Cancelar</button>
+                <button type="button" class="btn btn-info" onclick="checkForDuplicates()" style="margin-right: 10px;">
+                    🔍 Verificar Duplicados
+                </button>
                 <button type="button" class="btn btn-warning" onclick="validateBulkData()" style="margin-right: 10px;">
                     🔍 Validar Datos
                 </button>
@@ -756,6 +836,38 @@
 
             <!-- Área de errores -->
             <div id="bulkErrorsSection" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Quick para Agregar Grado -->
+    <div class="modal" id="quickGradeModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🎓 Agregar Nuevo Grado</h2>
+                <button class="close-btn" onclick="closeQuickGradeModal()">&times;</button>
+            </div>
+            
+            <form id="quickGradeForm" onsubmit="saveQuickGrade(event)">
+                <div class="form-group">
+                    <label class="form-label" for="quickGradeName">Nombre del Grado *</label>
+                    <input type="text" class="form-input" id="quickGradeName" name="name" required 
+                           placeholder="Ej: Octavo, Kinder, Transición, Décimo">
+                    <div class="help-text">Escriba el nombre tal como aparecerá en las listas</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="quickGradeDescription">Descripción (opcional)</label>
+                    <input type="text" class="form-input" id="quickGradeDescription" name="description" 
+                           placeholder="Descripción breve del grado">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeQuickGradeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success" id="quickGradeSaveBtn">
+                        💾 Crear y Seleccionar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1092,6 +1204,370 @@
             editingStudentId = null;
         }
 
+        function openGradesManagement() {
+            // Abrir modal de gestión de grados
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'gradesManagementModal';
+            modal.style.display = 'flex';
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">🎓 Gestión de Grados</h2>
+                        <button class="close-btn" onclick="closeGradesManagement()">&times;</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h4>Agregar Nuevo Grado</h4>
+                        <form onsubmit="addGradeFromManagement(event)" style="display: flex; gap: 10px; align-items: end;">
+                            <div style="flex: 1;">
+                                <label class="form-label">Nombre del Grado</label>
+                                <input type="text" class="form-input" id="newGradeNameManagement" required placeholder="Ej: Octavo, Kinder">
+                            </div>
+                            <button type="submit" class="btn btn-primary">➕ Agregar</button>
+                        </form>
+                    </div>
+                    
+                    <div>
+                        <h4>Grados Existentes</h4>
+                        <div id="gradesListManagement" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
+                            <p style="text-align: center; color: #666;">Cargando grados...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeGradesManagement()">Cerrar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            loadGradesForManagement();
+            
+            // Event listener para cerrar al hacer clic fuera
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) closeGradesManagement();
+            });
+        }
+
+        function closeGradesManagement() {
+            const modal = document.getElementById('gradesManagementModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function loadGradesForManagement() {
+            try {
+                const response = await fetch('/api/grades');
+                const result = await response.json();
+                
+                const container = document.getElementById('gradesListManagement');
+                if (!container) return;
+                
+                if (result.success && result.data.length > 0) {
+                    container.innerHTML = result.data.map(grade => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f8f9fa; margin-bottom: 5px; border-radius: 5px;">
+                            <div>
+                                <strong>${grade.name}</strong>
+                                <div style="font-size: 12px; color: #666;">
+                                    ${grade.description || 'Sin descripción'} | Creado: ${new Date(grade.created_at).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteGradeFromManagement(${grade.id}, '${grade.name}')" title="Eliminar grado">
+                                🗑️
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">No hay grados registrados</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                const container = document.getElementById('gradesListManagement');
+                if (container) {
+                    container.innerHTML = '<p style="text-align: center; color: #dc3545;">Error cargando grados</p>';
+                }
+            }
+        }
+
+        async function addGradeFromManagement(event) {
+            event.preventDefault();
+            
+            const input = document.getElementById('newGradeNameManagement');
+            const gradeName = input.value.trim();
+            
+            if (!gradeName) return;
+            
+            try {
+                const response = await fetch('/api/grades', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: gradeName })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    input.value = '';
+                    loadGradesForManagement();
+                    loadGrades(); // Actualizar también los selects principales
+                    showMessage('success', `Grado "${gradeName}" agregado correctamente`);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('error', 'Error creando grado');
+            }
+        }
+
+        async function deleteGradeFromManagement(gradeId, gradeName) {
+            if (!confirm(`¿Eliminar el grado "${gradeName}"?`)) return;
+            
+            try {
+                const response = await fetch(`/api/grades/${gradeId}`, { method: 'DELETE' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadGradesForManagement();
+                    loadGrades(); // Actualizar también los selects principales
+                    showMessage('success', `Grado "${gradeName}" eliminado`);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('error', 'Error eliminando grado');
+            }
+        }
+
+        // ========================================
+        // FUNCIONES DE LIMPIEZA DEL SISTEMA
+        // ========================================
+
+        function openCleanupModal() {
+            document.getElementById('cleanupModal').classList.add('show');
+            // Limpiar checkboxes
+            document.getElementById('cleanDuplicates').checked = false;
+            document.getElementById('cleanTestData').checked = false;
+            document.getElementById('cleanAllStudents').checked = false;
+        }
+
+        function closeCleanupModal() {
+            document.getElementById('cleanupModal').classList.remove('show');
+        }
+
+        async function executeCleanup() {
+            const cleanDuplicates = document.getElementById('cleanDuplicates').checked;
+            const cleanTestData = document.getElementById('cleanTestData').checked;
+            const cleanAllStudents = document.getElementById('cleanAllStudents').checked;
+
+            if (!cleanDuplicates && !cleanTestData && !cleanAllStudents) {
+                showMessage('error', 'Seleccione al menos una opción de limpieza');
+                return;
+            }
+
+            let confirmMessage = '¿Está seguro de ejecutar la limpieza?\n\n';
+            if (cleanAllStudents) {
+                confirmMessage += '⚠️ ELIMINARÁ TODOS LOS ESTUDIANTES\n';
+            }
+            if (cleanDuplicates) {
+                confirmMessage += '• Eliminará duplicados\n';
+            }
+            if (cleanTestData) {
+                confirmMessage += '• Eliminará datos de prueba\n';
+            }
+            confirmMessage += '\nEsta acción NO se puede deshacer.';
+
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                // Obtener todos los estudiantes
+                const response = await fetch('/api/students');
+                const result = await response.json();
+
+                if (!result.success) {
+                    showMessage('error', 'Error obteniendo estudiantes');
+                    return;
+                }
+
+                const allStudents = result.data || [];
+                let studentsToDelete = [];
+
+                if (cleanAllStudents) {
+                    studentsToDelete = allStudents;
+                } else {
+                    if (cleanTestData) {
+                        const testPatterns = ['prueba', 'test', 'juan', 'maría', 'carlos', 'ana', 'luis', 'pedro', 'ramirez', 'gonzalez', 'perez', 'lopez'];
+                        const testStudents = allStudents.filter(student => {
+                            const fullName = `${student.first_surname} ${student.second_surname || ''} ${student.first_name}`.toLowerCase();
+                            return testPatterns.some(pattern => fullName.includes(pattern));
+                        });
+                        studentsToDelete = studentsToDelete.concat(testStudents);
+                    }
+
+                    if (cleanDuplicates) {
+                        const duplicates = [];
+                        const seen = new Map();
+
+                        allStudents.forEach(student => {
+                            const key = `${student.first_surname}_${student.second_surname || ''}_${student.first_name}`.toLowerCase();
+                            
+                            if (seen.has(key)) {
+                                // Es duplicado, mantener el más reciente
+                                const existing = seen.get(key);
+                                if (new Date(student.created_at) > new Date(existing.created_at)) {
+                                    duplicates.push(existing);
+                                    seen.set(key, student);
+                                } else {
+                                    duplicates.push(student);
+                                }
+                            } else {
+                                seen.set(key, student);
+                            }
+                        });
+
+                        studentsToDelete = studentsToDelete.concat(duplicates);
+                    }
+                }
+
+                // Eliminar duplicados de la lista
+                studentsToDelete = studentsToDelete.filter((student, index, self) => 
+                    index === self.findIndex(s => s.id === student.id)
+                );
+
+                if (studentsToDelete.length === 0) {
+                    showMessage('success', 'No se encontraron estudiantes para eliminar');
+                    closeCleanupModal();
+                    return;
+                }
+
+                // Confirmar cantidad
+                if (!confirm(`Se eliminarán ${studentsToDelete.length} estudiantes. ¿Continuar?`)) {
+                    return;
+                }
+
+                // Eliminar estudiantes
+                let deletedCount = 0;
+                let errorCount = 0;
+
+                for (const student of studentsToDelete) {
+                    try {
+                        const deleteResponse = await fetch(`/api/students/${student.id}`, {
+                            method: 'DELETE'
+                        });
+
+                        const deleteResult = await deleteResponse.json();
+                        if (deleteResult.success) {
+                            deletedCount++;
+                        } else {
+                            errorCount++;
+                        }
+                    } catch (error) {
+                        errorCount++;
+                    }
+
+                    // Pausa pequeña
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+
+                closeCleanupModal();
+                loadStudents(); // Recargar lista
+
+                if (errorCount === 0) {
+                    showMessage('success', `✅ Limpieza completada: ${deletedCount} estudiantes eliminados`);
+                } else {
+                    showMessage('error', `⚠️ Limpieza parcial: ${deletedCount} eliminados, ${errorCount} errores`);
+                }
+
+            } catch (error) {
+                console.error('Error en limpieza:', error);
+                showMessage('error', 'Error ejecutando limpieza');
+                closeCleanupModal();
+            }
+        }
+
+        // ========================================
+        // FUNCIONES PARA GESTIÓN RÁPIDA DE GRADOS
+        // ========================================
+
+        function openQuickGradeModal() {
+            document.getElementById('quickGradeModal').classList.add('show');
+            document.getElementById('quickGradeForm').reset();
+            document.getElementById('quickGradeName').focus();
+        }
+
+        function closeQuickGradeModal() {
+            document.getElementById('quickGradeModal').classList.remove('show');
+        }
+
+        async function saveQuickGrade(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const gradeData = Object.fromEntries(formData.entries());
+
+            const saveBtn = document.getElementById('quickGradeSaveBtn');
+            const originalText = saveBtn.textContent;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Creando...';
+
+            try {
+                const response = await fetch('/api/grades', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gradeData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeQuickGradeModal();
+                    
+                    // Recargar grados y seleccionar el nuevo
+                    await loadGrades();
+                    
+                    // Seleccionar automáticamente el grado recién creado
+                    const gradeSelect = document.getElementById('bulkGrade');
+                    gradeSelect.value = gradeData.name;
+                    
+                    showMessage('success', `Grado "${gradeData.name}" creado y seleccionado`);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('error', 'Error de conexión al crear grado');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        }
+
+        async function refreshGrades() {
+            try {
+                const currentValue = document.getElementById('bulkGrade').value;
+                await loadGrades();
+                
+                // Mantener selección si aún existe
+                const gradeSelect = document.getElementById('bulkGrade');
+                if (currentValue && [...gradeSelect.options].some(opt => opt.value === currentValue)) {
+                    gradeSelect.value = currentValue;
+                }
+                
+                showMessage('success', 'Lista de grados actualizada');
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('error', 'Error actualizando grados');
+            }
+        }
+
         // ========================================
         // FUNCIONES MASIVAS CON INTERFAZ TIPO EXCEL
         // ========================================
@@ -1357,16 +1833,127 @@
             showMessage('success', `Datos pegados en ${rows.length} filas`);
         }
 
+        async function checkForDuplicates() {
+            const rows = document.querySelectorAll('#bulkAddTableBody tr');
+            const studentsToCheck = [];
+            
+            // Recopilar estudiantes con datos
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('.bulk-cell-input');
+                const rowData = {};
+                let hasData = false;
+                
+                inputs.forEach(input => {
+                    const col = input.dataset.col;
+                    const value = input.value.trim();
+                    rowData[col] = value;
+                    if (value) hasData = true;
+                });
+                
+                if (hasData && rowData.first_surname && rowData.first_name) {
+                    studentsToCheck.push({
+                        ...rowData,
+                        rowIndex: index + 1,
+                        rowElement: row
+                    });
+                }
+            });
+            
+            if (studentsToCheck.length === 0) {
+                showMessage('error', 'No hay estudiantes para verificar');
+                return;
+            }
+            
+            // Obtener estudiantes existentes
+            try {
+                const response = await fetch('/api/students');
+                const result = await response.json();
+                
+                if (!result.success) {
+                    showMessage('error', 'Error obteniendo lista de estudiantes existentes');
+                    return;
+                }
+                
+                const existingStudents = result.data || [];
+                const duplicates = [];
+                
+                // Verificar duplicados
+                studentsToCheck.forEach(newStudent => {
+                    const duplicate = existingStudents.find(existing => {
+                        // Comparar por cédula si existe
+                        if (newStudent.cedula && existing.cedula) {
+                            return newStudent.cedula === existing.cedula;
+                        }
+                        
+                        // Comparar por nombre completo
+                        const newName = `${newStudent.first_surname} ${newStudent.second_surname || ''} ${newStudent.first_name}`.toLowerCase().trim();
+                        const existingName = `${existing.first_surname} ${existing.second_surname || ''} ${existing.first_name}`.toLowerCase().trim();
+                        
+                        return newName === existingName;
+                    });
+                    
+                    if (duplicate) {
+                        duplicates.push({
+                            newStudent,
+                            existing: duplicate
+                        });
+                        
+                        // Marcar fila como duplicada
+                        newStudent.rowElement.style.backgroundColor = '#ffeaa7';
+                        newStudent.rowElement.title = `Posible duplicado de: ${duplicate.first_surname} ${duplicate.first_name}`;
+                    } else {
+                        // Limpiar marcado de duplicado
+                        newStudent.rowElement.style.backgroundColor = '';
+                        newStudent.rowElement.title = '';
+                    }
+                });
+                
+                // Mostrar resultados
+                if (duplicates.length > 0) {
+                    const duplicateList = duplicates.map(dup => 
+                        `Fila ${dup.newStudent.rowIndex}: ${dup.newStudent.first_surname} ${dup.newStudent.first_name} (ya existe)`
+                    ).join('<br>');
+                    
+                    showBulkErrors([
+                        `Se encontraron ${duplicates.length} posibles duplicados:`,
+                        ...duplicates.map(dup => 
+                            `Fila ${dup.newStudent.rowIndex}: ${dup.newStudent.first_surname} ${dup.newStudent.first_name} ya existe en el sistema`
+                        )
+                    ]);
+                    
+                    showMessage('error', `⚠️ ${duplicates.length} posibles duplicados encontrados (filas marcadas en amarillo)`);
+                } else {
+                    hideBulkErrors();
+                    showMessage('success', `✅ No se encontraron duplicados en ${studentsToCheck.length} estudiantes`);
+                }
+                
+            } catch (error) {
+                console.error('Error verificando duplicados:', error);
+                showMessage('error', 'Error verificando duplicados');
+            }
+        }
         function validateBulkData() {
             const grade = document.getElementById('bulkGrade').value;
             if (!grade) {
-                showMessage('error', 'Seleccione un grado primero');
+                showMessage('error', '⚠️ DEBE seleccionar un grado antes de continuar. Todos los estudiantes tendrán este grado.');
+                
+                // Resaltar el select de grado
+                const gradeSelect = document.getElementById('bulkGrade');
+                gradeSelect.style.borderColor = '#dc3545';
+                gradeSelect.focus();
+                
+                setTimeout(() => {
+                    gradeSelect.style.borderColor = '';
+                }, 3000);
+                
                 return false;
             }
             
             const errors = [];
             const validStudents = [];
             const rows = document.querySelectorAll('#bulkAddTableBody tr');
+            
+            let studentsWithData = 0;
             
             rows.forEach((row, index) => {
                 const inputs = row.querySelectorAll('.bulk-cell-input');
@@ -1384,6 +1971,7 @@
                 });
                 
                 if (hasData) {
+                    studentsWithData++;
                     const rowNum = index + 1;
                     
                     // Validar campos obligatorios
@@ -1409,29 +1997,52 @@
                 }
             });
             
+            if (studentsWithData === 0) {
+                showMessage('error', 'No hay estudiantes para procesar. Complete al menos una fila.');
+                return false;
+            }
+            
             if (errors.length > 0) {
                 showBulkErrors(errors);
                 showMessage('error', `Se encontraron ${errors.length} errores`);
                 return false;
             } else {
                 hideBulkErrors();
-                showMessage('success', `${validStudents.length} estudiantes válidos listos para guardar`);
+                showMessage('success', `✅ ${validStudents.length} estudiantes válidos listos para guardar con grado "${grade}"`);
                 window.validatedBulkData = validStudents;
                 return true;
             }
         }
-
         function showBulkErrors(errors) {
             const errorSection = document.getElementById('bulkErrorsSection');
+            
+            if (!errors || errors.length === 0) {
+                errorSection.style.display = 'none';
+                return;
+            }
+            
             errorSection.innerHTML = `
                 <div class="error-list">
-                    <h5>⚠️ Errores encontrados:</h5>
-                    <ul>
-                        ${errors.map(error => `<li>${error}</li>`).join('')}
-                    </ul>
+                    <h5>⚠️ Errores encontrados (${errors.length}):</h5>
+                    <div style="max-height: 200px; overflow-y: auto; margin-top: 10px;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            ${errors.map(error => `<li style="margin-bottom: 5px;">${error}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px; border-left: 3px solid #2196f3;">
+                        <strong>💡 Sugerencias:</strong>
+                        <ul style="margin: 5px 0 0 15px; font-size: 14px;">
+                            <li>Verifique que no existan estudiantes duplicados</li>
+                            <li>Use el botón "🔍 Verificar Duplicados" antes de guardar</li>
+                            <li>Use "🧹 Limpiar Sistema" para eliminar datos de prueba</li>
+                        </ul>
+                    </div>
                 </div>
             `;
             errorSection.style.display = 'block';
+            
+            // Scroll hasta los errores
+            errorSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function hideBulkErrors() {
@@ -1440,6 +2051,7 @@
         }
 
         async function saveBulkStudents() {
+            // Validar automáticamente antes de guardar
             if (!validateBulkData()) {
                 return;
             }
@@ -1449,18 +2061,29 @@
                 return;
             }
 
+            const grade = document.getElementById('bulkGrade').value;
+            const studentCount = window.validatedBulkData.length;
+            
+            if (!confirm(`¿Confirma guardar ${studentCount} estudiante(s) en el grado "${grade}"?\n\n⚠️ Si algunos estudiantes ya existen, se mostrarán errores específicos.`)) {
+                return;
+            }
+
             const saveBtn = document.getElementById('saveBulkBtn');
             const originalText = saveBtn.textContent;
             saveBtn.disabled = true;
-            saveBtn.textContent = 'Guardando...';
+            saveBtn.textContent = `Guardando 0/${studentCount} estudiantes...`;
 
             try {
                 let successCount = 0;
                 let errorCount = 0;
                 const errors = [];
 
-                for (const studentData of window.validatedBulkData) {
+                for (let i = 0; i < window.validatedBulkData.length; i++) {
+                    const studentData = window.validatedBulkData[i];
+                    
                     try {
+                        console.log(`Guardando estudiante ${i + 1}:`, studentData);
+                        
                         const response = await fetch('/api/students', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1468,44 +2091,64 @@
                         });
 
                         const result = await response.json();
+                        console.log(`Respuesta para estudiante ${i + 1}:`, result);
                         
                         if (result.success) {
                             successCount++;
+                            saveBtn.textContent = `Guardando ${successCount}/${studentCount} estudiantes...`;
                         } else {
                             errorCount++;
-                            errors.push(`Fila ${studentData.row}: ${result.message}`);
+                            // Mensajes de error más específicos
+                            let errorMsg = result.message || 'Error desconocido';
+                            
+                            // Detectar tipos de error comunes
+                            if (errorMsg.toLowerCase().includes('unique') || errorMsg.toLowerCase().includes('duplicate')) {
+                                errorMsg = 'Ya existe un estudiante con los mismos datos';
+                            } else if (errorMsg.toLowerCase().includes('required')) {
+                                errorMsg = 'Faltan campos obligatorios';
+                            } else if (errorMsg.toLowerCase().includes('cedula')) {
+                                errorMsg = 'Cédula ya existe o inválida';
+                            }
+                            
+                            const studentName = `${studentData.first_surname} ${studentData.first_name}`;
+                            errors.push(`Fila ${studentData.row} (${studentName}): ${errorMsg}`);
                         }
                     } catch (error) {
                         errorCount++;
-                        errors.push(`Fila ${studentData.row}: Error de conexión`);
+                        console.error(`Error en estudiante ${i + 1}:`, error);
+                        const studentName = `${studentData.first_surname} ${studentData.first_name}`;
+                        errors.push(`Fila ${studentData.row} (${studentName}): Error de conexión`);
                     }
 
-                    // Pausa entre requests
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    // Pausa pequeña entre requests para no sobrecargar el servidor
+                    await new Promise(resolve => setTimeout(resolve, 50));
                 }
 
                 saveBtn.disabled = false;
                 saveBtn.textContent = originalText;
 
-                let message = `Proceso completado: ${successCount} estudiantes guardados`;
-                if (errorCount > 0) {
-                    message += `, ${errorCount} errores`;
+                // Mostrar resultados detallados
+                if (successCount > 0 && errorCount === 0) {
+                    showMessage('success', `✅ ¡Éxito total! ${successCount} estudiantes guardados en "${grade}"`);
+                    loadStudents(); // Recargar la lista principal
+                    clearBulkTable();
+                    addBulkRows(5);
+                    document.getElementById('bulkGrade').value = '';
+                    closeBulkAddModal();
+                } else if (successCount > 0 && errorCount > 0) {
+                    showMessage('error', `⚠️ Proceso parcial: ${successCount} guardados, ${errorCount} errores`);
+                    showBulkErrors(errors);
+                    loadStudents(); // Recargar para mostrar los que sí se guardaron
+                } else {
+                    showMessage('error', `❌ No se pudo guardar ningún estudiante. ${errorCount} errores`);
                     showBulkErrors(errors);
                 }
 
-                showMessage(errorCount === 0 ? 'success' : 'error', message);
-
-                if (successCount > 0) {
-                    loadStudents();
-                    if (errorCount === 0) {
-                        closeBulkAddModal();
-                    }
-                }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error general:', error);
                 saveBtn.disabled = false;
                 saveBtn.textContent = originalText;
-                showMessage('error', 'Error en guardado masivo');
+                showMessage('error', 'Error crítico en el proceso de guardado');
             }
         }
 
@@ -1530,6 +2173,14 @@
 
         document.getElementById('bulkAddModal').addEventListener('click', function(event) {
             if (event.target === this) closeBulkAddModal();
+        });
+
+        document.getElementById('quickGradeModal').addEventListener('click', function(event) {
+            if (event.target === this) closeQuickGradeModal();
+        });
+
+        document.getElementById('cleanupModal').addEventListener('click', function(event) {
+            if (event.target === this) closeCleanupModal();
         });
     </script>
 </body>
