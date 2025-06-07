@@ -1961,27 +1961,51 @@ Participa activamente en discusiones"
                 return;
             }
             
+            const saveButton = document.querySelector('button[onclick="guardarTodo()"]');
+            const originalText = saveButton.textContent;
+            
             // Preparar datos para enviar
             const estudiantesData = {};
             
-            // Recopilar calificaciones de todos los estudiantes
+            console.log('🔍 Debug - Recopilando datos:');
+            console.log('📊 Estado de calificaciones:', calificaciones);
+            console.log('📋 Grado actual:', currentGrado);
+            console.log('📖 Materia actual:', currentMateria);
+            console.log('📅 Fecha actual:', currentDate);
+            
+            // ✅ CORRECCIÓN: Usar las mismas claves que se usan al guardar calificaciones
             const estudiantesDelGrado = students.filter(student => {
                 const gradeField = student.grade_level || student.grade || student.grado;
                 return gradeField === currentGrado;
             });
             
-            estudiantesDelGrado.forEach(student => {
-                const studentKey = `${student.first_surname} ${student.second_surname || ''} ${student.first_name} ${student.second_name || ''}`.trim();
+            console.log('👥 Estudiantes del grado:', estudiantesDelGrado.length);
+            
+            // Verificar si hay datos de calificaciones
+            if (calificaciones[currentGrado] && 
+                calificaciones[currentGrado][currentMateria] && 
+                calificaciones[currentGrado][currentMateria][currentDate] &&
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes) {
                 
-                if (calificaciones[currentGrado] && 
-                    calificaciones[currentGrado][currentMateria] && 
-                    calificaciones[currentGrado][currentMateria][currentDate] &&
-                    calificaciones[currentGrado][currentMateria][currentDate].estudiantes &&
-                    calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
+                const datosDelDia = calificaciones[currentGrado][currentMateria][currentDate];
+                console.log('✅ Datos encontrados para el día:', datosDelDia);
+                
+                // ✅ USAR LAS CLAVES CORRECTAS: student_${id}
+                estudiantesDelGrado.forEach(student => {
+                    const studentKey = `student_${student.id}`;
+                    const studentName = `${student.first_surname} ${student.second_surname || ''} ${student.first_name} ${student.second_name || ''}`.trim();
                     
-                    estudiantesData[studentKey] = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
-                }
-            });
+                    if (datosDelDia.estudiantes[studentKey]) {
+                        // Usar el nombre como clave para enviar al servidor (más legible)
+                        estudiantesData[studentName] = datosDelDia.estudiantes[studentKey];
+                        console.log(`✅ Agregado: ${studentName} con ${Object.keys(datosDelDia.estudiantes[studentKey]).length} calificaciones`);
+                    }
+                });
+                
+                console.log('📊 Total estudiantes con calificaciones:', Object.keys(estudiantesData).length);
+            } else {
+                console.log('⚠️ No hay datos de calificaciones para esta combinación');
+            }
             
             const dataToSend = {
                 grade_level: currentGrado,
@@ -1993,11 +2017,10 @@ Participa activamente en discusiones"
             };
             
             console.log('📤 Enviando datos al servidor:', dataToSend);
+            console.log('📊 Total estudiantes a enviar:', Object.keys(estudiantesData).length);
             
             try {
                 // Mostrar indicador de guardando
-                const saveButton = document.querySelector('button[onclick="guardarTodo()"]');
-                const originalText = saveButton.textContent;
                 saveButton.disabled = true;
                 saveButton.textContent = '💾 Guardando...';
                 
@@ -2027,7 +2050,6 @@ Participa activamente en discusiones"
                 alert('❌ Error de conexión al guardar');
             } finally {
                 // Restaurar botón
-                const saveButton = document.querySelector('button[onclick="guardarTodo()"]');
                 saveButton.disabled = false;
                 saveButton.textContent = originalText;
             }
