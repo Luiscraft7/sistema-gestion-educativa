@@ -268,9 +268,9 @@
                 <div class="module-icon">📚</div>
                 <div class="module-title">Materias</div>
                 <div class="module-description">
-                    Configuración de materias, horarios, profesores y ponderaciones
+                    Gestión de materias académicas y asignación por grados
                 </div>
-                <div class="module-status status-development">En Desarrollo</div>
+                <div class="module-status status-ready">Disponible</div>
             </div>
             
             <!-- Módulo Reportes -->
@@ -295,18 +295,18 @@
 
     <script>
     function openModule(moduleName) {
-        // Navegación directa a páginas reales
         if (moduleName === 'estudiantes') {
             window.location.href = 'students.html';
         } else if (moduleName === 'asistencia') {
             window.location.href = 'attendance.html';
+        } else if (moduleName === 'materias') {
+            window.location.href = 'subjects.html';  // ← AGREGAR ESTA LÍNEA
         } else if (moduleName === 'cotidiano') {
             alert('📊 Módulo Cotidiano - ¡Será el próximo en desarrollar!');
         } else {
             const messages = {
                 'tareas': '📝 Módulo Tareas - Próximamente disponible',
                 'examenes': '📋 Módulo Exámenes - En planificación',
-                'materias': '📚 Módulo Materias - En desarrollo',
                 'reportes': '📈 Módulo Reportes - En planificación'
             };
             alert(messages[moduleName] || 'Módulo no encontrado');

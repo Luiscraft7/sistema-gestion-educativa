@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Gestión de Materias - Sistema Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-purple { background: #6f42c1; color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+            background: #f8f9fa;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .subjects-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .subject-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .subject-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .subject-item:last-child {
+            border-bottom: none;
+        }
+        
+        .subject-info {
+            flex: 1;
+        }
+        
+        .subject-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .subject-details {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .subject-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .grade-assignments {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .grade-card {
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .grade-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e1e1e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .grade-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .grade-stats {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .grade-subjects {
+            padding: 15px;
+        }
+        
+        .subject-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin: 2px;
+        }
+        
+        .subject-tag.removable {
+            padding-right: 20px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .subject-tag.removable:after {
+            content: '×';
+            position: absolute;
+            right: 6px;
+            top: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .subject-tag.removable:hover {
+            background: #dc3545;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .quick-actions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .quick-actions-title {
+            font-weight: 600;
+            color: #333;
+            margin-right: 10px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .assignment-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .assignment-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .assignment-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .assignment-item input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        
+        .assignment-item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.show {
+            display: block;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>📚 Gestión de Materias</h1>
+                <p>Administra materias y asignaciones por grado</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openSubjectModal()">
+                    ➕ Nueva Materia
+                </button>
+                <button class="btn btn-info" onclick="openAssignmentModal()">
+                    🎯 Asignar a Grados
+                </button>
+                <a href="dashboard.html" class="btn btn-secondary">
+                    ← Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Mensajes -->
+        <div id="successMessage" class="message success">✅ Operación completada exitosamente</div>
+        <div id="errorMessage" class="message error">❌ Error en la operación</div>
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalSubjects">0</div>
+                <div class="stat-label">Total Materias</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalGrades">0</div>
+                <div class="stat-label">Grados Registrados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalAssignments">0</div>
+                <div class="stat-label">Asignaciones Activas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgSubjectsPerGrade">0</div>
+                <div class="stat-label">Promedio por Grado</div>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="main-content">
+            <!-- Lista de Materias -->
+            <div class="card">
+                <div class="card-header">
+                    📖 Materias Registradas
+                    <button class="btn btn-success btn-sm" onclick="loadData()" style="margin-left: auto;">
+                        🔄 Actualizar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <span class="quick-actions-title">⚡ Acciones:</span>
+                        <button class="btn btn-primary btn-sm" onclick="openSubjectModal()">
+                            ➕ Agregar
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="refreshSubjects()">
+                            🔄 Recargar
+                        </button>
+                    </div>
+                    
+                    <div class="subjects-list" id="subjectsList">
+                        <div class="loading">🔄 Cargando materias...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asignaciones por Grado -->
+            <div class="card">
+                <div class="card-header">
+                    🎯 Materias por Grado
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <span class="quick-actions-title">⚡ Acciones:</span>
+                        <button class="btn btn-info btn-sm" onclick="openAssignmentModal()">
+                            🎯 Asignar
+                        </button>
+                        <button class="btn btn-purple btn-sm" onclick="openBulkAssignmentModal()">
+                            📋 Asignación Masiva
+                        </button>
+                    </div>
+                    
+                    <div class="grade-assignments" id="gradeAssignments">
+                        <div class="loading">🔄 Cargando asignaciones...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar/Editar Materia -->
+    <div class="modal" id="subjectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="subjectModalTitle">Nueva Materia</h2>
+                <button class="close-btn" onclick="closeSubjectModal()">&times;</button>
+            </div>
+            
+            <form id="subjectForm" onsubmit="saveSubject(event)">
+                <div class="form-group">
+                    <label class="form-label" for="subjectName">Nombre de la Materia *</label>
+                    <input type="text" class="form-input" id="subjectName" required 
+                           placeholder="Ej: Matemáticas, Ciencias, Historia">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="subjectDescription">Descripción (opcional)</label>
+                    <textarea class="form-textarea" id="subjectDescription" rows="3" 
+                              placeholder="Descripción o detalles adicionales de la materia"></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeSubjectModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="saveSubjectBtn">Guardar Materia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Asignar Materias a Grados -->
+    <div class="modal" id="assignmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🎯 Asignar Materias a Grado</h2>
+                <button class="close-btn" onclick="closeAssignmentModal()">&times;</button>
+            </div>
+            
+            <form id="assignmentForm" onsubmit="saveAssignment(event)">
+                <div class="form-group">
+                    <label class="form-label" for="assignmentGrade">Seleccionar Grado *</label>
+                    <select class="form-select" id="assignmentGrade" required>
+                        <option value="">Seleccione un grado...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Materias Disponibles *</label>
+                    <div class="assignment-list" id="availableSubjects">
+                        <div class="loading">Cargando materias...</div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAssignmentModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Asignar Materias</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Asignación Masiva -->
+    <div class="modal" id="bulkAssignmentModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">📋 Asignación Masiva</h2>
+                <button class="close-btn" onclick="closeBulkAssignmentModal()">&times;</button>
+            </div>
+            
+            <form id="bulkAssignmentForm" onsubmit="saveBulkAssignment(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Grados a Asignar *</label>
+                        <div class="assignment-list" id="bulkGradesList">
+                            <div class="loading">Cargando grados...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Materias a Asignar *</label>
+                        <div class="assignment-list" id="bulkSubjectsList">
+                            <div class="loading">Cargando materias...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkAssignmentModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Asignar a Múltiples Grados</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // VARIABLES GLOBALES
+        // ========================================
+        let subjects = [];
+        let grades = [];
+        let gradeAssignments = [];
+        let editingSubjectId = null;
+
+        // ========================================
+        // INICIALIZACIÓN
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando módulo de materias...');
+            loadData();
+        });
+
+        // ========================================
+        // FUNCIONES DE CARGA DE DATOS
+        // ========================================
+        async function loadData() {
+            await Promise.all([
+                loadSubjects(),
+                loadGrades(),
+                loadGradeAssignments()
+            ]);
+            updateStats();
+        }
+
+        async function loadSubjects() {
+            try {
+                const response = await fetch('/api/custom-subjects');
+                const result = await response.json();
+                
+                if (result.success) {
+                    subjects = result.data;
+                    renderSubjectsList();
+                    console.log('✅ Materias cargadas:', subjects.length);
+                } else {
+                    showMessage('error', 'Error cargando materias: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando materias:', error);
+                showMessage('error', 'Error de conexión al cargar materias');
+            }
+        }
+
+        async function loadGrades() {
+            try {
+                const response = await fetch('/api/grades');
+                const result = await response.json();
+                
+                if (result.success) {
+                    grades = result.data;
+                    updateGradeSelects();
+                    console.log('✅ Grados cargados:', grades.length);
+                } else {
+                    showMessage('error', 'Error cargando grados: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando grados:', error);
+                showMessage('error', 'Error de conexión al cargar grados');
+            }
+        }
+
+        async function loadGradeAssignments() {
+            try {
+                const response = await fetch('/api/grade-subjects');
+                const result = await response.json();
+                
+                if (result.success) {
+                    gradeAssignments = result.data;
+                    renderGradeAssignments();
+                    console.log('✅ Asignaciones cargadas:', gradeAssignments.length);
+                } else {
+                    showMessage('error', 'Error cargando asignaciones: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando asignaciones:', error);
+                showMessage('error', 'Error de conexión al cargar asignaciones');
+            }
+        }
+
+        // ========================================
+        // FUNCIONES DE RENDERIZADO
+        // ========================================
+        function renderSubjectsList() {
+            const container = document.getElementById('subjectsList');
+            
+            if (subjects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📚 No hay materias registradas</h3>
+                        <p>Comience agregando su primera materia</p>
+                        <button class="btn btn-primary" onclick="openSubjectModal()" style="margin-top: 15px;">
+                            ➕ Agregar Primera Materia
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = subjects.map(subject => `
+                <div class="subject-item">
+                    <div class="subject-info">
+                        <div class="subject-name">${subject.name}</div>
+                        <div class="subject-details">
+                            ${subject.description || 'Sin descripción'} • 
+                            Usado en ${subject.usage} estudiante(s)
+                        </div>
+                    </div>
+                    <div class="subject-actions">
+                        <button class="btn btn-warning btn-sm" onclick="editSubject(${subject.id})" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSubject(${subject.id}, '${subject.name}', ${subject.usage})" title="Eliminar">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderGradeAssignments() {
+            const container = document.getElementById('gradeAssignments');
+            
+            if (gradeAssignments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🎯 No hay asignaciones configuradas</h3>
+                        <p>Asigne materias a los grados</p>
+                        <button class="btn btn-info" onclick="openAssignmentModal()" style="margin-top: 15px;">
+                            🎯 Crear Primera Asignación
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = gradeAssignments.map(grade => `
+                <div class="grade-card">
+                    <div class="grade-header">
+                        <div class="grade-title">📚 ${grade.gradeName}</div>
+                        <div class="grade-stats">${grade.subjectCount} materia(s)</div>
+                    </div>
+                    <div class="grade-subjects">
+                        ${grade.subjects.length > 0 ? 
+                            grade.subjects.map(subject => 
+                                `<span class="subject-tag removable" onclick="removeSubjectFromGrade('${grade.gradeName}', '${subject}')">${subject}</span>`
+                            ).join(' ') :
+                            '<span style="color: #666; font-style: italic;">Sin materias asignadas</span>'
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateGradeSelects() {
+            const assignmentGrade = document.getElementById('assignmentGrade');
+            
+            if (assignmentGrade) {
+                assignmentGrade.innerHTML = '<option value="">Seleccione un grado...</option>' +
+                    grades.map(grade => `<option value="${grade.name}">${grade.name}</option>`).join('');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalSubjects').textContent = subjects.length;
+            document.getElementById('totalGrades').textContent = grades.length;
+            document.getElementById('totalAssignments').textContent = 
+                gradeAssignments.reduce((sum, grade) => sum + grade.subjectCount, 0);
+            
+            const avgSubjectsPerGrade = grades.length > 0 ? 
+                (gradeAssignments.reduce((sum, grade) => sum + grade.subjectCount, 0) / grades.length).toFixed(1) : 0;
+            document.getElementById('avgSubjectsPerGrade').textContent = avgSubjectsPerGrade;
+        }
+
+        // ========================================
+        // FUNCIONES DE MATERIAS
+        // ========================================
+        function openSubjectModal(subjectId = null) {
+            editingSubjectId = subjectId;
+            
+            if (subjectId) {
+                const subject = subjects.find(s => s.id === subjectId);
+                document.getElementById('subjectModalTitle').textContent = 'Editar Materia';
+                document.getElementById('saveSubjectBtn').textContent = 'Actualizar Materia';
+                document.getElementById('subjectName').value = subject.name;
+                document.getElementById('subjectDescription').value = subject.description || '';
+            } else {
+                document.getElementById('subjectModalTitle').textContent = 'Nueva Materia';
+                document.getElementById('saveSubjectBtn').textContent = 'Guardar Materia';
+                document.getElementById('subjectForm').reset();
+            }
+            
+            document.getElementById('subjectModal').classList.add('show');
+        }
+
+        function closeSubjectModal() {
+            document.getElementById('subjectModal').classList.remove('show');
+            editingSubjectId = null;
+        }
+
+        function editSubject(id) {
+            openSubjectModal(id);
+        }
+
+        async function saveSubject(event) {
+            event.preventDefault();
+            
+            try {
+                const subjectData = {
+                    name: document.getElementById('subjectName').value.trim(),
+                    description: document.getElementById('subjectDescription').value.trim()
+                };
+
+                const url = editingSubjectId ? `/api/custom-subjects/${editingSubjectId}` : '/api/custom-subjects';
+                const method = editingSubjectId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(subjectData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeSubjectModal();
+                    await loadSubjects();
+                    updateStats();
+                    const message = editingSubjectId ? 'Materia actualizada correctamente' : 'Materia agregada correctamente';
+                    showMessage('success', message);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error guardando materia:', error);
+                showMessage('error', 'Error de conexión al guardar materia');
+            }
+        }
+
+        async function deleteSubject(id, name, usageCount) {
+            let confirmMessage = `¿Estás seguro de eliminar la materia "${name}"?`;
+            
+            if (usageCount > 0) {
+                confirmMessage += `\n\n⚠️ ADVERTENCIA: Esta materia está siendo usada por ${usageCount} estudiante(s).`;
+                confirmMessage += `\nSi la eliminas, podrías tener problemas de consistencia en los datos.`;
+                confirmMessage += `\n\n¿Realmente deseas continuar?`;
+            }
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/custom-subjects/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await loadData();
+                    showMessage('success', `Materia "${name}" eliminada correctamente`);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando materia:', error);
+                showMessage('error', 'Error de conexión al eliminar materia');
+            }
+        }
+
+        // ========================================
+        // FUNCIONES DE ASIGNACIÓN
+        // ========================================
+        function openAssignmentModal() {
+            loadAvailableSubjects();
+            document.getElementById('assignmentModal').classList.add('show');
+        }
+
+        function closeAssignmentModal() {
+            document.getElementById('assignmentModal').classList.remove('show');
+        }
+
+        async function loadAvailableSubjects() {
+            const container = document.getElementById('availableSubjects');
+            
+            if (subjects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No hay materias disponibles. Agregue materias primero.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = subjects.map(subject => `
+                <div class="assignment-item">
+                    <input type="checkbox" id="subject_${subject.id}" value="${subject.name}">
+                    <label for="subject_${subject.id}">${subject.name}</label>
+                </div>
+            `).join('');
+        }
+
+        async function saveAssignment(event) {
+            event.preventDefault();
+            
+            try {
+                const gradeName = document.getElementById('assignmentGrade').value;
+                const selectedSubjects = [];
+                
+                document.querySelectorAll('#availableSubjects input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedSubjects.push(checkbox.value);
+                });
+
+                if (!gradeName) {
+                    showMessage('error', 'Seleccione un grado');
+                    return;
+                }
+
+                if (selectedSubjects.length === 0) {
+                    showMessage('error', 'Seleccione al menos una materia');
+                    return;
+                }
+
+                const response = await fetch('/api/grade-subjects/assign', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gradeName: gradeName,
+                        subjects: selectedSubjects
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeAssignmentModal();
+                    await loadGradeAssignments();
+                    updateStats();
+                    showMessage('success', `${result.data.successCount} materias asignadas a ${gradeName}`);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error guardando asignación:', error);
+                showMessage('error', 'Error de conexión al guardar asignación');
+            }
+        }
+
+        // ========================================
+        // FUNCIONES DE ASIGNACIÓN MASIVA
+        // ========================================
+        function openBulkAssignmentModal() {
+            loadBulkLists();
+            document.getElementById('bulkAssignmentModal').classList.add('show');
+        }
+
+        function closeBulkAssignmentModal() {
+            document.getElementById('bulkAssignmentModal').classList.remove('show');
+        }
+
+        function loadBulkLists() {
+            // Cargar grados
+            const gradesContainer = document.getElementById('bulkGradesList');
+            if (grades.length === 0) {
+                gradesContainer.innerHTML = '<div class="empty-state"><p>No hay grados disponibles</p></div>';
+            } else {
+                gradesContainer.innerHTML = grades.map(grade => `
+                    <div class="assignment-item">
+                        <input type="checkbox" id="bulk_grade_${grade.id}" value="${grade.name}">
+                        <label for="bulk_grade_${grade.id}">${grade.name}</label>
+                    </div>
+                `).join('');
+            }
+
+            // Cargar materias
+            const subjectsContainer = document.getElementById('bulkSubjectsList');
+            if (subjects.length === 0) {
+                subjectsContainer.innerHTML = '<div class="empty-state"><p>No hay materias disponibles</p></div>';
+            } else {
+                subjectsContainer.innerHTML = subjects.map(subject => `
+                    <div class="assignment-item">
+                        <input type="checkbox" id="bulk_subject_${subject.id}" value="${subject.name}">
+                        <label for="bulk_subject_${subject.id}">${subject.name}</label>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function saveBulkAssignment(event) {
+            event.preventDefault();
+            
+            try {
+                const selectedGrades = [];
+                const selectedSubjects = [];
+                
+                document.querySelectorAll('#bulkGradesList input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedGrades.push(checkbox.value);
+                });
+                
+                document.querySelectorAll('#bulkSubjectsList input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedSubjects.push(checkbox.value);
+                });
+
+                if (selectedGrades.length === 0) {
+                    showMessage('error', 'Seleccione al menos un grado');
+                    return;
+                }
+
+                if (selectedSubjects.length === 0) {
+                    showMessage('error', 'Seleccione al menos una materia');
+                    return;
+                }
+
+                const confirmMessage = `¿Confirma asignar ${selectedSubjects.length} materias a ${selectedGrades.length} grados?\n\nEsto creará ${selectedGrades.length * selectedSubjects.length} asignaciones.`;
+                
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
+                const response = await fetch('/api/grade-subjects/assign-multiple', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        grades: selectedGrades,
+                        subjects: selectedSubjects
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeBulkAssignmentModal();
+                    await loadGradeAssignments();
+                    updateStats();
+                    showMessage('success', `${result.data.totalSuccessCount} asignaciones completadas en ${result.data.affectedGrades} grados`);
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error guardando asignación masiva:', error);
+                showMessage('error', 'Error de conexión al guardar asignación masiva');
+            }
+        }
+
+        // ========================================
+        // FUNCIONES DE ELIMINACIÓN DE ASIGNACIONES
+        // ========================================
+        async function removeSubjectFromGrade(gradeName, subjectName) {
+            if (!confirm(`¿Eliminar ${subjectName} del grado ${gradeName}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadGradeAssignments();
+                    updateStats();
+                    showMessage('success', 'Materia eliminada del grado correctamente');
+                } else {
+                    showMessage('error', 'Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando asignación:', error);
+                showMessage('error', 'Error de conexión al eliminar asignación');
+            }
+        }
+
+        // ========================================
+        // FUNCIONES AUXILIARES
+        // ========================================
+        function showMessage(type, message) {
+            const messageEl = document.getElementById(type + 'Message');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 5000);
+        }
+
+        function refreshSubjects() {
+            loadSubjects();
+        }
+
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        document.getElementById('subjectModal').addEventListener('click', function(event) {
+            if (event.target === this) closeSubjectModal();
+        });
+
+        document.getElementById('assignmentModal').addEventListener('click', function(event) {
+            if (event.target === this) closeAssignmentModal();
+        });
+
+        document.getElementById('bulkAssignmentModal').addEventListener('click', function(event) {
+            if (event.target === this) closeBulkAssignmentModal();
+        });
+    </script>
+</body>
+</html>
