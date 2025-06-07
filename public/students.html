@@ -53,13 +53,13 @@
         }
         
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
         .btn-secondary { background: #6c757d; color: white; }
         .btn-success { background: #28a745; color: white; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-info { background: #17a2b8; color: white; }
-        .btn-purple { background: #6f42c1; color: white; }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         
         .main-content {
@@ -98,20 +98,21 @@
             text-transform: uppercase;
         }
 
-        .quick-actions {
-            padding: 20px 25px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            gap: 15px;
+        .bulk-actions {
+            padding: 15px 25px;
+            background: #fff3cd;
+            border-bottom: 1px solid #ffeaa7;
+            display: none;
             align-items: center;
+            gap: 15px;
             flex-wrap: wrap;
         }
 
-        .quick-actions-title {
+        .bulk-actions.show { display: flex; }
+
+        .bulk-actions-text {
             font-weight: 600;
-            color: #333;
-            margin-right: 10px;
+            color: #856404;
         }
         
         .search-filters {
@@ -191,15 +192,6 @@
         .grade-badge {
             background: #e9ecef;
             color: #495057;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        
-        .subject-badge {
-            background: #d1ecf1;
-            color: #0c5460;
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 11px;
@@ -293,12 +285,6 @@
             gap: 15px;
         }
         
-        .form-row-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-        
         .modal-actions {
             display: flex;
             justify-content: flex-end;
@@ -308,306 +294,171 @@
             border-top: 1px solid #eee;
         }
 
-        .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        /* Combobox personalizado */
-        .custom-select {
-            position: relative;
-            width: 100%;
-        }
-
-        .select-button {
-            width: 100%;
-            padding: 12px 40px 12px 15px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
+        /* Bulk Add Modal */
+        .bulk-modal-content {
             background: white;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s;
+            border-radius: 15px;
+            padding: 30px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .instruction-box {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .instruction-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .bulk-table-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            background: white;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .bulk-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 14px;
         }
 
-        .select-button:hover { border-color: #667eea; }
-
-        .select-button.open {
-            border-color: #667eea;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
+        .bulk-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .select-arrow {
-            transition: transform 0.3s;
-            font-size: 12px;
-            color: #666;
+        .bulk-table td {
+            padding: 4px;
+            border: 1px solid #e0e0e0;
+            position: relative;
         }
 
-        .select-button.open .select-arrow { transform: rotate(180deg); }
+        .bulk-table tr:hover {
+            background: #f8f9fa;
+        }
 
-        .select-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
+        .bulk-cell-input {
+            width: 100%;
+            border: none;
+            padding: 8px;
+            font-size: 13px;
+            background: transparent;
+            outline: none;
+            min-height: 30px;
+        }
+
+        .bulk-cell-input:focus {
             background: white;
             border: 2px solid #667eea;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
+            border-radius: 4px;
         }
 
-        .select-dropdown.show { display: block; }
-
-        .select-option {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.2s;
+        .bulk-cell-input.invalid {
+            background: #fee;
+            border-color: #dc3545;
         }
 
-        .select-option:last-child { border-bottom: none; }
-        .select-option:hover { background-color: #f8f9fa; }
-        .select-option.selected { background-color: #667eea; color: white; }
-
-        .priority-badge {
-            background: #28a745;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-
-        .usage-count {
-            background: #6c757d;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-        }
-
-        .search-box {
-            margin-bottom: 15px;
-            padding: 10px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        /* Autocompletado */
-        .autocomplete-container { position: relative; }
-
-        .autocomplete-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-
-        .autocomplete-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .autocomplete-item:hover { background-color: #f8f9fa; }
-        .autocomplete-item.selected { background-color: #667eea; color: white; }
-
-        /* Lista de items */
-        .items-list {
+        .bulk-row-number {
             background: #f8f9fa;
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+            width: 40px;
+            padding: 8px 4px;
+        }
+
+        .bulk-actions-row {
+            background: #f8f9fa;
+            border-top: 2px solid #ddd;
+        }
+
+        .bulk-actions-row td {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .selected-cell {
+            background: #e3f2fd !important;
+            border: 2px solid #2196f3 !important;
+        }
+
+        .paste-area {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            background: #f9f9f9;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .paste-area:focus {
+            border-color: #667eea;
+            outline: none;
+            background: white;
+        }
+
+        .paste-helper {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
         }
 
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-        }
-
-        .item-tag {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            transition: all 0.3s;
-        }
-
-        .item-tag.priority {
-            border-color: #28a745;
-            background: #f8fff9;
-        }
-
-        .item-tag .count {
-            background: #667eea;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 11px;
-            margin-left: 8px;
-        }
-
-        .item-tag .actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: nowrap;
-        }
-
-        .priority-star {
-            color: #ffc107;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .priority-star.active { color: #28a745; }
-        .priority-star:hover { transform: scale(1.2); }
-
-        /* Checkbox de selección múltiple */
-        .select-checkbox {
-            transform: scale(1.2);
-            margin-right: 8px;
-        }
-
-        .bulk-actions {
-            padding: 15px;
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .bulk-actions.show { display: flex; }
-
-        .bulk-actions-text {
-            font-weight: 600;
+        .paste-helper h5 {
             color: #856404;
+            margin-bottom: 10px;
         }
 
-        /* Tabs para grados-materias */
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            background: #f8f9fa;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .tab-btn.active {
-            background: white;
-            color: #667eea;
-            border-bottom-color: #667eea;
-            font-weight: 600;
-        }
-
-        .tab-btn:hover { background: #e9ecef; }
-
-        .tab-content { min-height: 300px; }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-        }
-
-        .checkbox-item:hover { background-color: #f8f9fa; }
-
-        .checkbox-item input[type="checkbox"] { transform: scale(1.2); }
-
-        .grade-subject-card {
-            border: 1px solid #eee;
+        .error-list {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
             border-radius: 8px;
             padding: 15px;
-            margin-bottom: 15px;
-            background: #f8f9fa;
+            margin-top: 15px;
         }
 
-        .grade-subject-header {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
+        .error-list h5 {
+            color: #721c24;
             margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .subject-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+        .error-list ul {
+            margin-left: 20px;
+            color: #721c24;
         }
 
-        .subject-tag {
-            background: #667eea;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .checkbox-cell {
+            text-align: center;
+            width: 40px;
         }
 
-        .subject-tag .remove-btn {
-            background: rgba(255, 255, 255, 0.3);
-            border: none;
-            color: white;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 10px;
+        .checkbox-cell input[type="checkbox"] {
+            transform: scale(1.2);
         }
 
-        .subject-tag .remove-btn:hover { background: rgba(255, 255, 255, 0.5); }
-        
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -615,19 +466,42 @@
                 gap: 15px;
             }
             
-            .search-filters, .quick-actions {
+            .search-filters {
                 flex-direction: column;
                 align-items: stretch;
             }
             
             .search-input { min-width: auto; }
             .stats { justify-content: center; flex-wrap: wrap; }
-            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
             
-            .modal-content {
+            .modal-content, .bulk-modal-content {
                 margin: 20px;
                 width: calc(100% - 40px);
             }
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.show {
+            display: block;
         }
     </style>
 </head>
@@ -636,23 +510,26 @@
         <!-- Header -->
         <div class="header">
             <div>
-                <h1>👨‍🎓 Gestión de Estudiantes</h1>
-                <p>Administra estudiantes, grados y materias de forma integrada</p>
+                <h1>👨‍🎓 Gestión Simple de Estudiantes</h1>
+                <p>Administración eficiente y rápida de estudiantes</p>
             </div>
-        <div class="header-actions">
-            <button class="btn btn-success" onclick="openBulkGradeModal()">
-                📝 Edición Masiva
-            </button>
-            <button class="btn btn-info" onclick="openBulkAddModal()">
-                📋 Agregar Múltiples
-            </button>
-            <button class="btn btn-primary" onclick="openAddModal()">
-                ➕ Agregar Estudiante
-            </button>
-            <a href="dashboard.html" class="btn btn-secondary">
-                ← Dashboard
-            </a>
+            <div class="header-actions">
+                <button class="btn btn-info" onclick="openBulkAddModal()">
+                    📋 Agregar Masivo
+                </button>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    ➕ Agregar Individual
+                </button>
+                <a href="dashboard.html" class="btn btn-secondary">
+                    ← Dashboard
+                </a>
+            </div>
         </div>
+
+        <!-- Mensajes -->
+        <div id="successMessage" class="message success">✅ Operación completada exitosamente</div>
+        <div id="errorMessage" class="message error">❌ Error en la operación</div>
+
         <!-- Main Content -->
         <div class="main-content">
             <!-- Content Header with Stats -->
@@ -667,12 +544,8 @@
                         <div class="stat-label">Estudiantes Activos</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number" id="totalGrades">0</div>
-                        <div class="stat-label">Grados Guardados</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="totalSubjects">0</div>
-                        <div class="stat-label">Materias Guardadas</div>
+                        <div class="stat-number" id="selectedCount">0</div>
+                        <div class="stat-label">Seleccionados</div>
                     </div>
                 </div>
                 <button class="btn btn-primary btn-sm" onclick="loadStudents()">
@@ -680,20 +553,16 @@
                 </button>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <span class="quick-actions-title">⚡ Configuración Rápida:</span>
-                <button class="btn btn-purple btn-sm" onclick="openGradesModal()">
-                    📚 Gestionar Grados
+            <!-- Bulk Actions Bar -->
+            <div class="bulk-actions" id="bulkActions">
+                <span class="bulk-actions-text">
+                    <span id="selectedStudentsCount">0</span> estudiantes seleccionados
+                </span>
+                <button class="btn btn-danger btn-sm" onclick="deleteSelectedStudents()">
+                    🗑️ Eliminar Seleccionados
                 </button>
-                <button class="btn btn-warning btn-sm" onclick="openSubjectsModal()">
-                    📖 Gestionar Materias
-                </button>
-                <button class="btn btn-info btn-sm" onclick="openGradeSubjectsModal()">
-                    🎯 Materias por Grado
-                </button>
-                <button class="btn btn-success btn-sm" onclick="loadGradesAndSubjects()">
-                    🔄 Actualizar Listas
+                <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+                    Cancelar Selección
                 </button>
             </div>
 
@@ -703,15 +572,9 @@
                 <select class="filter-select" id="gradeFilter" onchange="filterStudents()">
                     <option value="">Todos los grados</option>
                 </select>
-                <select class="filter-select" id="subjectFilter" onchange="filterStudents()">
-                    <option value="">Todas las materias</option>
-                </select>
-                <select class="filter-select" id="sectionFilter" onchange="filterStudents()">
-                    <option value="">Todas las secciones</option>
-                    <option value="A">Sección A</option>
-                    <option value="B">Sección B</option>
-                    <option value="C">Sección C</option>
-                </select>
+                <button class="btn btn-warning btn-sm" onclick="clearFilters()">
+                    🧹 Limpiar Filtros
+                </button>
             </div>
 
             <!-- Students Table -->
@@ -722,13 +585,13 @@
                 
                 <div id="emptyState" class="empty-state" style="display: none;">
                     <h3>📝 No hay estudiantes registrados</h3>
-                    <p>Comienza agregando tu primer estudiante</p>
+                    <p>Comienza agregando estudiantes individual o masivamente</p>
                     <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="openAddModal()">
-                            ➕ Agregar Primer Estudiante
+                            ➕ Agregar Individual
                         </button>
                         <button class="btn btn-info" onclick="openBulkAddModal()">
-                            📋 Agregar Múltiples
+                            📋 Agregar Masivo
                         </button>
                     </div>
                 </div>
@@ -737,14 +600,11 @@
                     <thead>
                         <tr>
                             <th style="width: 40px;">
-                                <input type="checkbox" id="selectAllStudents" onchange="toggleAllStudents(this.checked)">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" title="Seleccionar todos">
                             </th>
                             <th>Estudiante</th>
                             <th>Cédula</th>
-                            <th>ID</th>
                             <th>Grado</th>
-                            <th>Materia</th>
-                            <th>Sección</th>
                             <th>Contacto</th>
                             <th>Padre/Madre</th>
                             <th>Acciones</th>
@@ -757,7 +617,7 @@
         </div>
     </div>
 
-    <!-- Modal para Agregar/Editar Estudiante -->
+    <!-- Modal Individual -->
     <div class="modal" id="studentModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -766,18 +626,12 @@
             </div>
             
             <form id="studentForm" onsubmit="saveStudent(event)">
-                <!-- Información Personal -->
-                <h4 style="color: #333; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    👤 Información Personal
-                </h4>
-                
                 <div class="form-group">
-                    <label class="form-label" for="cedula">Cédula</label>
+                    <label class="form-label" for="cedula">Cédula (opcional)</label>
                     <input type="text" class="form-input" id="cedula" name="cedula" placeholder="123456789">
-                    <div class="help-text">Número de identificación (opcional)</div>
                 </div>
                 
-                <div class="form-row-3">
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="firstSurname">Primer Apellido *</label>
                         <input type="text" class="form-input" id="firstSurname" name="first_surname" required>
@@ -786,57 +640,19 @@
                         <label class="form-label" for="secondSurname">Segundo Apellido</label>
                         <input type="text" class="form-input" id="secondSurname" name="second_surname">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="firstName">Nombre *</label>
-                        <input type="text" class="form-input" id="firstName" name="first_name" required>
-                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="firstName">Nombre *</label>
+                    <input type="text" class="form-input" id="firstName" name="first_name" required>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="studentId">ID Estudiante</label>
-                        <input type="text" class="form-input" id="studentId" name="student_id" placeholder="EST-001">
-                        <div class="help-text">Se genera automáticamente si no se especifica</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="birthDate">Fecha Nacimiento</label>
-                        <input type="date" class="form-input" id="birthDate" name="birth_date">
-                    </div>
-                </div>
-                
-                <!-- Información Académica -->
-                <h4 style="color: #333; margin: 25px 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    📚 Información Académica
-                </h4>
-                
-                <div class="form-row-3">
-                    <div class="form-group">
-                        <label class="form-label" for="gradeLevel">Grado/Nivel *</label>
-                        <div class="custom-select" id="gradeSelect">
-                            <div class="select-button" onclick="toggleDropdown('gradeSelect')">
-                                <span class="selected-text">Seleccione un grado...</span>
-                                <span class="select-arrow">▼</span>
-                            </div>
-                            <div class="select-dropdown" id="gradeDropdown">
-                                <div class="search-box">
-                                    <input type="text" placeholder="🔍 Buscar grado..." onkeyup="filterGrades(this.value)">
-                                </div>
-                                <div id="gradeOptions"></div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="gradeLevel" name="grade_level">
-                        <div class="help-text">Seleccione de la lista o agregue nuevos grados</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="subjectArea">Materia Principal</label>
-                        <div class="autocomplete-container">
-                            <input type="text" class="form-input" id="subjectArea" name="subject_area" 
-                                   placeholder="Ej: Matemáticas, Español"
-                                   onkeyup="handleAutocomplete(this, 'subjects')"
-                                   onfocus="showAutocomplete(this, 'subjects')">
-                            <div class="autocomplete-list" id="subjectAutocomplete"></div>
-                        </div>
-                        <div class="help-text">Materia que más enseña</div>
+                        <label class="form-label" for="gradeLevel">Grado</label>
+                        <select class="form-input" id="gradeLevel" name="grade_level">
+                            <option value="">Seleccionar grado...</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="section">Sección</label>
@@ -849,31 +665,16 @@
                     </div>
                 </div>
                 
-                <!-- Información de Contacto -->
-                <h4 style="color: #333; margin: 25px 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    📞 Información de Contacto
-                </h4>
-                
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Estudiante</label>
-                        <input type="email" class="form-input" id="email" name="email" placeholder="estudiante@email.com">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" class="form-input" id="email" name="email">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="phone">Teléfono Estudiante</label>
-                        <input type="tel" class="form-input" id="phone" name="phone" placeholder="8888-8888">
+                        <label class="form-label" for="phone">Teléfono</label>
+                        <input type="tel" class="form-input" id="phone" name="phone">
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="address">Dirección</label>
-                    <input type="text" class="form-input" id="address" name="address" placeholder="Dirección completa">
-                </div>
-                
-                <!-- Información del Padre/Madre -->
-                <h4 style="color: #333; margin: 25px 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    👨‍👩‍👧‍👦 Información del Padre/Madre
-                </h4>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -882,423 +683,108 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="parentPhone">Teléfono Padre/Madre</label>
-                        <input type="tel" class="form-input" id="parentPhone" name="parent_phone" placeholder="8888-8888">
+                        <input type="tel" class="form-input" id="parentPhone" name="parent_phone">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="parentEmail">Email Padre/Madre</label>
-                    <input type="email" class="form-input" id="parentEmail" name="parent_email" placeholder="padre@email.com">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="notes">Notas Adicionales</label>
-                    <textarea class="form-input" id="notes" name="notes" rows="3" placeholder="Información adicional sobre el estudiante..."></textarea>
                 </div>
                 
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="saveBtn">Guardar Estudiante</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- Modal para Edición Masiva de Grados -->
-    <div class="modal" id="bulkGradeModal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2 class="modal-title">📝 Edición Masiva de Estudiantes</h2>
-                <button class="close-btn" onclick="closeBulkGradeModal()">&times;</button>
-            </div>
-            
-            <div id="selectedStudentsInfo" style="padding: 0 20px;">
-                <!-- Se llena dinámicamente -->
-            </div>
-            
-            <form id="bulkGradeForm" onsubmit="saveBulkGradeChange(event)" style="padding: 20px;">
-                <div style="background: #fff3cd; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                    <p><strong>⚠️ Instrucciones:</strong></p>
-                    <ul style="margin: 10px 0; padding-left: 20px; color: #856404;">
-                        <li>Solo se actualizarán los campos que tengan valores seleccionados</li>
-                        <li>Los campos vacíos no se modificarán</li>
-                        <li>Esta acción afectará a todos los estudiantes seleccionados</li>
-                    </ul>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">🎓 Nuevo Grado (opcional):</label>
-                    <div class="custom-select" id="bulkGradeSelect">
-                        <div class="select-button" onclick="toggleDropdown('bulkGradeSelect')">
-                            <span class="selected-text">Mantener grado actual...</span>
-                            <span class="select-arrow">▼</span>
-                        </div>
-                        <div class="select-dropdown" id="bulkGradeDropdown">
-                            <div class="search-box">
-                                <input type="text" placeholder="🔍 Buscar grado..." onkeyup="filterBulkGrades(this.value)">
-                            </div>
-                            <div id="bulkGradeOptions"></div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="bulkNewGrade">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">📚 Nueva Materia (opcional):</label>
-                    <div class="autocomplete-container">
-                        <input type="text" class="form-input" id="bulkNewSubject" 
-                            placeholder="Mantener materia actual o escribir nueva..."
-                            onkeyup="handleAutocomplete(this, 'subjects')"
-                            onfocus="showAutocomplete(this, 'subjects')">
-                        <div class="autocomplete-list" id="subjectAutocomplete"></div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">🏫 Nueva Sección (opcional):</label>
-                    <select class="form-input" id="bulkNewSection">
-                        <option value="">Mantener sección actual...</option>
-                        <option value="A">Sección A</option>
-                        <option value="B">Sección B</option>
-                        <option value="C">Sección C</option>
-                    </select>
-                </div>
-                
-                <div id="bulkGradeProgress" style="display: none; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin: 15px 0;">
-                    🔄 Procesando...
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeBulkGradeModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-success">✅ Actualizar Estudiantes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- Modal para Gestionar Grados -->
-    <div class="modal" id="gradesModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">📚 Gestionar Grados</h2>
-                <button class="close-btn" onclick="closeGradesModal()">&times;</button>
-            </div>
-            
-            <!-- Acciones masivas para grados -->
-            <div class="bulk-actions" id="gradesBulkActions">
-                <span class="bulk-actions-text">
-                    <span id="selectedGradesCount">0</span> grados seleccionados
-                </span>
-                <button class="btn btn-danger btn-sm" onclick="deleteSelectedGrades()">
-                    🗑️ Eliminar Seleccionados
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="clearGradeSelection()">
-                    Cancelar
-                </button>
-            </div>
-            
-            <div class="items-list">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h4>Grados Guardados: <span id="gradesCount">0</span></h4>
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
-                        <input type="checkbox" id="selectAllGrades" onchange="toggleAllGrades(this.checked)">
-                        Seleccionar todos
-                    </label>
-                </div>
-                <div class="items-grid" id="gradesList">
-                    <div style="color: #666; font-style: italic;">Cargando grados...</div>
-                </div>
-            </div>
-
-            <form onsubmit="addGrade(event)">
-                <div class="form-group">
-                    <label class="form-label" for="newGrade">Agregar Nuevo Grado</label>
-                    <input type="text" class="form-input" id="newGrade" placeholder="Ej: Octavo, Kinder, Transición" required>
-                    <div class="help-text">Escriba el nombre del grado tal como aparecerá en las listas</div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeGradesModal()">Cerrar</button>
-                    <button type="submit" class="btn btn-primary">➕ Agregar Grado</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal para Gestionar Materias -->
-    <div class="modal" id="subjectsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">📖 Gestionar Materias</h2>
-                <button class="close-btn" onclick="closeSubjectsModal()">&times;</button>
-            </div>
-            
-            <!-- Acciones masivas para materias -->
-            <div class="bulk-actions" id="subjectsBulkActions">
-                <span class="bulk-actions-text">
-                    <span id="selectedSubjectsCount">0</span> materias seleccionadas
-                </span>
-                <button class="btn btn-danger btn-sm" onclick="deleteSelectedSubjects()">
-                    🗑️ Eliminar Seleccionadas
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="clearSubjectSelection()">
-                    Cancelar
-                </button>
-            </div>
-            
-            <div class="items-list">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h4>Materias Guardadas: <span id="subjectsCount">0</span></h4>
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
-                        <input type="checkbox" id="selectAllSubjects" onchange="toggleAllSubjects(this.checked)">
-                        Seleccionar todas
-                    </label>
-                </div>
-                <div class="items-grid" id="subjectsList">
-                    <div style="color: #666; font-style: italic;">Cargando materias...</div>
-                </div>
-            </div>
-
-            <form onsubmit="addSubject(event)">
-                <div class="form-group">
-                    <label class="form-label" for="newSubject">Agregar Nueva Materia</label>
-                    <input type="text" class="form-input" id="newSubject" placeholder="Ej: Biología, Educación Física, Arte" required>
-                    <div class="help-text">Escriba el nombre de la materia tal como aparecerá en las listas</div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeSubjectsModal()">Cerrar</button>
-                    <button type="submit" class="btn btn-primary">➕ Agregar Materia</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para Asignar Materias a Grados -->
-    <div class="modal" id="gradeSubjectsModal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h2 class="modal-title">📚 Asignar Materias a Grados</h2>
-                <button class="close-btn" onclick="closeGradeSubjectsModal()">&times;</button>
-            </div>
-            
-            <!-- Tabs -->
-            <div style="border-bottom: 1px solid #eee; margin-bottom: 20px;">
-                <div style="display: flex; gap: 0;">
-                    <button class="tab-btn active" onclick="switchTab('single')" id="singleTab">
-                        📖 Un Grado → Materias
-                    </button>
-                    <button class="tab-btn" onclick="switchTab('multiple')" id="multipleTab">
-                        📚 Múltiples Grados → Materias
-                    </button>
-                    <button class="tab-btn" onclick="switchTab('view')" id="viewTab">
-                        👁️ Ver Asignaciones
-                    </button>
-                </div>
-            </div>
-
-
-
-            
-            
-            <!-- Tab Content: Single Grade -->
-            <div id="singleTab" class="tab-content">
-                <form onsubmit="assignSubjectsToSingleGrade(event)">
-                    <div class="form-group">
-                        <label class="form-label">Seleccionar Grado:</label>
-                        <div class="custom-select" id="singleGradeSelect">
-                            <div class="select-button" onclick="toggleDropdown('singleGradeSelect')">
-                                <span class="selected-text">Seleccione un grado...</span>
-                                <span class="select-arrow">▼</span>
-                            </div>
-                            <div class="select-dropdown" id="singleGradeDropdown">
-                                <div class="search-box">
-                                    <input type="text" placeholder="🔍 Buscar grado..." onkeyup="filterSingleGrades(this.value)">
-                                </div>
-                                <div id="singleGradeOptions"></div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="selectedSingleGrade">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Seleccionar Materias:</label>
-                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
-                            <div id="subjectsCheckboxList">
-                                <!-- Se llena dinámicamente -->
-                            </div>
-                        </div>
-                        <div class="help-text">Seleccione todas las materias que este grado debe recibir</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Nombre del Profesor (Opcional):</label>
-                        <input type="text" class="form-input" id="singleTeacherName" placeholder="Ej: Prof. María González">
-                        <div class="help-text">Se aplicará a todas las materias seleccionadas</div>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeGradeSubjectsModal()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">📝 Asignar Materias</button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Tab Content: Multiple Grades -->
-            <div id="multipleTab" class="tab-content" style="display: none;">
-                <form onsubmit="assignSubjectsToMultipleGrades(event)">
-                    <div class="form-group">
-                        <label class="form-label">Seleccionar Grados:</label>
-                        <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
-                            <div id="gradesCheckboxList">
-                                <!-- Se llena dinámicamente -->
-                            </div>
-                        </div>
-                        <div class="help-text">Seleccione todos los grados que recibirán las mismas materias</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Seleccionar Materias:</label>
-                        <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
-                            <div id="multipleSubjectsCheckboxList">
-                                <!-- Se llena dinámicamente -->
-                            </div>
-                        </div>
-                        <div class="help-text">Estas materias se asignarán a TODOS los grados seleccionados</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Nombre del Profesor (Opcional):</label>
-                        <input type="text" class="form-input" id="multipleTeacherName" placeholder="Ej: Prof. Juan Pérez">
-                        <div class="help-text">Se aplicará a todas las combinaciones grado-materia</div>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeGradeSubjectsModal()">Cancelar</button>
-                        <button type="submit" class="btn btn-success">🚀 Asignar a Múltiples Grados</button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Tab Content: View Assignments -->
-            <div id="viewTab" class="tab-content" style="display: none;">
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <h4>📋 Asignaciones Actuales</h4>
-                    <button class="btn btn-info btn-sm" onclick="loadGradeSubjectsView()">🔄 Actualizar</button>
-                </div>
-                
-                <div id="gradeSubjectsView" style="max-height: 400px; overflow-y: auto;">
-                    <div style="color: #666; text-align: center; padding: 40px;">
-                        Cargando asignaciones...
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeGradeSubjectsModal()">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-   <!-- Modal para Agregar Múltiples Estudiantes - VERSIÓN CORREGIDA -->
+    <!-- Modal Agregar Masivo -->
     <div class="modal" id="bulkAddModal">
-        <div class="modal-content" style="max-width: 1000px;">
+        <div class="bulk-modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">📋 Agregar Múltiples Estudiantes</h2>
+                <h2 class="modal-title">📋 Agregar Estudiantes Masivamente</h2>
                 <button class="close-btn" onclick="closeBulkAddModal()">&times;</button>
             </div>
             
-            <!-- Instrucciones -->
-            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                <p><strong>📝 Instrucciones:</strong></p>
-                <ul style="margin: 10px 0; padding-left: 20px;">
-                    <li><strong>Opción 1:</strong> Complete manualmente los campos. Solo <strong>Primer Apellido</strong> y <strong>Nombre</strong> son obligatorios.</li>
-                    <li><strong>Opción 2:</strong> <span style="background: #fff3cd; padding: 2px 6px; border-radius: 4px;">🔥 Pegue desde Excel/Google Sheets</span> - Seleccione una celda y pegue (Ctrl+V)</li>
-                    <li><strong>Navegación:</strong> Use Tab, Enter o flechas para moverse entre celdas</li>
-                    <li><strong>Agregar filas:</strong> Use el botón "+ Agregar Fila" o navegue más allá de la última fila</li>
-                </ul>
-                <div style="margin-top: 10px; display: flex; gap: 15px; align-items: center;">
-                    <button class="btn btn-success btn-sm" onclick="addBulkRow()">+ Agregar Fila</button>
-                    <button class="btn btn-warning btn-sm" onclick="clearBulkTable(); for(let i=0; i<3; i++) addBulkRow();">🧹 Limpiar Todo</button>
-                    <span style="color: #666; font-size: 12px;">Filas: <span id="rowCount">0</span></span>
-                </div>
+            <div class="instruction-box">
+                <h4>📝 Instrucciones de Uso</h4>
+                <p><strong>Opción 1:</strong> Completa manualmente los campos en la tabla</p>
+                <p><strong>Opción 2:</strong> Pega datos desde Excel/Google Sheets directamente en las celdas</p>
+                <p><strong>Opción 3:</strong> Pega todo el bloque de datos en el área de texto abajo</p>
             </div>
 
-            <!-- ✅ NUEVO: Controles globales para aplicar grado a todos -->
-            <div style="background: #e8f4fd; border: 2px solid #2196f3; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                <h4 style="margin-bottom: 10px; color: #1976d2;">🎯 Aplicar Grado a Todos</h4>
-                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Grado para todos:</label>
-                        <select id="bulkGradeSelect" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar grado...</option>
-                            <!-- Se llena dinámicamente -->
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-info" onclick="applyGradeToAll()" style="margin-top: 20px;">
-                        📚 Aplicar a Todas las Filas
-                    </button>
-                    <button type="button" class="btn btn-warning" onclick="clearAllGrades()" style="margin-top: 20px;">
-                        🧹 Limpiar Grados
-                    </button>
-                </div>
-                <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                    💡 Seleccione un grado y haga clic en "Aplicar" para completar automáticamente todas las filas
-                </div>
+            <div class="form-group">
+                <label class="form-label">Grado para TODOS los estudiantes:</label>
+                <select class="form-input" id="bulkGrade" required>
+                    <option value="">Seleccionar grado...</option>
+                </select>
             </div>
-            
-            <!-- Tabla de estudiantes -->
-            <div style="overflow-x: auto; max-height: 400px; border: 1px solid #e1e1e1; border-radius: 8px;">
-                <table id="bulkAddTable" style="width: 100%; min-width: 800px;">
-                    <thead style="background: #667eea; color: white; position: sticky; top: 0;">
+
+            <!-- Tabla tipo Excel -->
+            <div class="bulk-table-container">
+                <table class="bulk-table">
+                    <thead>
                         <tr>
-                            <th style="padding: 12px; width: 15%;">Cédula</th>
-                            <th style="padding: 12px; width: 20%;">Primer Apellido *</th>
-                            <th style="padding: 12px; width: 20%;">Segundo Apellido</th>
-                            <th style="padding: 12px; width: 20%;">Nombre *</th>
-                            <th style="padding: 12px; width: 20%;">Grado *</th>
-                            <th style="padding: 12px; width: 5%;">Eliminar</th>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 150px;">Cédula</th>
+                            <th style="width: 200px;">Primer Apellido *</th>
+                            <th style="width: 200px;">Segundo Apellido</th>
+                            <th style="width: 200px;">Nombre *</th>
                         </tr>
                     </thead>
                     <tbody id="bulkAddTableBody">
-                        <!-- Las filas se generan dinámicamente -->
                     </tbody>
+                    <tr class="bulk-actions-row">
+                        <td colspan="5">
+                            <button class="btn btn-info btn-sm" onclick="addBulkRows(5)" style="margin-right: 10px;">
+                                ➕ Agregar 5 Filas
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="clearBulkTable()">
+                                🧹 Limpiar Todo
+                            </button>
+                        </td>
+                    </tr>
                 </table>
             </div>
-            
+
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeBulkAddModal()">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="saveBulkStudents()">Guardar Todos</button>
+                <button type="button" class="btn btn-warning" onclick="validateBulkData()" style="margin-right: 10px;">
+                    🔍 Validar Datos
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveBulkStudents()" id="saveBulkBtn">
+                    💾 Guardar Estudiantes
+                </button>
             </div>
+
+            <!-- Área de errores -->
+            <div id="bulkErrorsSection" style="display: none;"></div>
         </div>
     </div>
 
     <script>
+        // Variables globales
         let students = [];
         let filteredStudents = [];
+        let selectedStudents = new Set();
         let editingStudentId = null;
+        let availableGrades = [];
+        
+        // Variables para tabla masiva tipo Excel
         let bulkRowCounter = 0;
         let selectedCell = null;
-        let availableGrades = [];
-        let availableSubjects = [];
-        let selectedGrade = '';
-        let selectedSingleGradeForSubjects = '';
-        let gradeSubjectsData = [];
-        let selectedGradeIds = [];
-        let selectedSubjectIds = [];
+        let bulkData = [];
 
-        // Cargar estudiantes al inicio
+        // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Iniciando aplicación...');
+            console.log('🚀 Iniciando gestión simple de estudiantes...');
             loadStudents();
-            loadGradesAndSubjects();
+            loadGrades();
         });
 
         // ========================================
-        // FUNCIONES PRINCIPALES
+        // FUNCIONES DE CARGA DE DATOS
         // ========================================
 
         async function loadStudents() {
             try {
-                console.log('📚 Cargando estudiantes...');
                 document.getElementById('loadingState').style.display = 'block';
                 document.getElementById('studentsTable').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
@@ -1309,498 +795,214 @@
                 if (result.success) {
                     students = result.data;
                     filteredStudents = [...students];
-                    console.log('✅ Estudiantes cargados:', students.length);
                     updateStats();
-                    updateFilters();
                     renderStudentsTable();
                 } else {
-                    console.error('❌ Error:', result.message);
-                    alert('Error cargando estudiantes: ' + result.message);
+                    showMessage('error', 'Error cargando estudiantes: ' + result.message);
                 }
             } catch (error) {
-                console.error('❌ Error:', error);
-                alert('Error conectando con el servidor');
+                console.error('Error:', error);
+                showMessage('error', 'Error de conexión');
             } finally {
                 document.getElementById('loadingState').style.display = 'none';
             }
         }
 
-        async function loadGradesAndSubjects() {
+        async function loadGrades() {
             try {
-                console.log('🔄 Cargando grados y materias desde BD...');
+                const response = await fetch('/api/grades');
+                const result = await response.json();
                 
-                // Cargar grados desde la nueva API
-                const gradesResponse = await fetch('/api/grades');
-                if (gradesResponse.ok) {
-                    const gradesResult = await gradesResponse.json();
-                    if (gradesResult.success) {
-                        availableGrades = gradesResult.data;
-                        console.log('✅ Grados cargados desde BD:', availableGrades.length);
-                    }
+                if (result.success) {
+                    availableGrades = result.data;
+                    
+                    const gradeSelects = [
+                        document.getElementById('gradeFilter'),
+                        document.getElementById('gradeLevel'),
+                        document.getElementById('bulkGrade')
+                    ];
+                    
+                    gradeSelects.forEach(select => {
+                        if (select) {
+                            const currentValue = select.value;
+                            const isFilter = select.id === 'gradeFilter';
+                            
+                            select.innerHTML = isFilter ? 
+                                '<option value="">Todos los grados</option>' : 
+                                '<option value="">Seleccionar grado...</option>';
+                            
+                            availableGrades.forEach(grade => {
+                                select.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
+                            });
+                            
+                            if (currentValue) select.value = currentValue;
+                        }
+                    });
                 }
-                
-                // Cargar materias desde la nueva API
-                const subjectsResponse = await fetch('/api/custom-subjects');
-                if (subjectsResponse.ok) {
-                    const subjectsResult = await subjectsResponse.json();
-                    if (subjectsResult.success) {
-                        availableSubjects = subjectsResult.data.map(s => s.name);
-                        console.log('✅ Materias cargadas desde BD:', availableSubjects.length);
-                    }
-                }
-                
-                // Actualizar estadísticas en la interfaz
-                document.getElementById('totalGrades').textContent = availableGrades.length;
-                document.getElementById('totalSubjects').textContent = availableSubjects.length;
-                
-                // Renderizar opciones del combobox
-                setTimeout(() => {
-                    renderGradeOptions();
-                    console.log('🎯 Combobox de grados inicializado');
-                }, 100);
-                
             } catch (error) {
-                console.error('❌ Error cargando grados y materias:', error);
+                console.error('Error cargando grados:', error);
             }
         }
 
         function updateStats() {
-            const totalStudents = students.length;
-            const activeStudents = students.filter(s => s.status === 'active').length;
+            const total = students.length;
+            const active = students.filter(s => s.status === 'active').length;
+            const selected = selectedStudents.size;
 
-            document.getElementById('totalStudents').textContent = totalStudents;
-            document.getElementById('activeStudents').textContent = activeStudents;
+            document.getElementById('totalStudents').textContent = total;
+            document.getElementById('activeStudents').textContent = active;
+            document.getElementById('selectedCount').textContent = selected;
+            document.getElementById('selectedStudentsCount').textContent = selected;
+
+            // Mostrar/ocultar barra de acciones masivas
+            document.getElementById('bulkActions').classList.toggle('show', selected > 0);
         }
 
-        function updateFilters() {
-            const gradeFilter = document.getElementById('gradeFilter');
-            const subjectFilter = document.getElementById('subjectFilter');
-            
-            gradeFilter.innerHTML = '<option value="">Todos los grados</option>';
-            subjectFilter.innerHTML = '<option value="">Todas las materias</option>';
-            
-            const grades = [...new Set(students.map(s => s.grade_level).filter(g => g))];
-            const subjects = [...new Set(students.map(s => s.subject_area).filter(s => s))];
-            
-            grades.forEach(grade => {
-                gradeFilter.innerHTML += `<option value="${grade}">${grade}</option>`;
-            });
-            
-            subjects.forEach(subject => {
-                subjectFilter.innerHTML += `<option value="${subject}">${subject}</option>`;
-            });
-        }
+        // ========================================
+        // FUNCIONES DE RENDERIZADO
+        // ========================================
 
-        async function renderStudentsTable() {
-            if (students.length === 0) {
-                document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('loadingState').innerHTML = '📝 No hay estudiantes para mostrar';
+        function renderStudentsTable() {
+            const tbody = document.getElementById('studentsTableBody');
+            
+            if (filteredStudents.length === 0) {
                 document.getElementById('studentsTable').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
                 return;
             }
-            
-            document.getElementById('loadingState').style.display = 'none';
+
+            document.getElementById('emptyState').style.display = 'none';
             document.getElementById('studentsTable').style.display = 'table';
-            
-            debugLog('🎨 Renderizando tabla con estudiantes:', students.map(s => ({ id: s.id, name: s.first_name })));
-            debugLog('📊 Datos de asistencia disponibles:', attendanceData);
-            
-            // Invalidar cache de estadísticas cuando renderizamos
-            studentMEPStats = {};
-            
-            const tbody = document.getElementById('studentsTableBody');
-            tbody.innerHTML = '';
-            
-            for (const student of students) {
-                const attendance = attendanceData[student.id];
+
+            tbody.innerHTML = filteredStudents.map(student => {
                 const initials = ((student.first_name?.[0] || '') + (student.first_surname?.[0] || '')).toUpperCase();
                 const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+                const isSelected = selectedStudents.has(student.id);
                 
-                const status = attendance?.status || 'not_marked';
-                const statusText = getStatusText(status);
-                const statusClass = getStatusClass(status);
-                
-                // Debug por estudiante
-                debugLog(`👤 Estudiante ${student.id} (${student.first_name}):`, {
-                    hasAttendance: !!attendance,
-                    status: status
-                });
-                
-                // Crear fila con checkbox para selección masiva
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <input type="checkbox" class="student-checkbox" value="${student.id}" onchange="updateStudentSelection()">
-                    </td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div class="student-photo">${initials}</div>
-                            <div>
-                                <div class="student-name">${fullName}</div>
-                                <div class="student-id">${student.student_id || '-'} (ID: ${student.id})</div>
+                return `
+                    <tr style="${isSelected ? 'background-color: #e3f2fd;' : ''}">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" 
+                                   ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleStudentSelection(${student.id})"
+                                   title="Seleccionar estudiante">
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="student-photo">${initials}</div>
+                                <div>
+                                    <div class="student-name">${fullName}</div>
+                                    <div class="student-id">${student.student_id || '-'}</div>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td>${student.cedula || '-'}</td>
-                    <td>${student.student_id || '-'}</td>
-                    <td>${student.grade_level ? `<span class="grade-badge">${student.grade_level}</span>` : '-'}</td>
-                    <td>${student.subject_area ? `<span class="subject-badge">${student.subject_area}</span>` : '-'}</td>
-                    <td>${student.section || '-'}</td>
-                    <td>
-                        <div>${student.email || '-'}</div>
-                        <div style="font-size: 12px; color: #666;">${student.phone || '-'}</div>
-                    </td>
-                    <td>
-                        <div>${student.parent_name || '-'}</div>
-                        <div style="font-size: 12px; color: #666;">${student.parent_phone || '-'}</div>
-                    </td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn btn-warning btn-sm" onclick="editStudent(${student.id})" title="Editar">
-                                ✏️
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.id})" title="Eliminar">
-                                🗑️
-                            </button>
-                        </div>
-                    </td>
+                        </td>
+                        <td>${student.cedula || '-'}</td>
+                        <td>${student.grade_level ? `<span class="grade-badge">${student.grade_level}</span>` : '-'}</td>
+                        <td>
+                            <div>${student.email || '-'}</div>
+                            <div style="font-size: 12px; color: #666;">${student.phone || '-'}</div>
+                        </td>
+                        <td>
+                            <div>${student.parent_name || '-'}</div>
+                            <div style="font-size: 12px; color: #666;">${student.parent_phone || '-'}</div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-warning btn-sm" onclick="editStudent(${student.id})" title="Editar">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.id})" title="Eliminar">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 `;
-                
-                tbody.appendChild(row);
-            }
+            }).join('');
             
-            debugLog('✅ Tabla renderizada con', students.length, 'estudiantes');
+            updateSelectAllCheckbox();
         }
 
+        // ========================================
+        // FUNCIONES DE FILTRADO Y BÚSQUEDA
+        // ========================================
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const gradeFilter = document.getElementById('gradeFilter').value;
+
+            filteredStudents = students.filter(student => {
+                const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.toLowerCase();
+                const matchesSearch = !searchTerm || 
+                    fullName.includes(searchTerm) ||
+                    (student.cedula && student.cedula.includes(searchTerm)) ||
+                    (student.student_id && student.student_id.toLowerCase().includes(searchTerm));
+                
+                const matchesGrade = !gradeFilter || student.grade_level === gradeFilter;
+                
+                return matchesSearch && matchesGrade && student.status === 'active';
+            });
+
+            renderStudentsTable();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('gradeFilter').value = '';
+            filterStudents();
+        }
 
         // ========================================
-        // FUNCIONES DE EDICIÓN MASIVA DE ESTUDIANTES
+        // FUNCIONES DE SELECCIÓN
         // ========================================
 
-        let selectedStudentIds = [];
-
-        function updateStudentSelection() {
-            const checkboxes = document.querySelectorAll('.student-checkbox:checked');
-            selectedStudentIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
-            
-            const bulkActionsPanel = document.getElementById('studentBulkActions');
-            if (selectedStudentIds.length > 0) {
-                bulkActionsPanel.classList.add('show');
-                document.getElementById('selectedStudentsCount').textContent = selectedStudentIds.length;
+        function toggleStudentSelection(studentId) {
+            if (selectedStudents.has(studentId)) {
+                selectedStudents.delete(studentId);
             } else {
-                bulkActionsPanel.classList.remove('show');
+                selectedStudents.add(studentId);
+            }
+            updateStats();
+            renderStudentsTable();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            if (selectAllCheckbox.checked) {
+                filteredStudents.forEach(student => selectedStudents.add(student.id));
+            } else {
+                selectedStudents.clear();
             }
             
-            // Actualizar estado del checkbox "Seleccionar todos"
-            const selectAllCheckbox = document.getElementById('selectAllStudents');
-            const allCheckboxes = document.querySelectorAll('.student-checkbox');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedStudentIds.length === allCheckboxes.length;
-            }
+            updateStats();
+            renderStudentsTable();
         }
 
-        function toggleAllStudents(checked) {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            checkboxes.forEach(cb => cb.checked = checked);
-            updateStudentSelection();
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const visibleStudentIds = filteredStudents.map(s => s.id);
+            const selectedVisibleCount = visibleStudentIds.filter(id => selectedStudents.has(id)).length;
+            
+            selectAllCheckbox.checked = visibleStudentIds.length > 0 && selectedVisibleCount === visibleStudentIds.length;
+            selectAllCheckbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleStudentIds.length;
         }
 
-        function clearStudentSelection() {
-            selectedStudentIds = [];
-            document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
-            document.getElementById('studentBulkActions').classList.remove('show');
-            const selectAllCheckbox = document.getElementById('selectAllStudents');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = false;
-            }
-        }
-
-        function openBulkGradeModal() {
-            if (selectedStudentIds.length === 0) {
-                alert('Seleccione al menos un estudiante');
-                return;
-            }
-            
-            document.getElementById('bulkGradeModal').classList.add('show');
-            
-            // Mostrar información de estudiantes seleccionados
-            const selectedStudentsInfo = document.getElementById('selectedStudentsInfo');
-            const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
-            
-            selectedStudentsInfo.innerHTML = `
-                <h4>📋 Estudiantes Seleccionados: ${selectedStudents.length}</h4>
-                <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 10px 0;">
-                    ${selectedStudents.map(student => {
-                        const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
-                        return `
-                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                                <span><strong>${fullName}</strong></span>
-                                <span style="color: #666;">Actual: ${student.grade_level || 'Sin grado'}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        function closeBulkGradeModal() {
-            document.getElementById('bulkGradeModal').classList.remove('show');
-        }
-
-        async function saveBulkGradeChange(event) {
-            event.preventDefault();
-            
-            const newGrade = document.getElementById('bulkNewGrade').value;
-            const newSubject = document.getElementById('bulkNewSubject').value;
-            const newSection = document.getElementById('bulkNewSection').value;
-            
-            if (!newGrade && !newSubject && !newSection) {
-                alert('Seleccione al menos un campo para actualizar');
-                return;
-            }
-            
-            if (!confirm(`¿Actualizar ${selectedStudentIds.length} estudiantes seleccionados?`)) {
-                return;
-            }
-            
-            try {
-                let successCount = 0;
-                let errorCount = 0;
-                
-                // Mostrar progreso
-                const progressDiv = document.getElementById('bulkGradeProgress');
-                progressDiv.style.display = 'block';
-                progressDiv.innerHTML = '🔄 Actualizando estudiantes...';
-                
-                for (const studentId of selectedStudentIds) {
-                    try {
-                        const student = students.find(s => s.id === studentId);
-                        const updateData = { ...student };
-                        
-                        // Solo actualizar campos que tienen valores
-                        if (newGrade) updateData.grade_level = newGrade;
-                        if (newSubject) updateData.subject_area = newSubject;
-                        if (newSection) updateData.section = newSection;
-                        
-                        const response = await fetch(`/api/students/${studentId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(updateData)
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            successCount++;
-                        } else {
-                            errorCount++;
-                            console.error(`Error actualizando estudiante ${studentId}:`, result.message);
-                        }
-                        
-                        // Pequeña pausa para no sobrecargar el servidor
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        
-                    } catch (error) {
-                        errorCount++;
-                        console.error(`Error actualizando estudiante ${studentId}:`, error);
-                    }
-                }
-                
-                progressDiv.style.display = 'none';
-                
-                if (errorCount === 0) {
-                    alert(`✅ ${successCount} estudiantes actualizados correctamente`);
-                    closeBulkGradeModal();
-                    clearStudentSelection();
-                    loadStudents(); // Recargar la lista
-                } else {
-                    alert(`⚠️ ${successCount} exitosos, ${errorCount} errores. Revise la consola para más detalles.`);
-                }
-                
-            } catch (error) {
-                console.error('Error en actualización masiva:', error);
-                alert('Error en la actualización masiva');
-                document.getElementById('bulkGradeProgress').style.display = 'none';
-            }
-        }
-
-
-        // ========================================
-        // FUNCIONES DEL COMBOBOX DE GRADOS
-        // ========================================
-
-        function toggleDropdown(selectId) {
-            console.log('🎯 Toggle dropdown:', selectId);
-            const button = document.querySelector(`#${selectId} .select-button`);
-            const dropdown = document.querySelector(`#${selectId} .select-dropdown`);
-            
-            if (!button || !dropdown) {
-                console.error('❌ Elementos del dropdown no encontrados');
-                return;
-            }
-            
-            // Cerrar otros dropdowns
-            document.querySelectorAll('.select-dropdown').forEach(dd => {
-                if (dd !== dropdown) {
-                    dd.classList.remove('show');
-                    dd.parentElement.querySelector('.select-button').classList.remove('open');
-                }
-            });
-            
-            button.classList.toggle('open');
-            dropdown.classList.toggle('show');
-            
-            if (dropdown.classList.contains('show')) {
-                const searchInput = dropdown.querySelector('input');
-                if (searchInput) {
-                    setTimeout(() => searchInput.focus(), 100);
-                }
-            }
-        }
-
-        function selectGrade(gradeName) {
-            console.log('📝 Grado seleccionado:', gradeName);
-            selectedGrade = gradeName;
-            
-            // Actualizar interfaz
-            document.querySelector('#gradeSelect .selected-text').textContent = gradeName;
-            document.getElementById('gradeLevel').value = gradeName;
-            
-            // Cerrar dropdown
-            document.querySelector('#gradeSelect .select-button').classList.remove('open');
-            document.getElementById('gradeDropdown').classList.remove('show');
-        }
-
-        function selectSingleGradeForSubjects(gradeName) {
-            selectedSingleGradeForSubjects = gradeName;
-            document.querySelector('#singleGradeSelect .selected-text').textContent = gradeName;
-            document.getElementById('selectedSingleGrade').value = gradeName;
-            
-            // Cerrar dropdown
-            document.querySelector('#singleGradeSelect .select-button').classList.remove('open');
-            document.getElementById('singleGradeDropdown').classList.remove('show');
-        }
-
-        function renderGradeOptions() {
-            const container = document.getElementById('gradeOptions');
-            if (!container) return;
-            
-            renderGradeOptionsInContainer(container, 'selectGrade', selectedGrade);
-        }
-
-        function renderGradeOptionsInContainer(container, selectFunction, selectedValue) {
-            if (!availableGrades || availableGrades.length === 0) {
-                container.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No hay grados configurados</div>';
-                return;
-            }
-            
-            // Ordenar: prioritarios primero, luego por uso, luego alfabético
-            const sortedGrades = [...availableGrades].sort((a, b) => {
-                if (a.priority && !b.priority) return -1;
-                if (!a.priority && b.priority) return 1;
-                if (a.priority && b.priority) return b.usage - a.usage;
-                return a.name.localeCompare(b.name);
-            });
-            
-            const optionsHTML = sortedGrades.map(grade => `
-                <div class="select-option ${selectedValue === grade.name ? 'selected' : ''}" 
-                     onclick="${selectFunction}('${grade.name}')">
-                    <span>${grade.name}</span>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        ${grade.priority ? '<span class="priority-badge">PRIORIDAD</span>' : ''}
-                        ${grade.usage > 0 ? `<span class="usage-count">${grade.usage}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
-            
-            container.innerHTML = optionsHTML;
-        }
-
-        function filterGrades(searchTerm) {
-            filterGradeOptions('gradeOptions', searchTerm);
-        }
-
-        function filterGradeOptions(containerId, searchTerm) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            const options = container.querySelectorAll('.select-option');
-            options.forEach(option => {
-                const gradeName = option.textContent.toLowerCase();
-                const matches = gradeName.includes(searchTerm.toLowerCase());
-                option.style.display = matches ? 'flex' : 'none';
-            });
+        function clearSelection() {
+            selectedStudents.clear();
+            updateStats();
+            renderStudentsTable();
         }
 
         // ========================================
-        // FUNCIONES DE AUTOCOMPLETADO (MATERIAS)
-        // ========================================
-
-        function handleAutocomplete(input, type) {
-            const value = input.value.toLowerCase();
-            const container = input.nextElementSibling;
-            const items = type === 'subjects' ? availableSubjects : availableGrades;
-            
-            if (value.length === 0) {
-                container.style.display = 'none';
-                return;
-            }
-            
-            const matches = items.filter(item => 
-                item.toLowerCase().includes(value)
-            );
-            
-            if (matches.length === 0) {
-                container.style.display = 'none';
-                return;
-            }
-            
-            container.innerHTML = matches.map(item => 
-                `<div class="autocomplete-item" onclick="selectAutocomplete('${input.id}', '${item}')">${item}</div>`
-            ).join('');
-            
-            container.style.display = 'block';
-        }
-
-        function showAutocomplete(input, type) {
-            const container = input.nextElementSibling;
-            const items = type === 'subjects' ? availableSubjects : availableGrades;
-            
-            container.innerHTML = items.map(item => 
-                `<div class="autocomplete-item" onclick="selectAutocomplete('${input.id}', '${item}')">${item}</div>`
-            ).join('');
-            
-            container.style.display = 'block';
-        }
-
-        function selectAutocomplete(inputId, value) {
-            document.getElementById(inputId).value = value;
-            document.querySelector(`#${inputId}`).nextElementSibling.style.display = 'none';
-        }
-
-        // ========================================
-        // FUNCIONES MODAL INDIVIDUAL
+        // FUNCIONES CRUD INDIVIDUAL
         // ========================================
 
         function openAddModal() {
-            console.log('📝 Abriendo modal para agregar estudiante...');
             editingStudentId = null;
             document.getElementById('modalTitle').textContent = 'Agregar Estudiante';
-            document.getElementById('saveBtn').textContent = 'Guardar Estudiante';
+            document.getElementById('saveBtn').textContent = 'Guardar';
             document.getElementById('studentForm').reset();
-            
-            // Resetear el combobox
-            selectedGrade = '';
-            document.querySelector('#gradeSelect .selected-text').textContent = 'Seleccione un grado...';
-            document.getElementById('gradeLevel').value = '';
-            
-            // Asegurar que las opciones estén cargadas
-            setTimeout(() => {
-                renderGradeOptions();
-            }, 100);
-            
             document.getElementById('studentModal').classList.add('show');
         }
 
@@ -1810,32 +1012,19 @@
 
             editingStudentId = id;
             document.getElementById('modalTitle').textContent = 'Editar Estudiante';
-            document.getElementById('saveBtn').textContent = 'Actualizar Estudiante';
+            document.getElementById('saveBtn').textContent = 'Actualizar';
 
             // Llenar formulario
             document.getElementById('cedula').value = student.cedula || '';
             document.getElementById('firstSurname').value = student.first_surname || '';
             document.getElementById('secondSurname').value = student.second_surname || '';
             document.getElementById('firstName').value = student.first_name || '';
-            document.getElementById('studentId').value = student.student_id || '';
-            document.getElementById('birthDate').value = student.birth_date || '';
-            
-            // Manejar el grado en el combobox
-            const gradeValue = student.grade_level || '';
-            document.getElementById('gradeLevel').value = gradeValue;
-            selectedGrade = gradeValue;
-            const gradeText = gradeValue || 'Seleccione un grado...';
-            document.querySelector('#gradeSelect .selected-text').textContent = gradeText;
-            
-            document.getElementById('subjectArea').value = student.subject_area || '';
+            document.getElementById('gradeLevel').value = student.grade_level || '';
             document.getElementById('section').value = student.section || '';
             document.getElementById('email').value = student.email || '';
             document.getElementById('phone').value = student.phone || '';
-            document.getElementById('address').value = student.address || '';
             document.getElementById('parentName').value = student.parent_name || '';
             document.getElementById('parentPhone').value = student.parent_phone || '';
-            document.getElementById('parentEmail').value = student.parent_email || '';
-            document.getElementById('notes').value = student.notes || '';
 
             document.getElementById('studentModal').classList.add('show');
         }
@@ -1843,58 +1032,13 @@
         async function saveStudent(event) {
             event.preventDefault();
             
+            const formData = new FormData(event.target);
+            const studentData = Object.fromEntries(formData.entries());
+
             try {
-                console.log('📝 Iniciando guardado de estudiante...');
-                
-                // ✅ VALIDACIÓN MEJORADA
-                const firstSurname = document.getElementById('firstSurname').value.trim();
-                const firstName = document.getElementById('firstName').value.trim();
-                
-                if (!firstSurname || !firstName) {
-                    alert('❌ Primer Apellido y Nombre son obligatorios');
-                    return;
-                }
-                
-                // ✅ RECOPILAR DATOS MANUALMENTE (más confiable que FormData)
-                const studentData = {
-                    cedula: document.getElementById('cedula').value.trim() || null,
-                    first_surname: firstSurname,
-                    second_surname: document.getElementById('secondSurname').value.trim() || null,
-                    first_name: firstName,
-                    student_id: document.getElementById('studentId').value.trim() || null,
-                    birth_date: document.getElementById('birthDate').value || null,
-                    grade_level: document.getElementById('gradeLevel').value.trim() || null,
-                    subject_area: document.getElementById('subjectArea').value.trim() || null,
-                    section: document.getElementById('section').value || null,
-                    email: document.getElementById('email').value.trim() || null,
-                    phone: document.getElementById('phone').value.trim() || null,
-                    address: document.getElementById('address').value.trim() || null,
-                    parent_name: document.getElementById('parentName').value.trim() || null,
-                    parent_phone: document.getElementById('parentPhone').value.trim() || null,
-                    parent_email: document.getElementById('parentEmail').value.trim() || null,
-                    notes: document.getElementById('notes').value.trim() || null,
-                    status: 'active'
-                };
-                
-                console.log('📤 Datos a enviar:', studentData);
-                
-                // ✅ GENERAR ID AUTOMÁTICO SI NO EXISTE
-                if (!editingStudentId && !studentData.student_id) {
-                    delete studentData.student_id;
-                    console.log('🔢 ID será generado automáticamente por el servidor');
-                }
-                
-                // ✅ DESHABILITAR BOTÓN DURANTE EL GUARDADO
-                const saveBtn = document.getElementById('saveBtn');
-                const originalText = saveBtn.textContent;
-                saveBtn.disabled = true;
-                saveBtn.textContent = 'Guardando...';
-                
                 const url = editingStudentId ? `/api/students/${editingStudentId}` : '/api/students';
                 const method = editingStudentId ? 'PUT' : 'POST';
-                
-                console.log(`📡 ${editingStudentId ? 'Actualizando' : 'Creando'} estudiante en: ${url}`);
-                
+
                 const response = await fetch(url, {
                     method: method,
                     headers: {
@@ -1902,1309 +1046,71 @@
                     },
                     body: JSON.stringify(studentData)
                 });
-                
-                console.log('📥 Respuesta del servidor:', response.status, response.statusText);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
+
                 const result = await response.json();
-                console.log('📋 Resultado completo:', result);
-                
+
                 if (result.success) {
-                    console.log('✅ Estudiante guardado exitosamente');
-                    
                     closeModal();
                     loadStudents();
-                    loadGradesAndSubjects();
-                    
-                    const message = editingStudentId ? 'Estudiante actualizado correctamente' : 'Estudiante agregado correctamente';
-                    alert(`✅ ${message}`);
-                    
+                    const message = editingStudentId ? 'Estudiante actualizado' : 'Estudiante agregado';
+                    showMessage('success', message);
                 } else {
-                    throw new Error(result.message || 'Error desconocido del servidor');
+                    showMessage('error', 'Error: ' + result.message);
                 }
-                
             } catch (error) {
-                console.error('❌ Error completo:', error);
-                alert(`❌ Error guardando estudiante: ${error.message}`);
-            } finally {
-                // ✅ REHABILITAR BOTÓN
-                const saveBtn = document.getElementById('saveBtn');
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = editingStudentId ? 'Actualizar Estudiante' : 'Guardar Estudiante';
-                }
+                console.error('Error:', error);
+                showMessage('error', 'Error de conexión');
             }
         }
-
-
-        function applyGradeToAll() {
-            const selectedGrade = document.getElementById('bulkGradeSelect').value;
-            
-            if (!selectedGrade) {
-                alert('❌ Seleccione un grado primero');
-                return;
-            }
-            
-            const gradeInputs = document.querySelectorAll('#bulkAddTableBody input[name="grade_level"]');
-            let count = 0;
-            
-            gradeInputs.forEach(input => {
-                if (input.closest('tr')) {  // Verificar que la fila existe
-                    input.value = selectedGrade;
-                    input.style.backgroundColor = '#d4edda';
-                    input.style.border = '2px solid #28a745';
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                alert(`✅ Grado "${selectedGrade}" aplicado a ${count} estudiantes`);
-                
-                // Quitar el resaltado después de 2 segundos
-                setTimeout(() => {
-                    gradeInputs.forEach(input => {
-                        input.style.backgroundColor = '';
-                        input.style.border = '2px solid #e1e1e1';
-                    });
-                }, 2000);
-            } else {
-                alert('❌ No hay filas para aplicar el grado');
-            }
-        }
-
-        function applyGradeToAll() {
-            const selectedGrade = document.getElementById('bulkGradeSelect').value;
-            
-            if (!selectedGrade) {
-                alert('❌ Seleccione un grado primero');
-                return;
-            }
-            
-            const gradeInputs = document.querySelectorAll('#bulkAddTableBody input[name="grade_level"]');
-            let count = 0;
-            
-            gradeInputs.forEach(input => {
-                if (input.closest('tr')) {  // Verificar que la fila existe
-                    input.value = selectedGrade;
-                    input.style.backgroundColor = '#d4edda';
-                    input.style.border = '2px solid #28a745';
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                alert(`✅ Grado "${selectedGrade}" aplicado a ${count} estudiantes`);
-                
-                // Quitar el resaltado después de 2 segundos
-                setTimeout(() => {
-                    gradeInputs.forEach(input => {
-                        input.style.backgroundColor = '';
-                        input.style.border = '2px solid #e1e1e1';
-                    });
-                }, 2000);
-            } else {
-                alert('❌ No hay filas para aplicar el grado');
-            }
-        }
-
-        function clearAllGrades() {
-            if (!confirm('¿Limpiar todos los grados de las filas?')) {
-                return;
-            }
-            
-            const gradeInputs = document.querySelectorAll('#bulkAddTableBody input[name="grade_level"]');
-            let count = 0;
-            
-            gradeInputs.forEach(input => {
-                if (input.closest('tr')) {
-                    input.value = '';
-                    count++;
-                }
-            });
-            
-            document.getElementById('bulkGradeSelect').value = '';
-            alert(`✅ Grados limpiados en ${count} filas`);
-        }
-
 
         async function deleteStudent(id) {
-        const student = students.find(s => s.id === id);
-        if (!student) return;
+            const student = students.find(s => s.id === id);
+            if (!student) return;
 
-        const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
-        
-        // Mostrar opciones de eliminación
-        const action = confirm(
-            `¿Cómo deseas eliminar a ${fullName}?\n\n` +
-            `• OK = Eliminar PERMANENTEMENTE (no se puede recuperar)\n` +
-            `• Cancelar = Solo marcar como inactivo (se puede recuperar)\n\n` +
-            `⚠️ La eliminación permanente borrará también todas las asistencias y calificaciones.`
-        );
-
-        if (action === null) {
-            return; // Usuario canceló completamente
-        }
-
-        const permanently = action; // true = permanente, false = lógica
-        const actionText = permanently ? 'eliminar permanentemente' : 'marcar como inactivo';
-        
-        if (!confirm(`¿Estás seguro de ${actionText} a ${fullName}?`)) {
-            return;
-        }
-
-        try {
-            let url = `/api/students/${id}`;
-            if (permanently) {
-                url += '?permanently=true';
-            }
-
-            const response = await fetch(url, {
-                method: 'DELETE'
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                loadStudents();
-                const message = permanently ? 
-                    `✅ ${fullName} eliminado permanentemente` :
-                    `✅ ${fullName} marcado como inactivo`;
-                alert(message);
-            } else {
-                alert('Error: ' + result.message);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error eliminando estudiante');
-        }
-    }
-
-        // ========================================
-        // FUNCIONES GESTIÓN DE GRADOS/MATERIAS CON SELECCIÓN MÚLTIPLE
-        // ========================================
-
-        function openGradesModal() {
-            document.getElementById('gradesModal').classList.add('show');
-            renderGradesList();
-            clearGradeSelection();
-        }
-
-        function closeGradesModal() {
-            document.getElementById('gradesModal').classList.remove('show');
-            clearGradeSelection();
-        }
-
-        async function renderGradesList() {
-            const container = document.getElementById('gradesList');
-            const countElement = document.getElementById('gradesCount');
-            
-            try {
-                const response = await fetch('/api/grades');
-                const result = await response.json();
-                
-                if (result.success && result.data.length > 0) {
-                    countElement.textContent = result.data.length;
-                    
-                    container.innerHTML = result.data.map(grade => `
-                        <div class="item-tag ${grade.priority ? 'priority' : ''}">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
-                                <input type="checkbox" class="select-checkbox" value="${grade.id}" onchange="updateGradeSelection()">
-                                <span>${grade.name}</span>
-                            </label>
-                            <div class="actions">
-                                <span class="count">${grade.usage}</span>
-                                <span class="priority-star ${grade.priority ? 'active' : ''}" 
-                                    onclick="toggleGradePriority(${grade.id}, ${!grade.priority})" 
-                                    title="${grade.priority ? 'Quitar prioridad' : 'Marcar como prioritario'}">⭐</span>
-                                <button class="btn btn-danger btn-sm" 
-                                        onclick="removeGrade(${grade.id}, '${grade.name}', ${grade.usage})"
-                                        title="Eliminar grado"
-                                        style="padding: 2px 6px; font-size: 10px; margin-left: 5px;">🗑️</button>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    countElement.textContent = '0';
-                    container.innerHTML = '<div style="color: #666; font-style: italic;">No hay grados guardados aún</div>';
-                }
-            } catch (error) {
-                console.error('Error cargando grados:', error);
-                container.innerHTML = '<div style="color: #dc3545; font-style: italic;">Error cargando grados</div>';
-            }
-        }
-
-        function toggleAllGrades(checked) {
-            const checkboxes = document.querySelectorAll('#gradesList input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = checked);
-            updateGradeSelection();
-        }
-
-        function updateGradeSelection() {
-            const checkboxes = document.querySelectorAll('#gradesList input[type="checkbox"]:checked');
-            selectedGradeIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
-            
-            document.getElementById('selectedGradesCount').textContent = selectedGradeIds.length;
-            document.getElementById('gradesBulkActions').classList.toggle('show', selectedGradeIds.length > 0);
-            
-            const selectAllCheckbox = document.getElementById('selectAllGrades');
-            const allCheckboxes = document.querySelectorAll('#gradesList input[type="checkbox"]');
-            selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedGradeIds.length === allCheckboxes.length;
-        }
-
-        function clearGradeSelection() {
-            selectedGradeIds = [];
-            document.querySelectorAll('#gradesList input[type="checkbox"]').forEach(cb => cb.checked = false);
-            document.getElementById('selectAllGrades').checked = false;
-            document.getElementById('gradesBulkActions').classList.remove('show');
-        }
-
-        async function deleteSelectedGrades() {
-            if (selectedGradeIds.length === 0) {
-                alert('No hay grados seleccionados');
-                return;
-            }
-
-            if (!confirm(`¿Estás seguro de eliminar ${selectedGradeIds.length} grados seleccionados?`)) {
-                return;
-            }
+            const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
+            if (!confirm(`¿Eliminar a ${fullName}?`)) return;
 
             try {
-                console.log('🗑️ Eliminando grados:', selectedGradeIds);
-
-                const response = await fetch('/api/grades/bulk', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ gradeIds: selectedGradeIds })
-                });
-
-                const result = await response.json();
-                console.log('📥 Respuesta del servidor:', result);
-
-                if (result.success) {
-                    alert(result.data.message || 'Grados eliminados correctamente');
-                    renderGradesList();
-                    loadGradesAndSubjects();
-                    clearGradeSelection();
-                } else {
-                    // Manejar errores específicos
-                    const errorMessage = result.message || 'Error eliminando grados';
-                    alert('❌ ' + errorMessage);
-                    console.error('❌ Error del servidor:', result);
-                }
-            } catch (error) {
-                console.error('❌ Error de conexión:', error);
-                alert('❌ Error de conexión: ' + error.message);
-            }
-        }
-
-
-        async function addGrade(event) {
-            event.preventDefault();
-            const gradeName = document.getElementById('newGrade').value.trim();
-            
-            if (!gradeName) return;
-
-            try {
-                const response = await fetch('/api/grades', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name: gradeName })
-                });
-
+                const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
                 const result = await response.json();
 
                 if (result.success) {
-                    document.getElementById('newGrade').value = '';
-                    renderGradesList();
-                    loadGradesAndSubjects();
-                    alert(`Grado "${gradeName}" agregado correctamente`);
+                    selectedStudents.delete(id);
+                    loadStudents();
+                    showMessage('success', 'Estudiante eliminado');
                 } else {
-                    alert('Error: ' + result.message);
+                    showMessage('error', 'Error: ' + result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error agregando grado');
+                showMessage('error', 'Error de conexión');
             }
-        }
-
-        async function toggleGradePriority(gradeId, priority) {
-            try {
-                console.log(`Cambiando prioridad del grado ${gradeId} a ${priority}`);
-                renderGradesList();
-                loadGradesAndSubjects();
-            } catch (error) {
-                console.error('Error actualizando prioridad:', error);
-            }
-        }
-
-        // Función similar para materias
-        function openSubjectsModal() {
-            document.getElementById('subjectsModal').classList.add('show');
-            renderSubjectsList();
-            clearSubjectSelection();
-        }
-
-        function closeSubjectsModal() {
-            document.getElementById('subjectsModal').classList.remove('show');
-            clearSubjectSelection();
-        }
-
-        async function renderSubjectsList() {
-            const container = document.getElementById('subjectsList');
-            const countElement = document.getElementById('subjectsCount');
-            
-            try {
-                const response = await fetch('/api/custom-subjects');
-                const result = await response.json();
-                
-                if (result.success && result.data.length > 0) {
-                    countElement.textContent = result.data.length;
-                    
-                    container.innerHTML = result.data.map(subject => `
-                        <div class="item-tag ${subject.priority ? 'priority' : ''}">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
-                                <input type="checkbox" class="select-checkbox" value="${subject.id}" onchange="updateSubjectSelection()">
-                                <span>${subject.name}</span>
-                            </label>
-                            <div class="actions">
-                                <span class="count">${subject.usage}</span>
-                                <span class="priority-star ${subject.priority ? 'active' : ''}" 
-                                    onclick="toggleSubjectPriority(${subject.id}, ${!subject.priority})" 
-                                    title="${subject.priority ? 'Quitar prioridad' : 'Marcar como prioritario'}">⭐</span>
-                                <button class="btn btn-info btn-sm" 
-                                        onclick="debugSubject(${subject.id}, '${subject.name}')"
-                                        title="Debug materia"
-                                        style="padding: 2px 6px; font-size: 10px; margin-left: 5px;">🐛</button>
-                                <button class="btn btn-danger btn-sm" 
-                                        onclick="removeSubject(${subject.id}, '${subject.name}', ${subject.usage})"
-                                        title="Eliminar materia"
-                                        style="padding: 2px 6px; font-size: 10px; margin-left: 5px;">🗑️</button>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    countElement.textContent = '0';
-                    container.innerHTML = '<div style="color: #666; font-style: italic;">No hay materias guardadas aún</div>';
-                }
-            } catch (error) {
-                console.error('Error cargando materias:', error);
-                container.innerHTML = '<div style="color: #dc3545; font-style: italic;">Error cargando materias</div>';
-            }
-        }
-        function toggleAllSubjects(checked) {
-            const checkboxes = document.querySelectorAll('#subjectsList input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = checked);
-            updateSubjectSelection();
-        }
-
-        function updateSubjectSelection() {
-            const checkboxes = document.querySelectorAll('#subjectsList input[type="checkbox"]:checked');
-            selectedSubjectIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
-            
-            document.getElementById('selectedSubjectsCount').textContent = selectedSubjectIds.length;
-            document.getElementById('subjectsBulkActions').classList.toggle('show', selectedSubjectIds.length > 0);
-            
-            const selectAllCheckbox = document.getElementById('selectAllSubjects');
-            const allCheckboxes = document.querySelectorAll('#subjectsList input[type="checkbox"]');
-            selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedSubjectIds.length === allCheckboxes.length;
-        }
-
-        function clearSubjectSelection() {
-            selectedSubjectIds = [];
-            document.querySelectorAll('#subjectsList input[type="checkbox"]').forEach(cb => cb.checked = false);
-            document.getElementById('selectAllSubjects').checked = false;
-            document.getElementById('subjectsBulkActions').classList.remove('show');
-        }
-
-        async function deleteSelectedSubjects() {
-            if (selectedSubjectIds.length === 0) {
-                alert('No hay materias seleccionadas');
-                return;
-            }
-
-            if (!confirm(`¿Estás seguro de eliminar ${selectedSubjectIds.length} materias seleccionadas?`)) {
-                return;
-            }
-
-            try {
-                console.log('🗑️ Eliminando materias:', selectedSubjectIds);
-
-                const response = await fetch('/api/custom-subjects/bulk', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ subjectIds: selectedSubjectIds })
-                });
-
-                const result = await response.json();
-                console.log('📥 Respuesta del servidor:', result);
-
-                if (result.success) {
-                    alert(result.data.message || 'Materias eliminadas correctamente');
-                    renderSubjectsList();
-                    loadGradesAndSubjects();
-                    clearSubjectSelection();
-                } else {
-                    // Manejar errores específicos
-                    const errorMessage = result.message || 'Error eliminando materias';
-                    alert('❌ ' + errorMessage);
-                    console.error('❌ Error del servidor:', result);
-                }
-            } catch (error) {
-                console.error('❌ Error de conexión:', error);
-                alert('❌ Error de conexión: ' + error.message);
-            }
-        }
-
-        async function addSubject(event) {
-            event.preventDefault();
-            const subjectName = document.getElementById('newSubject').value.trim();
-            
-            if (!subjectName) return;
-
-            try {
-                const response = await fetch('/api/custom-subjects', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name: subjectName })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    document.getElementById('newSubject').value = '';
-                    renderSubjectsList();
-                    loadGradesAndSubjects();
-                    alert(`Materia "${subjectName}" agregada correctamente`);
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error agregando materia');
-            }
-        }
-
-        async function toggleSubjectPriority(subjectId, priority) {
-            try {
-                console.log(`Cambiando prioridad de la materia ${subjectId} a ${priority}`);
-                renderSubjectsList();
-                loadGradesAndSubjects();
-            } catch (error) {
-                console.error('Error actualizando prioridad:', error);
-            }
-        }
-
-        // Función para eliminar grado individual
-        async function removeGrade(gradeId, gradeName, usageCount) {
-            let confirmMessage = `¿Estás seguro de eliminar el grado "${gradeName}"?`;
-            
-            if (usageCount > 0) {
-                confirmMessage += `\n\n⚠️ ADVERTENCIA: Este grado está siendo usado por ${usageCount} estudiante(s).`;
-                confirmMessage += `\nSi lo eliminas, podrías tener problemas de consistencia en los datos.`;
-                confirmMessage += `\n\n¿Realmente deseas continuar?`;
-            }
-            
-            if (!confirm(confirmMessage)) {
-                return;
-            }
-
-            try {
-                console.log(`🗑️ Intentando eliminar grado ID: ${gradeId}, Nombre: ${gradeName}`);
-                
-                const response = await fetch(`/api/grades/${gradeId}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-                console.log('📥 Respuesta del servidor:', result);
-
-                if (result.success) {
-                    alert(`✅ Grado "${gradeName}" eliminado correctamente`);
-                    console.log('✅ Grado eliminado exitosamente');
-                    
-                    renderGradesList();
-                    loadGradesAndSubjects();
-                } else {
-                    // Manejar errores específicos
-                    const errorMessage = result.message || `Error eliminando grado "${gradeName}"`;
-                    alert('❌ ' + errorMessage);
-                    console.error('❌ Error del servidor:', result);
-                }
-            } catch (error) {
-                console.error('❌ Error eliminando grado:', error);
-                alert('❌ Error de conexión: ' + error.message);
-            }
-        }
-
-        // Función para eliminar materia individual - CORREGIDA
-        async function removeSubject(subjectId, subjectName, usageCount) {
-            let confirmMessage = `¿Estás seguro de eliminar la materia "${subjectName}"?`;
-            
-            if (usageCount > 0) {
-                confirmMessage += `\n\n⚠️ ADVERTENCIA: Esta materia está siendo usada por ${usageCount} estudiante(s).`;
-                confirmMessage += `\nSi la eliminas, podrías tener problemas de consistencia en los datos.`;
-                confirmMessage += `\n\n¿Realmente deseas continuar?`;
-            }
-            
-            if (!confirm(confirmMessage)) {
-                return;
-            }
-
-            try {
-                console.log(`🗑️ Intentando eliminar materia ID: ${subjectId}, Nombre: ${subjectName}`);
-                
-                const response = await fetch(`/api/custom-subjects/${subjectId}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-                console.log('📥 Respuesta del servidor:', result);
-
-                if (result.success) {
-                    alert(`✅ Materia "${subjectName}" eliminada correctamente`);
-                    console.log('✅ Materia eliminada exitosamente');
-                    
-                    renderSubjectsList();
-                    loadGradesAndSubjects();
-                } else {
-                    // Manejar errores específicos
-                    const errorMessage = result.message || `Error eliminando materia "${subjectName}"`;
-                    alert('❌ ' + errorMessage);
-                    console.error('❌ Error del servidor:', result);
-                }
-            } catch (error) {
-                console.error('❌ Error eliminando materia:', error);
-                alert('❌ Error de conexión: ' + error.message);
-            }
-        }
-
-        // ========================================
-        // FUNCIONES GRADOS-MATERIAS
-        // ========================================
-
-        function openGradeSubjectsModal() {
-            document.getElementById('gradeSubjectsModal').classList.add('show');
-            loadGradeSubjectsData();
-            switchTab('single');
-        }
-
-        function closeGradeSubjectsModal() {
-            document.getElementById('gradeSubjectsModal').classList.remove('show');
-        }
-
-        async function loadGradeSubjectsData() {
-            try {
-                await loadGradesAndSubjects();
-            } catch (error) {
-                console.error('Error cargando datos:', error);
-            }
-        }
-
-        function switchTab(tabName) {
-            // Ocultar todos los tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.style.display = 'none';
-            });
-            
-            // Quitar clase active de todos los botones
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Mostrar tab seleccionado
-            document.getElementById(tabName + 'Tab').style.display = 'block';
-            
-            // Activar botón correspondiente
-            if (tabName === 'single') {
-                document.getElementById('singleTab').classList.add('active');
-                renderSingleGradeOptions();
-                renderSubjectsCheckboxes('subjectsCheckboxList');
-            } else if (tabName === 'multiple') {
-                document.getElementById('multipleTab').classList.add('active');
-                renderGradesCheckboxes();
-                renderSubjectsCheckboxes('multipleSubjectsCheckboxList');
-            } else if (tabName === 'view') {
-                document.getElementById('viewTab').classList.add('active');
-                loadGradeSubjectsView();
-            }
-        }
-
-        function renderSingleGradeOptions() {
-            const container = document.getElementById('singleGradeOptions');
-            if (!container || !availableGrades) return;
-            
-            container.innerHTML = availableGrades.map(grade => `
-                <div class="select-option" onclick="selectSingleGradeForSubjects('${grade.name}')">
-                    <span>${grade.name}</span>
-                    ${grade.usage > 0 ? `<span class="usage-count">${grade.usage}</span>` : ''}
-                </div>
-            `).join('');
-        }
-
-        function renderGradesCheckboxes() {
-            const container = document.getElementById('gradesCheckboxList');
-            if (!container || !availableGrades) return;
-            
-            container.innerHTML = availableGrades.map(grade => `
-                <div class="checkbox-item">
-                    <input type="checkbox" id="grade_${grade.id}" value="${grade.name}">
-                    <label for="grade_${grade.id}">${grade.name}</label>
-                    ${grade.usage > 0 ? `<span class="usage-count">${grade.usage}</span>` : ''}
-                </div>
-            `).join('');
-        }
-
-        function renderSubjectsCheckboxes(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container || !availableSubjects) return;
-            
-            container.innerHTML = availableSubjects.map((subject, index) => `
-                <div class="checkbox-item">
-                    <input type="checkbox" id="subject_${containerId}_${index}" value="${subject}">
-                    <label for="subject_${containerId}_${index}">${subject}</label>
-                </div>
-            `).join('');
-        }
-
-        async function assignSubjectsToSingleGrade(event) {
-            event.preventDefault();
-            
-            const gradeName = selectedSingleGradeForSubjects;
-            const teacherName = document.getElementById('singleTeacherName').value.trim();
-            
-            if (!gradeName) {
-                alert('Por favor seleccione un grado');
-                return;
-            }
-            
-            // Obtener materias seleccionadas
-            const selectedSubjects = [];
-            document.querySelectorAll('#subjectsCheckboxList input[type="checkbox"]:checked').forEach(checkbox => {
-                selectedSubjects.push(checkbox.value);
-            });
-            
-            if (selectedSubjects.length === 0) {
-                alert('Por favor seleccione al menos una materia');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/grade-subjects/assign', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        gradeName,
-                        subjects: selectedSubjects,
-                        teacherName
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert(`✅ ${result.data.successCount} materias asignadas a ${gradeName}`);
-                    closeGradeSubjectsModal();
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error asignando materias');
-            }
-        }
-
-        async function assignSubjectsToMultipleGrades(event) {
-            event.preventDefault();
-            
-            const teacherName = document.getElementById('multipleTeacherName').value.trim();
-            
-            // Obtener grados seleccionados
-            const selectedGrades = [];
-            document.querySelectorAll('#gradesCheckboxList input[type="checkbox"]:checked').forEach(checkbox => {
-                selectedGrades.push(checkbox.value);
-            });
-            
-            // Obtener materias seleccionadas
-            const selectedSubjects = [];
-            document.querySelectorAll('#multipleSubjectsCheckboxList input[type="checkbox"]:checked').forEach(checkbox => {
-                selectedSubjects.push(checkbox.value);
-            });
-            
-            if (selectedGrades.length === 0) {
-                alert('Por favor seleccione al menos un grado');
-                return;
-            }
-            
-            if (selectedSubjects.length === 0) {
-                alert('Por favor seleccione al menos una materia');
-                return;
-            }
-            
-            const confirmMessage = `¿Confirma asignar ${selectedSubjects.length} materias a ${selectedGrades.length} grados?\n\nEsto creará ${selectedGrades.length * selectedSubjects.length} asignaciones.`;
-            
-            if (!confirm(confirmMessage)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/grade-subjects/assign-multiple', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        grades: selectedGrades,
-                        subjects: selectedSubjects,
-                        teacherName
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert(`✅ ${result.data.totalSuccessCount} asignaciones completadas en ${result.data.affectedGrades} grados`);
-                    closeGradeSubjectsModal();
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error asignando materias');
-            }
-        }
-
-        // Cargar y mostrar asignaciones actuales
-        async function loadGradeSubjectsView() {
-            const container = document.getElementById('gradeSubjectsView');
-            
-            try {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Cargando...</div>';
-                
-                const response = await fetch('/api/grade-subjects');
-                const result = await response.json();
-                
-                if (result.success) {
-                    gradeSubjectsData = result.data;
-                    renderGradeSubjectsView();
-                } else {
-                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Error: ' + result.message + '</div>';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Error de conexión</div>';
-            }
-        }
-
-        function renderGradeSubjectsView() {
-            const container = document.getElementById('gradeSubjectsView');
-            
-            if (!gradeSubjectsData || gradeSubjectsData.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No hay asignaciones configuradas</div>';
-                return;
-            }
-            
-            container.innerHTML = gradeSubjectsData.map(item => `
-                <div class="grade-subject-card">
-                    <div class="grade-subject-header">
-                        <span>📚 ${item.gradeName}</span>
-                        <span style="font-size: 12px; color: #666;">${item.subjectCount} materias</span>
-                    </div>
-                    
-                    ${item.subjects.length > 0 ? `
-                        <div class="subject-tags">
-                            ${item.subjects.map(subject => `
-                                <div class="subject-tag">
-                                    ${subject}
-                                    <button class="remove-btn" onclick="removeSubjectFromGrade('${item.gradeName}', '${subject}')" title="Eliminar">×</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : `
-                        <div style="color: #666; font-style: italic;">Sin materias asignadas</div>
-                    `}
-                </div>
-            `).join('');
-        }
-
-        // Eliminar materia de un grado
-        async function removeSubjectFromGrade(gradeName, subjectName) {
-            if (!confirm(`¿Eliminar ${subjectName} del grado ${gradeName}?`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('✅ Materia eliminada correctamente');
-                    loadGradeSubjectsView(); // Recargar vista
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error eliminando materia');
-            }
-        }
-
-        function filterSingleGrades(searchTerm) {
-            const container = document.getElementById('singleGradeOptions');
-            const options = container.querySelectorAll('.select-option');
-            
-            options.forEach(option => {
-                const gradeName = option.textContent.toLowerCase();
-                const matches = gradeName.includes(searchTerm.toLowerCase());
-                option.style.display = matches ? 'flex' : 'none';
-            });
-        }
-
-        // ========================================
-        // FUNCIONES AGREGAR MÚLTIPLES ESTUDIANTES
-        // ========================================
-
-        function openBulkAddModal() {
-            document.getElementById('bulkAddModal').classList.add('show');
-            
-            // ✅ CARGAR GRADOS EN EL SELECT GLOBAL
-            loadGradesForBulkModal();
-            
-            clearBulkTable();
-            for (let i = 0; i < 10; i++) {
-                addBulkRow();
-            }
-        }
-
-        async function loadGradesForBulkModal() {
-            try {
-                const response = await fetch('/api/grades');
-                const result = await response.json();
-                
-                const bulkGradeSelect = document.getElementById('bulkGradeSelect');
-                bulkGradeSelect.innerHTML = '<option value="">Seleccionar grado...</option>';
-                
-                if (result.success) {
-                    result.data.forEach(grade => {
-                        bulkGradeSelect.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
-                    });
-                }
-            } catch (error) {
-                console.error('❌ Error cargando grados para modal múltiple:', error);
-            }
-        }
-
-        function closeBulkAddModal() {
-            document.getElementById('bulkAddModal').classList.remove('show');
-            selectedCell = null;
-        }
-       function addBulkRow() {
-            const tbody = document.getElementById('bulkAddTableBody');
-            const rowId = `bulkRow_${bulkRowCounter++}`;
-            
-            // Crear opciones de grados para el dropdown
-            const gradeOptions = availableGrades.map(grade => 
-                `<option value="${grade.name}">${grade.name}</option>`
-            ).join('');
-            
-            const row = document.createElement('tr');
-            row.id = rowId;
-            row.innerHTML = `
-                <td style="padding: 8px;">
-                    <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="123456789" name="cedula" 
-                        data-row="${bulkRowCounter-1}" data-col="0"
-                        onclick="selectCell(this)" onpaste="handlePaste(event)"
-                        onkeydown="handleKeyDown(event)">
-                </td>
-                <td style="padding: 8px;">
-                    <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="Pérez" name="first_surname" required
-                        data-row="${bulkRowCounter-1}" data-col="1"
-                        onclick="selectCell(this)" onpaste="handlePaste(event)"
-                        onkeydown="handleKeyDown(event)">
-                </td>
-                <td style="padding: 8px;">
-                    <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="González" name="second_surname"
-                        data-row="${bulkRowCounter-1}" data-col="2"
-                        onclick="selectCell(this)" onpaste="handlePaste(event)"
-                        onkeydown="handleKeyDown(event)">
-                </td>
-                <td style="padding: 8px;">
-                    <input type="text" class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                        placeholder="Juan" name="first_name" required
-                        data-row="${bulkRowCounter-1}" data-col="3"
-                        onclick="selectCell(this)" onpaste="handlePaste(event)"
-                        onkeydown="handleKeyDown(event)">
-                </td>
-                <td style="padding: 8px;">
-                    <select class="form-input" style="margin: 0; padding: 8px; font-size: 13px;" 
-                            name="grade_level"
-                            data-row="${bulkRowCounter-1}" data-col="4"
-                            onclick="selectCell(this)"
-                            onkeydown="handleKeyDown(event)">
-                        <option value="">Seleccionar grado...</option>
-                        ${gradeOptions}
-                    </select>
-                </td>
-                <td style="padding: 8px; text-align: center;">
-                    <button type="button" class="btn btn-danger btn-sm" 
-                            onclick="removeBulkRow('${rowId}')" 
-                            style="padding: 4px 8px; font-size: 12px;">X</button>
-                </td>
-            `;
-            
-            tbody.appendChild(row);
-            updateRowCount();
         }
 
         function closeModal() {
-            console.log('🚪 Cerrando modal...');
-            
-            const modal = document.getElementById('studentModal');
-            if (modal) {
-                modal.classList.remove('show');
-                console.log('✅ Modal cerrado');
-            }
-            
-            // ✅ LIMPIAR ESTADO
+            document.getElementById('studentModal').classList.remove('show');
             editingStudentId = null;
-            selectedGrade = '';
-            
-            // ✅ RESETEAR COMBOBOX
-            const selectedText = document.querySelector('#gradeSelect .selected-text');
-            if (selectedText) {
-                selectedText.textContent = 'Seleccione un grado...';
-            }
-            
-            const gradeLevel = document.getElementById('gradeLevel');
-            if (gradeLevel) {
-                gradeLevel.value = '';
-            }
-            
-            // ✅ CERRAR DROPDOWN SI ESTÁ ABIERTO
-            const dropdown = document.getElementById('gradeDropdown');
-            const button = document.querySelector('#gradeSelect .select-button');
-            if (dropdown && button) {
-                dropdown.classList.remove('show');
-                button.classList.remove('open');
-            }
-            
-            console.log('🧹 Estado limpiado correctamente');
         }
 
-        function removeBulkRow(rowId) {
-            const row = document.getElementById(rowId);
-            if (row) {
-                row.remove();
-                updateRowCount();
-            }
-        }
-
-        function clearBulkTable() {
-            document.getElementById('bulkAddTableBody').innerHTML = '';
-            bulkRowCounter = 0;
-            selectedCell = null;
-            updateRowCount();
-        }
-
-        function updateRowCount() {
-            const rowCount = document.getElementById('bulkAddTableBody').children.length;
-            document.getElementById('rowCount').textContent = rowCount;
-        }
-
-        function selectCell(input) {
-            if (selectedCell) {
-                selectedCell.style.backgroundColor = '';
-                selectedCell.style.border = '2px solid #e1e1e1';
-            }
-            
-            selectedCell = input;
-            input.style.backgroundColor = '#e3f2fd';
-            input.style.border = '2px solid #2196f3';
-            input.focus();
-        }
-
-        function handleKeyDown(event) {
-            const currentRow = parseInt(event.target.dataset.row);
-            const currentCol = parseInt(event.target.dataset.col);
-            
-            let targetRow = currentRow;
-            let targetCol = currentCol;
-            
-            switch(event.key) {
-                case 'Tab':
-                    event.preventDefault();
-                    targetCol = event.shiftKey ? currentCol - 1 : currentCol + 1;
-                    if (targetCol < 0) {
-                        targetCol = 4;
-                        targetRow = currentRow - 1;
-                    } else if (targetCol > 4) {
-                        targetCol = 0;
-                        targetRow = currentRow + 1;
-                    }
-                    break;
-                case 'ArrowUp':
-                    event.preventDefault();
-                    targetRow = currentRow - 1;
-                    break;
-                case 'ArrowDown':
-                case 'Enter':
-                    event.preventDefault();
-                    targetRow = currentRow + 1;
-                    break;
-                case 'ArrowLeft':
-                    if (event.target.selectionStart === 0) {
-                        event.preventDefault();
-                        targetCol = currentCol - 1;
-                    }
-                    break;
-                case 'ArrowRight':
-                    if (event.target.selectionStart === event.target.value.length) {
-                        event.preventDefault();
-                        targetCol = currentCol + 1;
-                    }
-                    break;
-                default:
-                    return;
-            }
-            
-            if (targetRow < 0) targetRow = 0;
-            if (targetCol < 0) targetCol = 0;
-            if (targetCol > 4) targetCol = 4;
-            
-            while (getTableRowCount() <= targetRow) {
-                addBulkRow();
-            }
-            
-            const targetInput = getInputByPosition(targetRow, targetCol);
-            if (targetInput) {
-                selectCell(targetInput);
-            }
-        }
-
-        function handlePaste(event) {
-            event.preventDefault();
-            
-            const clipboardData = event.clipboardData || window.clipboardData;
-            const pastedData = clipboardData.getData('text');
-            
-            if (!pastedData) return;
-            
-            const rows = pastedData.split('\n').filter(row => row.trim() !== '');
-            const startRow = parseInt(event.target.dataset.row);
-            const startCol = parseInt(event.target.dataset.col);
-            
-            rows.forEach((rowData, rowIndex) => {
-                const cols = rowData.split('\t');
-                const targetRowIndex = startRow + rowIndex;
-                
-                while (getTableRowCount() <= targetRowIndex) {
-                    addBulkRow();
-                }
-                
-                cols.forEach((cellData, colIndex) => {
-                    const targetCol = startCol + colIndex;
-                    if (targetCol < 5) {
-                        const input = getInputByPosition(targetRowIndex, targetCol);
-                        if (input) {
-                            input.value = cellData.trim();
-                            input.style.backgroundColor = '#d4edda';
-                            setTimeout(() => {
-                                input.style.backgroundColor = '';
-                            }, 2000);
-                        }
-                    }
-                });
-            });
-            
-            updateRowCount();
-        }
-
-        function getTableRowCount() {
-            return document.getElementById('bulkAddTableBody').children.length;
-        }
-
-        function getInputByPosition(row, col) {
-            const tbody = document.getElementById('bulkAddTableBody');
-            const targetRow = tbody.children[row];
-            if (!targetRow) return null;
-            
-            const inputs = targetRow.querySelectorAll('input[data-col]');
-            return inputs[col] || null;
-        }
-
-        async function saveBulkStudents() {
-            const tbody = document.getElementById('bulkAddTableBody');
-            const rows = tbody.querySelectorAll('tr');
-            
-            if (rows.length === 0) {
-                alert('No hay estudiantes para guardar');
-                return;
-            }
-
-            let successCount = 0;
-            let errorCount = 0;
-            const errors = [];
-
-            const saveBtn = document.querySelector('#bulkAddModal .btn-primary');
-            const originalText = saveBtn.textContent;
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Guardando...';
-
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const inputs = row.querySelectorAll('input');
-                
-                const studentData = {
-                    cedula: inputs[0].value.trim(),
-                    first_surname: inputs[1].value.trim(),
-                    second_surname: inputs[2].value.trim(),
-                    first_name: inputs[3].value.trim(),
-                    grade_level: inputs[4].value.trim()
-                };
-
-                const hasAnyData = Object.values(studentData).some(value => value !== '');
-                if (!hasAnyData) {
-                    continue; // Saltar filas vacías
-                }
-
-                if (!studentData.first_surname || !studentData.first_name) {
-                    errors.push(`Fila ${i + 1}: Primer Apellido y Nombre son obligatorios`);
-                    inputs.forEach(input => input.style.backgroundColor = '#f8d7da');
-                    errorCount++;
-                    continue;
-                }
-
-                console.log(`📝 Enviando estudiante ${i + 1}: ${studentData.first_surname}, ${studentData.first_name}`);
-
-                try {
-                    const response = await fetch('/api/students', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(studentData)
-                    });
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        successCount++;
-                        inputs.forEach(input => {
-                            input.style.backgroundColor = '#d4edda';
-                            input.style.border = '2px solid #28a745';
-                        });
-                        console.log(`✅ Estudiante guardado: ${studentData.first_surname}, ${studentData.first_name}`);
-                    } else {
-                        errorCount++;
-                        const errorMsg = result.message || 'Error desconocido';
-                        errors.push(`Fila ${i + 1}: ${errorMsg}`);
-                        inputs.forEach(input => {
-                            input.style.backgroundColor = '#f8d7da';
-                            input.style.border = '2px solid #dc3545';
-                        });
-                        console.error(`❌ Error en fila ${i + 1}:`, errorMsg);
-                    }
-                } catch (error) {
-                    errorCount++;
-                    errors.push(`Fila ${i + 1}: Error de conexión - ${error.message}`);
-                    inputs.forEach(input => {
-                        input.style.backgroundColor = '#f8d7da';
-                        input.style.border = '2px solid #dc3545';
-                    });
-                    console.error(`❌ Error de conexión en fila ${i + 1}:`, error);
-                }
-
-                // Pequeña pausa entre requests
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-
-            saveBtn.disabled = false;
-            saveBtn.textContent = originalText;
-
-            let message = `Proceso completado:\n✅ ${successCount} estudiantes guardados correctamente`;
-            
-            if (errorCount > 0) {
-                message += `\n❌ ${errorCount} errores encontrados:\n\n`;
-                errors.forEach((error, index) => {
-                    message += `${index + 1}. ${error}\n`;
-                });
-                message += `\n💡 Consejo: Revise las filas marcadas en rojo y corríjalas.`;
-            }
-            
-            alert(message);
-
-            if (successCount > 0) {
-                loadStudents(); // Recargar la lista
-                loadGradesAndSubjects(); // Actualizar contadores
-                if (errorCount === 0) {
-                    closeBulkAddModal();
-                } else {
-                    // Limpiar solo las filas exitosas
-                    for (let i = rows.length - 1; i >= 0; i--) {
-                        const row = rows[i];
-                        const inputs = row.querySelectorAll('input');
-                        const isSuccess = inputs[0].style.backgroundColor === 'rgb(212, 237, 218)';
-                        
-                        if (isSuccess) {
-                            inputs.forEach(input => input.value = '');
-                            inputs.forEach(input => {
-                                input.style.backgroundColor = '';
-                                input.style.border = '2px solid #e1e1e1';
-                            });
-                        }
-                    }
-                }
-            }
-        }
-
-                // ========================================
-        // FUNCIONES ADICIONALES PARA EDICIÓN MASIVA
+        // ========================================
+        // FUNCIONES MASIVAS CON INTERFAZ TIPO EXCEL
         // ========================================
 
-        // Función para eliminar estudiantes seleccionados
         async function deleteSelectedStudents() {
-            if (selectedStudentIds.length === 0) {
-                alert('No hay estudiantes seleccionados');
+            if (selectedStudents.size === 0) {
+                showMessage('error', 'No hay estudiantes seleccionados');
                 return;
             }
-            
-            const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
-            const studentNames = selectedStudents.map(s => 
-                `${s.first_surname} ${s.second_surname}, ${s.first_name}`.trim()
-            ).join('\n');
-            
-            if (!confirm(`¿Eliminar ${selectedStudentIds.length} estudiantes seleccionados?\n\n${studentNames}`)) {
-                return;
-            }
-            
+
+            if (!confirm(`¿Eliminar ${selectedStudents.size} estudiantes seleccionados?`)) return;
+
             try {
                 let successCount = 0;
                 let errorCount = 0;
-                
-                for (const studentId of selectedStudentIds) {
+
+                for (const studentId of selectedStudents) {
                     try {
-                        const response = await fetch(`/api/students/${studentId}`, {
-                            method: 'DELETE'
-                        });
-                        
+                        const response = await fetch(`/api/students/${studentId}`, { method: 'DELETE' });
                         const result = await response.json();
                         
                         if (result.success) {
@@ -3212,228 +1118,418 @@
                         } else {
                             errorCount++;
                         }
-                        
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        
                     } catch (error) {
                         errorCount++;
-                        console.error(`Error eliminando estudiante ${studentId}:`, error);
                     }
                 }
-                
-                if (errorCount === 0) {
-                    alert(`✅ ${successCount} estudiantes eliminados correctamente`);
-                } else {
-                    alert(`⚠️ ${successCount} eliminados, ${errorCount} errores`);
-                }
-                
-                clearStudentSelection();
+
+                clearSelection();
                 loadStudents();
-                
+
+                if (errorCount === 0) {
+                    showMessage('success', `${successCount} estudiantes eliminados`);
+                } else {
+                    showMessage('error', `${successCount} eliminados, ${errorCount} errores`);
+                }
             } catch (error) {
-                console.error('Error en eliminación masiva:', error);
-                alert('Error en la eliminación masiva');
+                console.error('Error:', error);
+                showMessage('error', 'Error en eliminación masiva');
             }
         }
 
-        // Función para seleccionar grado en el modal de edición masiva
-        function selectBulkGrade(gradeName) {
-            document.querySelector('#bulkGradeSelect .selected-text').textContent = gradeName;
-            document.getElementById('bulkNewGrade').value = gradeName;
-            
-            // Cerrar dropdown
-            document.querySelector('#bulkGradeSelect .select-button').classList.remove('open');
-            document.getElementById('bulkGradeDropdown').classList.remove('show');
+        function openBulkAddModal() {
+            document.getElementById('bulkAddModal').classList.add('show');
+            document.getElementById('bulkGrade').value = '';
+            clearBulkTable();
+            addBulkRows(10); // Comenzar con 10 filas
         }
 
-        // Función para renderizar opciones de grado en el modal de edición masiva
-        function renderBulkGradeOptions() {
-            const container = document.getElementById('bulkGradeOptions');
-            if (!container || !availableGrades) return;
+        function closeBulkAddModal() {
+            document.getElementById('bulkAddModal').classList.remove('show');
+            selectedCell = null;
+        }
+
+        function clearBulkTable() {
+            const tbody = document.getElementById('bulkAddTableBody');
+            tbody.innerHTML = '';
+            bulkRowCounter = 0;
+            bulkData = [];
+            hideBulkErrors();
+        }
+
+        function addBulkRows(count) {
+            const tbody = document.getElementById('bulkAddTableBody');
             
-            // Agregar opción para mantener grado actual
-            let optionsHTML = `
-                <div class="select-option" onclick="selectBulkGrade('')">
-                    <span style="color: #666; font-style: italic;">Mantener grado actual</span>
+            for (let i = 0; i < count; i++) {
+                const rowIndex = bulkRowCounter;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="bulk-row-number">${rowIndex + 1}</td>
+                    <td>
+                        <input type="text" class="bulk-cell-input" 
+                               placeholder="123456789" 
+                               data-row="${rowIndex}" data-col="cedula"
+                               onkeydown="handleCellKeyDown(event, ${rowIndex}, 'cedula')"
+                               onpaste="handleCellPaste(event, ${rowIndex}, 'cedula')"
+                               onclick="selectCell(this)">
+                    </td>
+                    <td>
+                        <input type="text" class="bulk-cell-input" 
+                               placeholder="Pérez" 
+                               data-row="${rowIndex}" data-col="first_surname"
+                               onkeydown="handleCellKeyDown(event, ${rowIndex}, 'first_surname')"
+                               onpaste="handleCellPaste(event, ${rowIndex}, 'first_surname')"
+                               onclick="selectCell(this)"
+                               required>
+                    </td>
+                    <td>
+                        <input type="text" class="bulk-cell-input" 
+                               placeholder="González" 
+                               data-row="${rowIndex}" data-col="second_surname"
+                               onkeydown="handleCellKeyDown(event, ${rowIndex}, 'second_surname')"
+                               onpaste="handleCellPaste(event, ${rowIndex}, 'second_surname')"
+                               onclick="selectCell(this)">
+                    </td>
+                    <td>
+                        <input type="text" class="bulk-cell-input" 
+                               placeholder="Juan" 
+                               data-row="${rowIndex}" data-col="first_name"
+                               onkeydown="handleCellKeyDown(event, ${rowIndex}, 'first_name')"
+                               onpaste="handleCellPaste(event, ${rowIndex}, 'first_name')"
+                               onclick="selectCell(this)"
+                               required>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                bulkRowCounter++;
+            }
+        }
+
+        function selectCell(cellInput) {
+            // Remover selección anterior
+            if (selectedCell) {
+                selectedCell.classList.remove('selected-cell');
+            }
+            
+            // Seleccionar nueva celda
+            selectedCell = cellInput;
+            cellInput.classList.add('selected-cell');
+            cellInput.focus();
+        }
+
+        function handleCellKeyDown(event, row, col) {
+            const columns = ['cedula', 'first_surname', 'second_surname', 'first_name'];
+            const currentColIndex = columns.indexOf(col);
+            
+            switch(event.key) {
+                case 'Tab':
+                    event.preventDefault();
+                    if (event.shiftKey) {
+                        // Tab hacia atrás
+                        moveToPreviousCell(row, currentColIndex, columns);
+                    } else {
+                        // Tab hacia adelante
+                        moveToNextCell(row, currentColIndex, columns);
+                    }
+                    break;
+                    
+                case 'Enter':
+                    event.preventDefault();
+                    // Enter va a la misma columna, siguiente fila
+                    moveToNextRow(row, col);
+                    break;
+                    
+                case 'ArrowUp':
+                    event.preventDefault();
+                    moveToPreviousRow(row, col);
+                    break;
+                    
+                case 'ArrowDown':
+                    event.preventDefault();
+                    moveToNextRow(row, col);
+                    break;
+                    
+                case 'ArrowLeft':
+                    if (event.target.selectionStart === 0) {
+                        event.preventDefault();
+                        moveToPreviousCell(row, currentColIndex, columns);
+                    }
+                    break;
+                    
+                case 'ArrowRight':
+                    if (event.target.selectionStart === event.target.value.length) {
+                        event.preventDefault();
+                        moveToNextCell(row, currentColIndex, columns);
+                    }
+                    break;
+            }
+        }
+
+        function moveToNextCell(row, currentColIndex, columns) {
+            if (currentColIndex < columns.length - 1) {
+                // Siguiente columna en la misma fila
+                const nextCol = columns[currentColIndex + 1];
+                const nextInput = document.querySelector(`[data-row="${row}"][data-col="${nextCol}"]`);
+                if (nextInput) selectCell(nextInput);
+            } else {
+                // Siguiente fila, primera columna
+                moveToNextRow(row, columns[0]);
+            }
+        }
+
+        function moveToPreviousCell(row, currentColIndex, columns) {
+            if (currentColIndex > 0) {
+                // Columna anterior en la misma fila
+                const prevCol = columns[currentColIndex - 1];
+                const prevInput = document.querySelector(`[data-row="${row}"][data-col="${prevCol}"]`);
+                if (prevInput) selectCell(prevInput);
+            } else {
+                // Fila anterior, última columna
+                moveToPreviousRow(row, columns[columns.length - 1]);
+            }
+        }
+
+        function moveToNextRow(row, col) {
+            const nextRow = row + 1;
+            const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${col}"]`);
+            if (nextInput) {
+                selectCell(nextInput);
+            } else {
+                // Si no existe la siguiente fila, agregar nuevas filas
+                addBulkRows(5);
+                setTimeout(() => {
+                    const newInput = document.querySelector(`[data-row="${nextRow}"][data-col="${col}"]`);
+                    if (newInput) selectCell(newInput);
+                }, 100);
+            }
+        }
+
+        function moveToPreviousRow(row, col) {
+            if (row > 0) {
+                const prevRow = row - 1;
+                const prevInput = document.querySelector(`[data-row="${prevRow}"][data-col="${col}"]`);
+                if (prevInput) selectCell(prevInput);
+            }
+        }
+
+        function handleCellPaste(event, row, col) {
+            event.preventDefault();
+            const pasteData = (event.clipboardData || window.clipboardData).getData('text');
+            
+            if (pasteData.includes('\t') || pasteData.includes('\n')) {
+                // Pegado de múltiples celdas
+                processMultiCellPaste(pasteData, row, col);
+            } else {
+                // Pegado simple
+                event.target.value = pasteData.trim();
+            }
+        }
+
+        function processMultiCellPaste(pasteData, startRow, startCol) {
+            const columns = ['cedula', 'first_surname', 'second_surname', 'first_name'];
+            const startColIndex = columns.indexOf(startCol);
+            
+            const rows = pasteData.trim().split('\n');
+            
+            rows.forEach((rowData, rowOffset) => {
+                const cells = rowData.split('\t').filter(cell => cell.trim());
+                if (cells.length === 0) return;
+                
+                const targetRow = startRow + rowOffset;
+                
+                // Asegurar que existe la fila
+                while (targetRow >= bulkRowCounter) {
+                    addBulkRows(5);
+                }
+                
+                cells.forEach((cellValue, cellOffset) => {
+                    const targetColIndex = startColIndex + cellOffset;
+                    if (targetColIndex < columns.length) {
+                        const targetCol = columns[targetColIndex];
+                        const targetInput = document.querySelector(`[data-row="${targetRow}"][data-col="${targetCol}"]`);
+                        if (targetInput) {
+                            targetInput.value = cellValue.trim();
+                        }
+                    }
+                });
+            });
+            
+            showMessage('success', `Datos pegados en ${rows.length} filas`);
+        }
+
+        function validateBulkData() {
+            const grade = document.getElementById('bulkGrade').value;
+            if (!grade) {
+                showMessage('error', 'Seleccione un grado primero');
+                return false;
+            }
+            
+            const errors = [];
+            const validStudents = [];
+            const rows = document.querySelectorAll('#bulkAddTableBody tr');
+            
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('.bulk-cell-input');
+                const rowData = {};
+                let hasData = false;
+                
+                inputs.forEach(input => {
+                    const col = input.dataset.col;
+                    const value = input.value.trim();
+                    rowData[col] = value;
+                    if (value) hasData = true;
+                    
+                    // Limpiar estilos de error
+                    input.classList.remove('invalid');
+                });
+                
+                if (hasData) {
+                    const rowNum = index + 1;
+                    
+                    // Validar campos obligatorios
+                    if (!rowData.first_surname) {
+                        errors.push(`Fila ${rowNum}: Primer apellido es obligatorio`);
+                        const input = row.querySelector('[data-col="first_surname"]');
+                        if (input) input.classList.add('invalid');
+                    }
+                    
+                    if (!rowData.first_name) {
+                        errors.push(`Fila ${rowNum}: Nombre es obligatorio`);
+                        const input = row.querySelector('[data-col="first_name"]');
+                        if (input) input.classList.add('invalid');
+                    }
+                    
+                    if (!errors.some(e => e.includes(`Fila ${rowNum}`))) {
+                        validStudents.push({
+                            ...rowData,
+                            grade_level: grade,
+                            row: rowNum
+                        });
+                    }
+                }
+            });
+            
+            if (errors.length > 0) {
+                showBulkErrors(errors);
+                showMessage('error', `Se encontraron ${errors.length} errores`);
+                return false;
+            } else {
+                hideBulkErrors();
+                showMessage('success', `${validStudents.length} estudiantes válidos listos para guardar`);
+                window.validatedBulkData = validStudents;
+                return true;
+            }
+        }
+
+        function showBulkErrors(errors) {
+            const errorSection = document.getElementById('bulkErrorsSection');
+            errorSection.innerHTML = `
+                <div class="error-list">
+                    <h5>⚠️ Errores encontrados:</h5>
+                    <ul>
+                        ${errors.map(error => `<li>${error}</li>`).join('')}
+                    </ul>
                 </div>
             `;
-            
-            // Ordenar: prioritarios primero, luego por uso, luego alfabético
-            const sortedGrades = [...availableGrades].sort((a, b) => {
-                if (a.priority && !b.priority) return -1;
-                if (!a.priority && b.priority) return 1;
-                if (a.priority && b.priority) return b.usage - a.usage;
-                return a.name.localeCompare(b.name);
-            });
-            
-            optionsHTML += sortedGrades.map(grade => `
-                <div class="select-option" onclick="selectBulkGrade('${grade.name}')">
-                    <span>${grade.name}</span>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        ${grade.priority ? '<span class="priority-badge">PRIORIDAD</span>' : ''}
-                        ${grade.usage > 0 ? `<span class="usage-count">${grade.usage}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
-            
-            container.innerHTML = optionsHTML;
+            errorSection.style.display = 'block';
         }
 
-        // Función para filtrar grados en el modal de edición masiva
-        function filterBulkGrades(searchTerm) {
-            const container = document.getElementById('bulkGradeOptions');
-            if (!container) return;
-            
-            const options = container.querySelectorAll('.select-option');
-            options.forEach(option => {
-                const gradeName = option.textContent.toLowerCase();
-                const matches = gradeName.includes(searchTerm.toLowerCase());
-                option.style.display = matches ? 'flex' : 'none';
-            });
+        function hideBulkErrors() {
+            const errorSection = document.getElementById('bulkErrorsSection');
+            errorSection.style.display = 'none';
         }
 
-        // Modificar la función openBulkGradeModal para cargar las opciones
-        function openBulkGradeModal() {
-            if (selectedStudentIds.length === 0) {
-                alert('Seleccione al menos un estudiante');
+        async function saveBulkStudents() {
+            if (!validateBulkData()) {
                 return;
             }
             
-            document.getElementById('bulkGradeModal').classList.add('show');
-            
-            // Renderizar opciones de grados
-            renderBulkGradeOptions();
-            
-            // Resetear valores del formulario
-            document.querySelector('#bulkGradeSelect .selected-text').textContent = 'Mantener grado actual...';
-            document.getElementById('bulkNewGrade').value = '';
-            document.getElementById('bulkNewSubject').value = '';
-            document.getElementById('bulkNewSection').value = '';
-            
-            // Mostrar información de estudiantes seleccionados
-            const selectedStudentsInfo = document.getElementById('selectedStudentsInfo');
-            const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
-            
-            selectedStudentsInfo.innerHTML = `
-                <h4>📋 Estudiantes Seleccionados: ${selectedStudents.length}</h4>
-                <div style="max-height: 150px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 10px 0;">
-                    ${selectedStudents.map(student => {
-                        const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
-                        return `
-                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                                <span><strong>${fullName}</strong></span>
-                                <span style="color: #666;">Actual: ${student.grade_level || 'Sin grado'}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
+            if (!window.validatedBulkData || window.validatedBulkData.length === 0) {
+                showMessage('error', 'No hay estudiantes válidos para guardar');
+                return;
+            }
 
-        async function debugSubject(subjectId, subjectName) {
+            const saveBtn = document.getElementById('saveBulkBtn');
+            const originalText = saveBtn.textContent;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Guardando...';
+
             try {
-                console.log(`🐛 DEBUG: Verificando materia ${subjectId} (${subjectName})`);
-                
-                const response = await fetch(`/api/debug/subjects/${subjectId}`);
-                const result = await response.json();
-                
-                console.log('🔍 Debug result:', result);
-                
-                if (result.success) {
-                    if (result.exists) {
-                        console.log(`📋 Materia encontrada: ${result.subject.name}`);
-                        console.log(`👥 Uso actual: ${result.usage} estudiantes`);
-                        console.log(`🗑️ Se puede eliminar: ${result.canDelete}`);
+                let successCount = 0;
+                let errorCount = 0;
+                const errors = [];
+
+                for (const studentData of window.validatedBulkData) {
+                    try {
+                        const response = await fetch('/api/students', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(studentData)
+                        });
+
+                        const result = await response.json();
                         
-                        alert(`Debug Info:\n• Materia: ${result.subject.name}\n• Estudiantes usando: ${result.usage}\n• Se puede eliminar: ${result.canDelete ? 'SÍ' : 'NO'}`);
-                    } else {
-                        console.log('❌ Materia no encontrada en BD');
-                        alert('Materia no encontrada en la base de datos');
+                        if (result.success) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                            errors.push(`Fila ${studentData.row}: ${result.message}`);
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        errors.push(`Fila ${studentData.row}: Error de conexión`);
+                    }
+
+                    // Pausa entre requests
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+
+                let message = `Proceso completado: ${successCount} estudiantes guardados`;
+                if (errorCount > 0) {
+                    message += `, ${errorCount} errores`;
+                    showBulkErrors(errors);
+                }
+
+                showMessage(errorCount === 0 ? 'success' : 'error', message);
+
+                if (successCount > 0) {
+                    loadStudents();
+                    if (errorCount === 0) {
+                        closeBulkAddModal();
                     }
                 }
             } catch (error) {
-                console.error('❌ Error en debug:', error);
-                alert('Error en debug: ' + error.message);
+                console.error('Error:', error);
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+                showMessage('error', 'Error en guardado masivo');
             }
         }
+
         // ========================================
-        // EVENT LISTENERS
+        // FUNCIONES AUXILIARES
         // ========================================
 
-        // Cerrar modales al hacer clic fuera
+        function showMessage(type, message) {
+            const messageEl = document.getElementById(type + 'Message');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 5000);
+        }
+
+        // Event listeners
         document.getElementById('studentModal').addEventListener('click', function(event) {
             if (event.target === this) closeModal();
         });
 
-        document.getElementById('gradesModal').addEventListener('click', function(event) {
-            if (event.target === this) closeGradesModal();
-        });
-
-        document.getElementById('subjectsModal').addEventListener('click', function(event) {
-            if (event.target === this) closeSubjectsModal();
-        });
-
-        document.getElementById('gradeSubjectsModal').addEventListener('click', function(event) {
-            if (event.target === this) closeGradeSubjectsModal();
-        });
-
         document.getElementById('bulkAddModal').addEventListener('click', function(event) {
             if (event.target === this) closeBulkAddModal();
-        });
-
-        // Cerrar autocompletado y dropdown al hacer clic fuera
-        document.addEventListener('click', function(event) {
-            // Cerrar autocompletado de materias
-            if (!event.target.closest('.autocomplete-container')) {
-                document.querySelectorAll('.autocomplete-list').forEach(list => {
-                    list.style.display = 'none';
-                });
-            }
-            
-            // Cerrar dropdown de grados
-            if (!event.target.closest('.custom-select')) {
-                document.querySelectorAll('.select-dropdown').forEach(dropdown => {
-                    dropdown.classList.remove('show');
-                    const button = dropdown.parentElement.querySelector('.select-button');
-                    if (button) button.classList.remove('open');
-                });
-            }
-
-
-            // Cerrar modal de edición masiva al hacer clic fuera
-            document.getElementById('bulkGradeModal').addEventListener('click', function(event) {
-                if (event.target === this) closeBulkGradeModal();
-            });
-        });
-
-
-
-                // ✅ MEJORAR EVENT LISTENER PARA CERRAR MODAL
-        document.addEventListener('DOMContentLoaded', function() {
-            // Event listener mejorado para cerrar modal con ESC
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'Escape') {
-                    if (document.getElementById('studentModal').classList.contains('show')) {
-                        closeModal();
-                    }
-                    if (document.getElementById('bulkAddModal').classList.contains('show')) {
-                        closeBulkAddModal();
-                    }
-                }
-            });
-            
-            // Event listener mejorado para cerrar al hacer clic fuera
-            document.getElementById('studentModal').addEventListener('click', function(event) {
-                if (event.target === this) {
-                    console.log('🖱️ Clic fuera del modal detectado');
-                    closeModal();
-                }
-            });
-            
-            // Prevenir que clics dentro del modal lo cierren
-            document.querySelector('#studentModal .modal-content').addEventListener('click', function(event) {
-                event.stopPropagation();
-            });
         });
     </script>
 </body>
