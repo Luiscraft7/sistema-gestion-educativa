@@ -1263,6 +1263,35 @@ async function startServer() {
     }
 }
 
+
+// DEBUG: Ver qué devuelve getTaskGrades
+app.get('/api/debug/task-grades/:taskId', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        
+        console.log('🐛 DEBUG: Obteniendo task grades para tarea', taskId);
+        
+        const grades = await database.getTaskGrades(taskId);
+        
+        res.json({
+            success: true,
+            debug: {
+                task_id: taskId,
+                total_students: grades.length,
+                students: grades.map(g => ({
+                    student_id: g.student_id,
+                    name: `${g.first_surname} ${g.first_name}`,
+                    has_grade: !!g.grade_id,
+                    points: g.points_earned || 'Sin calificar'
+                }))
+            },
+            data: grades
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Iniciar todo
 startServer();
 

@@ -1088,110 +1088,195 @@
         }
 
         // ========================================
-        // CALIFICACIÓN
+        // FUNCIONES DE CALIFICACIÓN CORREGIDAS
         // ========================================
+
         async function startGrading(taskId) {
             currentTaskId = taskId;
             currentTask = tasks.find(t => t.id === taskId);
             
-            if (!currentTask) return;
+            if (!currentTask) {
+                showMessage('error', 'No se encontró la tarea');
+                return;
+            }
             
             try {
-                // Cargar calificaciones existentes
-                const response = await fetch(`/api/task-grades/${taskId}`);
-                const result = await response.json();
+                console.log('🔄 Iniciando calificación para tarea:', taskId);
                 
-                const existingGrades = result.success ? result.data : [];
-                
-                // Mostrar interface de calificación
+                // Mostrar estado de carga
                 document.getElementById('tasksContainer').style.display = 'none';
                 document.getElementById('gradingContainer').style.display = 'block';
                 document.getElementById('currentTaskTitle').textContent = currentTask.title;
                 
-                renderGradingTable(existingGrades);
-                
-            } catch (error) {
-                console.error('❌ Error iniciando calificación:', error);
-                showMessage('error', 'Error cargando calificaciones');
-            }
-        }
-
-        function renderGradingTable(existingGrades) {
-            const tbody = document.getElementById('gradingTableBody');
-            
-            tbody.innerHTML = students.map(student => {
-                const initials = ((student.first_name?.[0] || '') + (student.first_surname?.[0] || '')).toUpperCase();
-                const fullName = `${student.first_surname || ''} ${student.second_surname || ''} ${student.first_name || ''}`.trim();
-                
-                const existingGrade = existingGrades.find(g => g.student_id === student.id);
-                const pointsEarned = existingGrade ? existingGrade.points_earned : '';
-                const percentage = existingGrade ? Math.round((existingGrade.points_earned / currentTask.max_points) * 100) : 0;
-                const gradeDate = existingGrade ? new Date(existingGrade.created_at).toLocaleDateString('es-ES') : '';
-                const notes = existingGrade ? existingGrade.notes : '';
-                
-                return `
+                // Mostrar indicador de carga en la tabla
+                document.getElementById('gradingTableBody').innerHTML = `
                     <tr>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="student-photo">${initials}</div>
-                                <div>
-                                    <div class="student-name">${fullName}</div>
-                                    <div class="student-id">${student.student_id || '-'}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <input type="number" 
-                                   class="grade-input" 
-                                   min="0" 
-                                   max="${currentTask.max_points}" 
-                                   step="0.5"
-                                   value="${pointsEarned}"
-                                   placeholder="0"
-                                   data-student-id="${student.id}"
-                                   onchange="updateGradeDisplay(this)">
-                            <div style="font-size: 11px; color: #666; margin-top: 2px;">
-                                de ${currentTask.max_points} pts
-                            </div>
-                        </td>
-                        <td>
-                            <div class="grade-display">
-                                <div class="percentage-display ${getGradeClass(percentage)}" id="percentage-${student.id}">
-                                    ${pointsEarned ? percentage + '%' : '-'}
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span id="date-${student.id}" style="font-size: 12px; color: #666;">
-                                ${gradeDate || '-'}
-                            </span>
-                        </td>
-                        <td>
-                            <input type="text" 
-                                   class="form-input" 
-                                   style="font-size: 12px; padding: 4px 8px;"
-                                   placeholder="Observaciones..."
-                                   value="${notes}"
-                                   data-student-id="${student.id}"
-                                   data-field="notes">
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                            🔄 Cargando estudiantes para calificar...
                         </td>
                     </tr>
                 `;
-            }).join('');
+                
+                // Cargar datos de calificaciones desde la API
+                const response = await fetch(`/api/task-grades/${taskId}`);
+                const result = await response.json();
+                
+                console.log('📥 Respuesta completa de la API:', result);
+                
+                if (result.success && result.data) {
+                    console.log('👥 Estudiantes recibidos de la API:', result.data.length);
+                    
+                    if (result.data.length === 0) {
+                        document.getElementById('gradingTableBody').innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                                    📝 No hay estudiantes registrados para esta tarea
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    // Usar los datos directamente de la API
+                    renderGradingTable(result.data);
+                } else {
+                    console.error('❌ Error en respuesta de la API:', result);
+                    document.getElementById('gradingTableBody').innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #dc3545;">
+                                ❌ Error: ${result.message || 'No se pudieron cargar los estudiantes'}
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error iniciando calificación:', error);
+                showMessage('error', 'Error cargando calificaciones: ' + error.message);
+                
+                document.getElementById('gradingTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #dc3545;">
+                            ❌ Error de conexión: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderGradingTable(studentsWithGrades) {
+            const tbody = document.getElementById('gradingTableBody');
+            
+            if (!tbody) {
+                console.error('❌ No se encontró el elemento gradingTableBody');
+                return;
+            }
+            
+            console.log('🎨 Renderizando tabla de calificaciones...');
+            console.log('📊 Datos recibidos:', studentsWithGrades);
+            
+            // Verificar que tenemos datos
+            if (!studentsWithGrades || studentsWithGrades.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                            📝 No hay estudiantes para mostrar
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Limpiar tabla
+            tbody.innerHTML = '';
+            
+            // Renderizar cada estudiante
+            studentsWithGrades.forEach((studentData, index) => {
+                console.log(`👤 Renderizando estudiante ${index + 1}:`, studentData);
+                
+                // Extraer datos del estudiante
+                const initials = ((studentData.first_name?.[0] || '') + (studentData.first_surname?.[0] || '')).toUpperCase();
+                const fullName = `${studentData.first_surname || ''} ${studentData.second_surname || ''} ${studentData.first_name || ''}`.trim();
+                
+                // Datos de calificación (pueden existir o no)
+                const pointsEarned = studentData.points_earned || '';
+                const maxPoints = studentData.max_points || currentTask.max_points || 100;
+                const percentage = pointsEarned ? Math.round((pointsEarned / maxPoints) * 100) : 0;
+                const gradeDate = studentData.grade_date ? new Date(studentData.grade_date).toLocaleDateString('es-ES') : '';
+                const notes = studentData.notes || '';
+                
+                // Crear fila
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="student-photo">${initials}</div>
+                            <div>
+                                <div class="student-name">${fullName}</div>
+                                <div class="student-id">${studentData.student_id || studentData.id || '-'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" 
+                            class="grade-input" 
+                            min="0" 
+                            max="${maxPoints}" 
+                            step="0.5"
+                            value="${pointsEarned}"
+                            placeholder="0"
+                            data-student-id="${studentData.id || studentData.student_id}"
+                            onchange="updateGradeDisplay(this)">
+                        <div style="font-size: 11px; color: #666; margin-top: 2px;">
+                            de ${maxPoints} pts
+                        </div>
+                    </td>
+                    <td>
+                        <div class="grade-display">
+                            <div class="percentage-display ${getGradeClass(percentage)}" id="percentage-${studentData.id || studentData.student_id}">
+                                ${pointsEarned ? percentage + '%' : '-'}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span id="date-${studentData.id || studentData.student_id}" style="font-size: 12px; color: #666;">
+                            ${gradeDate || '-'}
+                        </span>
+                    </td>
+                    <td>
+                        <input type="text" 
+                            class="form-input" 
+                            style="font-size: 12px; padding: 4px 8px;"
+                            placeholder="Observaciones..."
+                            value="${notes}"
+                            data-student-id="${studentData.id || studentData.student_id}"
+                            data-field="notes">
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            console.log('✅ Tabla renderizada con', studentsWithGrades.length, 'estudiantes');
         }
 
         function updateGradeDisplay(input) {
             const studentId = input.dataset.studentId;
             const pointsEarned = parseFloat(input.value) || 0;
-            const percentage = Math.round((pointsEarned / currentTask.max_points) * 100);
+            const maxPoints = currentTask.max_points || 100;
+            const percentage = Math.round((pointsEarned / maxPoints) * 100);
+            
+            console.log('📝 Actualizando display de calificación:', { studentId, pointsEarned, percentage });
             
             const percentageDisplay = document.getElementById(`percentage-${studentId}`);
-            percentageDisplay.textContent = pointsEarned > 0 ? percentage + '%' : '-';
-            percentageDisplay.className = `percentage-display ${getGradeClass(percentage)}`;
+            if (percentageDisplay) {
+                percentageDisplay.textContent = pointsEarned > 0 ? percentage + '%' : '-';
+                percentageDisplay.className = `percentage-display ${getGradeClass(percentage)}`;
+            }
             
             // Actualizar fecha
             const dateDisplay = document.getElementById(`date-${studentId}`);
-            if (pointsEarned > 0) {
+            if (dateDisplay && pointsEarned > 0) {
                 dateDisplay.textContent = new Date().toLocaleDateString('es-ES');
             }
         }

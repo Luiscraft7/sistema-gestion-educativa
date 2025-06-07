@@ -976,7 +976,7 @@ class Database {
 
 
 
-// ========================================
+    // ========================================
     // FUNCIONES DEL MÓDULO DE TAREAS
     // ========================================
 
@@ -1108,37 +1108,71 @@ class Database {
     // ========================================
 
     // Obtener calificaciones de una tarea específica
-    async getTaskGrades(taskId) {
-        this.ensureConnection();
+ // Obtener calificaciones de una tarea específica (CORREGIDA - muestra todos los estudiantes)
+async getTaskGrades(taskId) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        // Primero obtener información de la tarea
+        const taskQuery = 'SELECT grade_level, subject_area, title, max_points, percentage FROM assignments WHERE id = ?';
         
-        return new Promise((resolve, reject) => {
+        this.db.get(taskQuery, [taskId], (err, task) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            if (!task) {
+                resolve([]);
+                return;
+            }
+            
+            // Obtener TODOS los estudiantes del grado/materia con sus calificaciones (si las tienen)
             const query = `
                 SELECT 
-                    ag.*,
+                    s.id as student_id,
                     s.first_name,
                     s.first_surname,
                     s.second_surname,
                     s.student_id as student_code,
-                    a.title as task_title,
-                    a.max_points,
-                    a.percentage as task_percentage
-                FROM assignment_grades ag
-                INNER JOIN students s ON ag.student_id = s.id
-                INNER JOIN assignments a ON ag.assignment_id = a.id
-                WHERE ag.assignment_id = ? AND s.status = 'active'
+                    ag.id as grade_id,
+                    ag.points_earned,
+                    ag.grade,
+                    ag.percentage,
+                    ag.is_submitted,
+                    ag.is_late,
+                    ag.notes,
+                    ag.feedback,
+                    ag.submitted_at,
+                    ? as assignment_id,
+                    ? as task_title,
+                    ? as max_points,
+                    ? as task_percentage
+                FROM students s
+                LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ?
+                WHERE s.status = 'active' 
+                    AND s.grade_level = ?
+                    AND (s.subject_area = ? OR s.subject_area IS NULL OR s.subject_area = '')
                 ORDER BY s.first_surname, s.second_surname, s.first_name
             `;
             
-            this.db.all(query, [taskId], (err, rows) => {
+            this.db.all(query, [
+                taskId, task.title, task.max_points, task.percentage, // Para los campos SELECT
+                taskId, // Para el LEFT JOIN
+                task.grade_level, // Para el WHERE
+                task.subject_area // Para el WHERE
+            ], (err, rows) => {
                 if (err) {
+                    console.error('❌ Error en getTaskGrades:', err);
                     reject(err);
                 } else {
+                    console.log(`👥 Estudiantes encontrados para tarea ${taskId} (${task.title}):`, rows.length);
                     resolve(rows || []);
                 }
             });
         });
-    }
-
+    });
+}
     // Obtener estudiantes para calificar una tarea
     async getStudentsForTask(taskId) {
         this.ensureConnection();
