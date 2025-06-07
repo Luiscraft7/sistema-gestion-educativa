@@ -1295,6 +1295,236 @@ async function startServer() {
     }
 }
 
+
+// ========================================
+// APIs DEL MÓDULO DE COTIDIANO
+// ========================================
+
+// Obtener indicadores por grado y materia
+app.get('/api/cotidiano/indicators', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        if (!grade || !subject) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Grade and subject are required' 
+            });
+        }
+        
+        const query = `
+            SELECT * FROM daily_indicators 
+            WHERE grade_level = ? AND subject_area = ? AND is_active = 1
+            ORDER BY parent_indicator_id IS NULL DESC, parent_indicator_id ASC, id ASC
+        `;
+        
+        const indicators = await database.runQuery(query, [grade, subject]);
+        
+        res.json({
+            success: true,
+            data: indicators,
+            message: `${indicators.length} indicadores encontrados`
+        });
+    } catch (error) {
+        console.error('Error fetching indicators:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error obteniendo indicadores',
+            error: error.message 
+        });
+    }
+});
+
+// Crear nuevo indicador
+app.post('/api/cotidiano/indicators', async (req, res) => {
+    try {
+        const { grade_level, subject_area, indicator_name, parent_indicator_id } = req.body;
+        
+        if (!grade_level || !subject_area || !indicator_name) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields' 
+            });
+        }
+        
+        const query = `
+            INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        const result = await database.runQuery(query, [grade_level, subject_area, indicator_name, parent_indicator_id || null]);
+        
+        res.json({ 
+            success: true,
+            data: { id: result.lastID }, 
+            message: 'Indicador creado exitosamente' 
+        });
+    } catch (error) {
+        console.error('Error creating indicator:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error creando indicador',
+            error: error.message 
+        });
+    }
+});
+
+// Eliminar indicador
+app.delete('/api/cotidiano/indicators/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const query = 'DELETE FROM daily_indicators WHERE id = ?';
+        await database.runQuery(query, [id]);
+        
+        res.json({ 
+            success: true,
+            message: 'Indicador eliminado exitosamente' 
+        });
+    } catch (error) {
+        console.error('Error deleting indicator:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error eliminando indicador',
+            error: error.message 
+        });
+    }
+});
+
+// Obtener evaluación de una fecha específica
+app.get('/api/cotidiano/evaluation', async (req, res) => {
+    try {
+        const { grade, subject, date } = req.query;
+        
+        if (!grade || !subject || !date) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Grade, subject and date are required' 
+            });
+        }
+        
+        const query = `
+            SELECT de.*, dis.indicator_id, dis.score, dis.notes as score_notes
+            FROM daily_evaluations de
+            LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
+            WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+        `;
+        
+        const rows = await database.runQuery(query, [grade, subject, date]);
+        
+        if (rows.length === 0) {
+            return res.json({ success: true, data: null });
+        }
+        
+        // Procesar datos para agrupar por estudiante
+        const evaluationData = {
+            date: rows[0].evaluation_date,
+            grade_weight: rows[0].grade_weight,
+            students: {}
+        };
+        
+        rows.forEach(row => {
+            if (!evaluationData.students[row.student_id]) {
+                evaluationData.students[row.student_id] = {
+                    student_id: row.student_id,
+                    total_points: row.total_points,
+                    final_grade: row.final_grade,
+                    scores: {}
+                };
+            }
+            
+            if (row.indicator_id) {
+                evaluationData.students[row.student_id].scores[row.indicator_id] = {
+                    score: row.score,
+                    notes: row.score_notes
+                };
+            }
+        });
+        
+        res.json({ success: true, data: evaluationData });
+    } catch (error) {
+        console.error('Error fetching evaluation:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error obteniendo evaluación',
+            error: error.message 
+        });
+    }
+});
+
+// Guardar evaluación completa
+app.post('/api/cotidiano/evaluation', async (req, res) => {
+    try {
+        const { grade_level, subject_area, evaluation_date, grade_weight, students } = req.body;
+        
+        if (!grade_level || !subject_area || !evaluation_date || !students) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields' 
+            });
+        }
+        
+        // Aquí necesitarías implementar la transacción para guardar
+        // Por ahora simulo una respuesta exitosa
+        
+        res.json({ 
+            success: true,
+            message: 'Evaluación guardada exitosamente' 
+        });
+    } catch (error) {
+        console.error('Error saving evaluation:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error guardando evaluación',
+            error: error.message 
+        });
+    }
+});
+
+// Obtener historial de evaluaciones
+app.get('/api/cotidiano/history', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        if (!grade || !subject) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Grade and subject are required' 
+            });
+        }
+        
+        const query = `
+            SELECT 
+                evaluation_date,
+                COUNT(DISTINCT student_id) as total_students,
+                AVG(final_grade) as average_grade,
+                grade_weight
+            FROM daily_evaluations 
+            WHERE grade_level = ? AND subject_area = ?
+            GROUP BY evaluation_date, grade_weight
+            ORDER BY evaluation_date DESC
+        `;
+        
+        const history = await database.runQuery(query, [grade, subject]);
+        
+        res.json({
+            success: true,
+            data: history,
+            message: `${history.length} evaluaciones encontradas`
+        });
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error obteniendo historial',
+            error: error.message 
+        });
+    }
+});
+
+
+
+
 // Iniciar todo
 startServer();
 

@@ -263,6 +263,64 @@ CREATE INDEX IF NOT EXISTS idx_attendance_student_date ON attendance(student_id,
 CREATE INDEX IF NOT EXISTS idx_attendance_date_grade ON attendance(date, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_lesson_config_grade_subject ON lesson_config(grade_level, subject_area);
 
+
+
+-- ========================================
+-- MÓDULO DE COTIDIANO AVANZADO
+-- ========================================
+
+-- Tabla de Indicadores de Cotidiano
+CREATE TABLE IF NOT EXISTS daily_indicators (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    indicator_name TEXT NOT NULL,
+    parent_indicator_id INTEGER NULL,
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_indicator_id) REFERENCES daily_indicators(id) ON DELETE CASCADE
+);
+
+-- Tabla de Evaluaciones Cotidianas
+CREATE TABLE IF NOT EXISTS daily_evaluations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    evaluation_date DATE NOT NULL,
+    total_points INTEGER DEFAULT 0,
+    final_grade REAL DEFAULT 0,
+    grade_weight INTEGER DEFAULT 100,
+    teacher_notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    UNIQUE(student_id, grade_level, subject_area, evaluation_date)
+);
+
+-- Tabla de Calificaciones por Indicador
+CREATE TABLE IF NOT EXISTS daily_indicator_scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    daily_evaluation_id INTEGER NOT NULL,
+    indicator_id INTEGER NOT NULL,
+    score INTEGER DEFAULT 0 CHECK (score IN (0, 1, 2, 3)),
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (daily_evaluation_id) REFERENCES daily_evaluations(id) ON DELETE CASCADE,
+    FOREIGN KEY (indicator_id) REFERENCES daily_indicators(id) ON DELETE CASCADE,
+    UNIQUE(daily_evaluation_id, indicator_id)
+);
+
+-- Índices para Cotidiano Avanzado
+CREATE INDEX IF NOT EXISTS idx_daily_indicators_grade_subject ON daily_indicators(grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_daily_indicators_parent ON daily_indicators(parent_indicator_id);
+CREATE INDEX IF NOT EXISTS idx_daily_evaluations_student_date ON daily_evaluations(student_id, evaluation_date);
+CREATE INDEX IF NOT EXISTS idx_daily_evaluations_grade_subject_date ON daily_evaluations(grade_level, subject_area, evaluation_date);
+CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_evaluation ON daily_indicator_scores(daily_evaluation_id);
+CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_indicator ON daily_indicator_scores(indicator_id);
+
+
 -- ========================================
 -- DATOS MÍNIMOS ESENCIALES
 -- ========================================
