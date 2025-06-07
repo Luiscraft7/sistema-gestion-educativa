@@ -1193,6 +1193,56 @@ app.get('/api/task-stats/student/:studentId', async (req, res) => {
     }
 });
 
+// Obtener tareas por grado y materia (si no lo tienes)
+app.get('/api/tasks', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        console.log('📝 GET /api/tasks:', { grade, subject });
+        
+        if (!grade || !subject) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado y materia son requeridos'
+            });
+        }
+        
+        const tasks = await database.getTasksByGradeAndSubject(grade, subject);
+        res.json({
+            success: true,
+            data: tasks
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo tareas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo tareas',
+            error: error.message
+        });
+    }
+});
+
+// Crear nueva tarea (si no lo tienes)
+app.post('/api/tasks', async (req, res) => {
+    try {
+        console.log('📝 POST /api/tasks:', req.body);
+        
+        const result = await database.createTask(req.body);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Tarea creada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error creando tarea:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creando tarea',
+            error: error.message
+        });
+    }
+});
+
 
 // ========================================
 // INICIAR SERVIDOR

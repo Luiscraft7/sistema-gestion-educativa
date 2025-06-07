@@ -106,33 +106,57 @@ CREATE TABLE IF NOT EXISTS daily_grades (
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
--- Tabla de Tareas (CORREGIDA)
+-- ========================================
+-- ACTUALIZACIÓN DE ESQUEMA PARA MÓDULO DE TAREAS
+-- ========================================
+
+-- Primero, eliminar las tablas existentes si ya existen
+DROP TABLE IF EXISTS assignment_grades;
+DROP TABLE IF EXISTS assignments;
+
+-- Tabla de Tareas (ACTUALIZADA)
 CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject_id INTEGER,
     title TEXT NOT NULL,
     description TEXT,
     due_date DATE,
     max_points REAL DEFAULT 100,
-    percentage REAL DEFAULT 10,
+    percentage REAL DEFAULT 0,
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     teacher_name TEXT,
+    is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
--- Tabla de Calificaciones de Tareas
+-- Tabla de Calificaciones de Tareas (ACTUALIZADA)
 CREATE TABLE IF NOT EXISTS assignment_grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     assignment_id INTEGER,
     student_id INTEGER,
+    points_earned REAL,
     grade REAL,
+    percentage REAL,
     submitted_at DATETIME,
+    is_submitted INTEGER DEFAULT 0,
+    is_late INTEGER DEFAULT 0,
     notes TEXT,
+    feedback TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (assignment_id) REFERENCES assignments(id),
-    FOREIGN KEY (student_id) REFERENCES students(id)
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    UNIQUE(assignment_id, student_id)
 );
+
+-- Índices para mejorar rendimiento
+CREATE INDEX IF NOT EXISTS idx_assignments_grade_subject ON assignments(grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_assignments_due_date ON assignments(due_date);
+CREATE INDEX IF NOT EXISTS idx_assignment_grades_assignment ON assignment_grades(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_grades_student ON assignment_grades(student_id);
 
 -- Tabla de Exámenes
 CREATE TABLE IF NOT EXISTS exams (

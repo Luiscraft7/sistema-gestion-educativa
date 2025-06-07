@@ -976,10 +976,12 @@ class Database {
 
 
 
+// ========================================
+    // FUNCIONES DEL MÓDULO DE TAREAS
     // ========================================
-    // FUNCIONES DE TAREAS (CORREGIDAS)
-    // ========================================
-    async getTasksByGradeAndSubject(grade, subject) {
+
+    // Obtener tareas por grado y materia
+    async getTasksByGradeAndSubject(gradeLevel, subjectArea) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
@@ -994,96 +996,84 @@ class Database {
                     END) as avg_grade
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
-                WHERE a.grade_level = ? AND a.subject_area = ?
-                GROUP BY a.id, a.title, a.description, a.due_date, a.max_points, a.percentage, a.grade_level, a.subject_area, a.created_at
+                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
+                GROUP BY a.id
                 ORDER BY a.created_at DESC
             `;
             
-            console.log('🔍 Query tareas:', { grade, subject });
-            
-            this.db.all(query, [grade, subject], (err, rows) => {
+            this.db.all(query, [gradeLevel, subjectArea], (err, rows) => {
                 if (err) {
-                    console.error('❌ Error en getTasksByGradeAndSubject:', err);
                     reject(err);
                 } else {
-                    console.log('✅ Tareas encontradas:', rows.length);
                     resolve(rows || []);
                 }
             });
         });
     }
 
+    // Crear nueva tarea
     async createTask(taskData) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            console.log('📝 Creando tarea en BD:', taskData);
-            
             const query = `
                 INSERT INTO assignments (
                     title, description, due_date, max_points, percentage,
-                    grade_level, subject_area
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    grade_level, subject_area, teacher_name
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `;
             
             const values = [
                 taskData.title,
-                taskData.description || null,
-                taskData.due_date || null,
+                taskData.description,
+                taskData.due_date,
                 taskData.max_points || 100,
-                taskData.percentage || 10,
+                taskData.percentage || 0,
                 taskData.grade_level,
-                taskData.subject_area
+                taskData.subject_area,
+                taskData.teacher_name || null
             ];
-            
-            console.log('📊 Valores para insertar:', values);
             
             this.db.run(query, values, function(err) {
                 if (err) {
-                    console.error('❌ Error insertando tarea:', err);
                     reject(err);
                 } else {
-                    console.log('✅ Tarea creada con ID:', this.lastID);
                     resolve({ 
                         id: this.lastID, 
                         changes: this.changes,
-                        task: {
-                            id: this.lastID,
-                            ...taskData
-                        }
+                        ...taskData
                     });
                 }
             });
         });
     }
 
+    // Actualizar tarea
     async updateTask(taskId, taskData) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const query = `
                 UPDATE assignments SET 
-                    title = ?, description = ?, due_date = ?,
-                    max_points = ?, percentage = ?,
-                    updated_at = CURRENT_TIMESTAMP
+                    title = ?, description = ?, due_date = ?, max_points = ?, 
+                    percentage = ?, teacher_name = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             `;
             
             const values = [
                 taskData.title,
-                taskData.description || null,
-                taskData.due_date || null,
+                taskData.description,
+                taskData.due_date,
                 taskData.max_points || 100,
-                taskData.percentage || 10,
+                taskData.percentage || 0,
+                taskData.teacher_name || null,
                 taskId
             ];
             
             this.db.run(query, values, function(err) {
                 if (err) {
-                    console.error('❌ Error actualizando tarea:', err);
                     reject(err);
                 } else {
-                    console.log('✅ Tarea actualizada:', taskId);
                     resolve({ 
                         id: taskId, 
                         changes: this.changes 
@@ -1093,50 +1083,31 @@ class Database {
         });
     }
 
+    // Eliminar tarea (soft delete)
     async deleteTask(taskId) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            this.db.serialize(() => {
-                this.db.run('BEGIN TRANSACTION');
-                
-                // Eliminar calificaciones primero
-                this.db.run('DELETE FROM assignment_grades WHERE assignment_id = ?', [taskId], (err) => {
-                    if (err) {
-                        this.db.run('ROLLBACK');
-                        console.error('❌ Error eliminando calificaciones:', err);
-                        reject(err);
-                        return;
-                    }
-                    
-                    // Eliminar tarea
-                    this.db.run('DELETE FROM assignments WHERE id = ?', [taskId], function(err) {
-                        if (err) {
-                            this.db.run('ROLLBACK');
-                            console.error('❌ Error eliminando tarea:', err);
-                            reject(err);
-                        } else {
-                            this.db.run('COMMIT', (err) => {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    console.log('✅ Tarea eliminada:', taskId);
-                                    resolve({ 
-                                        id: taskId, 
-                                        changes: this.changes 
-                                    });
-                                }
-                            });
-                        }
+            const query = 'UPDATE assignments SET is_active = 0 WHERE id = ?';
+            
+            this.db.run(query, [taskId], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ 
+                        id: taskId, 
+                        changes: this.changes 
                     });
-                });
+                }
             });
         });
     }
 
     // ========================================
-    // FUNCIONES DE CALIFICACIONES DE TAREAS (CORREGIDAS)
+    // FUNCIONES DE CALIFICACIONES DE TAREAS
     // ========================================
+
+    // Obtener calificaciones de una tarea específica
     async getTaskGrades(taskId) {
         this.ensureConnection();
         
@@ -1148,12 +1119,9 @@ class Database {
                     s.first_surname,
                     s.second_surname,
                     s.student_id as student_code,
+                    a.title as task_title,
                     a.max_points,
-                    CASE 
-                        WHEN ag.points_earned IS NOT NULL AND a.max_points > 0 
-                        THEN ROUND((ag.points_earned * 100.0 / a.max_points), 1)
-                        ELSE 0 
-                    END as percentage
+                    a.percentage as task_percentage
                 FROM assignment_grades ag
                 INNER JOIN students s ON ag.student_id = s.id
                 INNER JOIN assignments a ON ag.assignment_id = a.id
@@ -1163,16 +1131,55 @@ class Database {
             
             this.db.all(query, [taskId], (err, rows) => {
                 if (err) {
-                    console.error('❌ Error obteniendo calificaciones:', err);
                     reject(err);
                 } else {
-                    console.log('✅ Calificaciones encontradas:', rows.length);
                     resolve(rows || []);
                 }
             });
         });
     }
 
+    // Obtener estudiantes para calificar una tarea
+    async getStudentsForTask(taskId) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    s.id,
+                    s.first_name,
+                    s.first_surname,
+                    s.second_surname,
+                    s.student_id as student_code,
+                    a.title as task_title,
+                    a.max_points,
+                    a.percentage as task_percentage,
+                    ag.points_earned,
+                    ag.grade,
+                    ag.percentage as student_percentage,
+                    ag.is_submitted,
+                    ag.is_late,
+                    ag.notes,
+                    ag.feedback
+                FROM students s
+                CROSS JOIN assignments a
+                LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND a.id = ag.assignment_id
+                WHERE a.id = ? AND s.status = 'active' 
+                    AND s.grade_level = a.grade_level
+                ORDER BY s.first_surname, s.second_surname, s.first_name
+            `;
+            
+            this.db.all(query, [taskId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+    }
+
+    // Guardar calificaciones de tareas (corregido)
     async saveTaskGrades(grades) {
         this.ensureConnection();
         
@@ -1181,9 +1188,7 @@ class Database {
                 resolve({ savedCount: 0, errorCount: 0 });
                 return;
             }
-            
-            console.log('💾 Guardando calificaciones:', grades.length);
-            
+
             this.db.serialize(() => {
                 this.db.run('BEGIN TRANSACTION');
                 
@@ -1191,102 +1196,71 @@ class Database {
                 let errorCount = 0;
                 let completedOperations = 0;
                 
+                console.log(`💾 Iniciando guardado de ${grades.length} calificaciones...`);
+                
                 grades.forEach((grade, index) => {
-                    const checkQuery = `
-                        SELECT id FROM assignment_grades 
-                        WHERE assignment_id = ? AND student_id = ?
+                    const query = `
+                        INSERT OR REPLACE INTO assignment_grades (
+                            assignment_id, student_id, points_earned, grade, percentage,
+                            is_submitted, is_late, notes, feedback, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                     `;
                     
-                    this.db.get(checkQuery, [grade.task_id, grade.student_id], (err, existing) => {
+                    // Calcular porcentaje basado en puntos obtenidos
+                    const percentage = grade.max_points && grade.max_points > 0 
+                        ? (grade.points_earned / grade.max_points) * 100 
+                        : 0;
+                    
+                    const values = [
+                        grade.assignment_id,
+                        grade.student_id,
+                        grade.points_earned || 0,
+                        grade.grade || percentage,
+                        percentage,
+                        grade.is_submitted !== undefined ? grade.is_submitted : 1,
+                        grade.is_late || 0,
+                        grade.notes || null,
+                        grade.feedback || null
+                    ];
+                    
+                    this.db.run(query, values, function(err) {
+                        completedOperations++;
+                        
                         if (err) {
+                            console.error(`❌ Error guardando calificación ${index + 1}:`, err.message);
                             errorCount++;
-                            completedOperations++;
-                            console.error(`❌ Error verificando calificación para estudiante ${grade.student_id}:`, err);
-                            checkCompletion();
-                            return;
+                        } else {
+                            console.log(`✅ Calificación ${index + 1} guardada exitosamente`);
+                            savedCount++;
                         }
                         
-                        if (existing) {
-                            // Actualizar existente
-                            const updateQuery = `
-                                UPDATE assignment_grades SET 
-                                    points_earned = ?, notes = ?,
-                                    submitted_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
-                            `;
-                            
-                            this.db.run(updateQuery, [
-                                grade.points_earned,
-                                grade.notes || null,
-                                existing.id
-                            ], function(err) {
-                                if (!err) {
-                                    savedCount++;
-                                    console.log(`✅ Calificación actualizada para estudiante ${grade.student_id}`);
-                                } else {
-                                    errorCount++;
-                                    console.error(`❌ Error actualizando calificación:`, err);
-                                }
-                                
-                                completedOperations++;
-                                checkCompletion();
-                            });
-                        } else {
-                            // Crear nuevo
-                            const insertQuery = `
-                                INSERT INTO assignment_grades (
-                                    assignment_id, student_id, points_earned, notes,
-                                    submitted_at
-                                ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-                            `;
-                            
-                            this.db.run(insertQuery, [
-                                grade.task_id,
-                                grade.student_id,
-                                grade.points_earned,
-                                grade.notes || null
-                            ], function(err) {
-                                if (!err) {
-                                    savedCount++;
-                                    console.log(`✅ Nueva calificación creada para estudiante ${grade.student_id}`);
-                                } else {
-                                    errorCount++;
-                                    console.error(`❌ Error creando calificación:`, err);
-                                }
-                                
-                                completedOperations++;
-                                checkCompletion();
-                            });
+                        // Verificar si todas las operaciones han terminado
+                        if (completedOperations === grades.length) {
+                            if (errorCount === 0) {
+                                this.db.run('COMMIT', (err) => {
+                                    if (err) {
+                                        console.error('❌ Error en commit:', err);
+                                        reject(err);
+                                    } else {
+                                        console.log(`✅ Transacción completada: ${savedCount} guardadas, ${errorCount} errores`);
+                                        resolve({ savedCount, errorCount });
+                                    }
+                                });
+                            } else {
+                                this.db.run('ROLLBACK', (err) => {
+                                    console.log(`⚠️ Rollback ejecutado: ${savedCount} intentos, ${errorCount} errores`);
+                                    reject(new Error(`${errorCount} errores al guardar calificaciones`));
+                                });
+                            }
                         }
                     });
                 });
-                
-                function checkCompletion() {
-                    if (completedOperations === grades.length) {
-                        if (errorCount === 0) {
-                            this.db.run('COMMIT', (err) => {
-                                if (err) {
-                                    console.error('❌ Error en commit:', err);
-                                    reject(err);
-                                } else {
-                                    console.log(`✅ Transacción completada: ${savedCount} guardadas, ${errorCount} errores`);
-                                    resolve({ savedCount, errorCount });
-                                }
-                            });
-                        } else {
-                            this.db.run('ROLLBACK', (err) => {
-                                console.log(`⚠️ Rollback ejecutado: ${savedCount} intentos, ${errorCount} errores`);
-                                // Aún así devolver resultado parcial
-                                resolve({ savedCount: 0, errorCount: errorCount });
-                            });
-                        }
-                    }
-                }
             });
         });
     }
 
-    async getStudentTaskStats(studentId, grade, subject) {
+    // Obtener estadísticas de tareas por estudiante
+    async getStudentTaskStats(studentId, gradeLevel, subjectArea) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
@@ -1294,22 +1268,85 @@ class Database {
                 SELECT 
                     COUNT(DISTINCT a.id) as total_tasks,
                     COUNT(ag.id) as completed_tasks,
-                    AVG(ag.percentage) as avg_percentage,
-                    SUM(a.percentage) as total_weight
+                    AVG(CASE WHEN ag.percentage IS NOT NULL THEN ag.percentage ELSE 0 END) as avg_percentage,
+                    SUM(a.percentage) as total_weight,
+                    SUM(CASE WHEN ag.is_late = 1 THEN 1 ELSE 0 END) as late_submissions,
+                    SUM(CASE WHEN ag.percentage >= 70 THEN 1 ELSE 0 END) as good_grades,
+                    MIN(ag.percentage) as min_grade,
+                    MAX(ag.percentage) as max_grade
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id AND ag.student_id = ?
-                WHERE a.grade_level = ? AND a.subject_area = ?
+                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
             `;
             
-            this.db.get(query, [studentId, grade, subject], (err, row) => {
+            this.db.get(query, [studentId, gradeLevel, subjectArea], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const stats = row || {
+                        total_tasks: 0,
+                        completed_tasks: 0,
+                        avg_percentage: 0,
+                        total_weight: 0,
+                        late_submissions: 0,
+                        good_grades: 0,
+                        min_grade: 0,
+                        max_grade: 0
+                    };
+                    
+                    // Calcular estadísticas adicionales
+                    const completionRate = stats.total_tasks > 0 
+                        ? (stats.completed_tasks / stats.total_tasks) * 100 
+                        : 0;
+                    
+                    resolve({
+                        student_id: studentId,
+                        grade_level: gradeLevel,
+                        subject_area: subjectArea,
+                        total_tasks: stats.total_tasks,
+                        completed_tasks: stats.completed_tasks,
+                        pending_tasks: stats.total_tasks - stats.completed_tasks,
+                        completion_rate: completionRate,
+                        avg_percentage: stats.avg_percentage || 0,
+                        total_weight: stats.total_weight || 0,
+                        late_submissions: stats.late_submissions || 0,
+                        good_grades: stats.good_grades || 0,
+                        min_grade: stats.min_grade || 0,
+                        max_grade: stats.max_grade || 0,
+                        calculated_at: new Date().toISOString()
+                    });
+                }
+            });
+        });
+    }
+
+    // Obtener resumen de tareas por grado y materia
+    async getTasksSummary(gradeLevel, subjectArea) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    COUNT(DISTINCT a.id) as total_tasks,
+                    COUNT(ag.id) as total_submissions,
+                    AVG(ag.percentage) as avg_class_percentage,
+                    SUM(a.percentage) as total_weight_configured,
+                    COUNT(DISTINCT ag.student_id) as students_with_grades
+                FROM assignments a
+                LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
+                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
+            `;
+            
+            this.db.get(query, [gradeLevel, subjectArea], (err, row) => {
                 if (err) {
                     reject(err);
                 } else {
                     resolve(row || {
                         total_tasks: 0,
-                        completed_tasks: 0,
-                        avg_percentage: 0,
-                        total_weight: 0
+                        total_submissions: 0,
+                        avg_class_percentage: 0,
+                        total_weight_configured: 0,
+                        students_with_grades: 0
                     });
                 }
             });
