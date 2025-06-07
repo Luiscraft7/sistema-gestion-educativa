@@ -686,8 +686,9 @@ class Database {
         });
     }
 
-    // Obtener todos los grados con sus materias
-    async getAllGradesWithSubjects() {
+
+    // Obtener todos los grados con sus materias (FORMATO CORREGIDO)
+  async getAllGradesWithSubjects() {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
