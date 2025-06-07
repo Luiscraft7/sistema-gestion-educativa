@@ -584,12 +584,6 @@ app.post('/api/lesson-config', async (req, res) => {
     }
 });
 
-
-
-// ========================================
-// AGREGAR ESTOS ENDPOINTS AL FINAL DE server.js (después de los existentes)
-// ========================================
-
 // ========================================
 // RUTAS API PARA ASIGNACIÓN GRADOS-MATERIAS
 // ========================================
@@ -819,6 +813,244 @@ app.delete('/api/custom-subjects/bulk', async (req, res) => {
     }
 });
 
+// ========================================
+// RUTAS API PARA EVALUACIONES - CORREGIDAS ✅
+// ========================================
+
+// Obtener evaluaciones por grado y materia
+app.get('/api/evaluations', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        if (!grade || !subject) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado y materia son requeridos'
+            });
+        }
+        
+        console.log('📝 GET /api/evaluations:', { grade, subject });
+        
+        const evaluations = await database.getEvaluationsByGradeAndSubject(grade, subject);
+        res.json({
+            success: true,
+            data: evaluations,
+            message: `${evaluations.length} evaluaciones encontradas`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo evaluaciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo evaluaciones',
+            error: error.message
+        });
+    }
+});
+
+// Crear nueva evaluación
+app.post('/api/evaluations', async (req, res) => {
+    try {
+        console.log('📝 POST /api/evaluations:', req.body);
+        
+        const result = await database.createEvaluation(req.body);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Evaluación creada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error creando evaluación:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creando evaluación',
+            error: error.message
+        });
+    }
+});
+
+// Actualizar evaluación
+app.put('/api/evaluations/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`📝 PUT /api/evaluations/${id}:`, req.body);
+        
+        const result = await database.updateEvaluation(id, req.body);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Evaluación actualizada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error actualizando evaluación:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error actualizando evaluación',
+            error: error.message
+        });
+    }
+});
+
+// Eliminar evaluación
+app.delete('/api/evaluations/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🗑️ DELETE /api/evaluations/${id}`);
+        
+        const result = await database.deleteEvaluation(id);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Evaluación eliminada correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error eliminando evaluación:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error eliminando evaluación',
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// RUTAS API PARA CALIFICACIONES DE EVALUACIONES - CORREGIDAS ✅
+// ========================================
+
+// Obtener calificaciones de una evaluación
+app.get('/api/evaluation-grades/:evaluationId', async (req, res) => {
+    try {
+        const { evaluationId } = req.params;
+        console.log('📊 GET /api/evaluation-grades/' + evaluationId);
+        
+        const grades = await database.getEvaluationGrades(evaluationId);
+        res.json({
+            success: true,
+            data: grades,
+            message: `${grades.length} estudiantes encontrados`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo calificaciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo calificaciones',
+            error: error.message
+        });
+    }
+});
+
+// Guardar calificaciones de evaluación
+app.post('/api/evaluation-grades', async (req, res) => {
+    try {
+        const { grades } = req.body;
+        
+        if (!grades || !Array.isArray(grades)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Array de calificaciones es requerido'
+            });
+        }
+        
+        console.log('💾 POST /api/evaluation-grades:', grades.length, 'calificaciones');
+        
+        const result = await database.saveEvaluationGrades(grades);
+        res.json({
+            success: true,
+            data: result,
+            message: `${result.savedCount} calificaciones guardadas correctamente`
+        });
+    } catch (error) {
+        console.error('❌ Error guardando calificaciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error guardando calificaciones',
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// RUTAS PARA DASHBOARD DE EVALUACIONES - CORREGIDAS ✅
+// ========================================
+
+// Resumen general de evaluaciones
+app.get('/api/evaluations/summary', async (req, res) => {
+    try {
+        console.log('📊 GET /api/evaluations/summary');
+        
+        const summary = await database.getEvaluationsSummary();
+        res.json({
+            success: true,
+            data: summary
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo resumen:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo resumen',
+            error: error.message
+        });
+    }
+});
+
+// Estadísticas por tipo de evaluación
+app.get('/api/evaluations/stats/types', async (req, res) => {
+    try {
+        console.log('📊 GET /api/evaluations/stats/types');
+        
+        const stats = await database.getEvaluationTypeStats();
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas por tipo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo estadísticas por tipo',
+            error: error.message
+        });
+    }
+});
+
+// Estadísticas por grado
+app.get('/api/evaluations/stats/grades', async (req, res) => {
+    try {
+        console.log('📊 GET /api/evaluations/stats/grades');
+        
+        const stats = await database.getEvaluationGradeStats();
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas por grado:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo estadísticas por grado',
+            error: error.message
+        });
+    }
+});
+
+// Progreso de evaluaciones
+app.get('/api/evaluations/progress', async (req, res) => {
+    try {
+        console.log('📊 GET /api/evaluations/progress');
+        
+        const progress = await database.getEvaluationProgress();
+        res.json({
+            success: true,
+            data: progress
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo progreso:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo progreso',
+            error: error.message
+        });
+    }
+});
 
 // ========================================
 // ENDPOINTS DE DEBUG Y DIAGNÓSTICO
@@ -972,8 +1204,7 @@ app.get('/api/debug/student-attendance/:studentId', async (req, res) => {
     }
 });
 
-
-// En server.js - AGREGAR este endpoint de debug
+// Debug: Verificar materia específica
 app.get('/api/debug/subjects/:id', async (req, res) => {
     try {
         const subjectId = req.params.id;
@@ -1016,413 +1247,19 @@ app.get('/api/debug/subjects/:id', async (req, res) => {
     }
 });
 
-// ========================================
-// RUTAS API PARA TAREAS
-// ========================================
-
-// Cambiar ruta de tareas a evaluaciones
-app.get('/api/evaluations', async (req, res) => {
-    try {
-        const { grade, subject } = req.query;
-        
-        if (!grade || !subject) {
-            return res.status(400).json({
-                success: false,
-                message: 'Grado y materia son requeridos'
-            });
-        }
-        
-        console.log('📝 GET /api/evaluations:', { grade, subject });
-        
-        const evaluations = await database.getTasksByGradeAndSubject(grade, subject);
-        res.json({
-            success: true,
-            data: evaluations,
-            message: `${evaluations.length} evaluaciones encontradas`
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo evaluaciones:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo evaluaciones',
-            error: error.message
-        });
-    }
-});
-
-// Resumen general
-app.get('/api/evaluations/summary', async (req, res) => {
-    try {
-        console.log('📊 GET /api/evaluations/summary');
-        
-        const summary = await database.getEvaluationsSummary();
-        res.json({
-            success: true,
-            data: summary
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo resumen:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo resumen',
-            error: error.message
-        });
-    }
-});
-
-// Crear nueva tarea
-app.post('/api/tasks', async (req, res) => {
-    try {
-        console.log('📝 POST /api/tasks:', req.body);
-        
-        const result = await database.createTask(req.body);
-        res.json({
-            success: true,
-            data: result,
-            message: 'Tarea creada correctamente'
-        });
-    } catch (error) {
-        console.error('❌ Error creando tarea:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error creando tarea',
-            error: error.message
-        });
-    }
-});
-
-// Actualizar tarea
-app.put('/api/tasks/:id', async (req, res) => {
-    try {
-        console.log('📝 PUT /api/tasks/' + req.params.id + ':', req.body);
-        
-        const result = await database.updateTask(req.params.id, req.body);
-        res.json({
-            success: true,
-            data: result,
-            message: 'Tarea actualizada correctamente'
-        });
-    } catch (error) {
-        console.error('❌ Error actualizando tarea:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error actualizando tarea',
-            error: error.message
-        });
-    }
-});
-
-// Eliminar tarea
-app.delete('/api/tasks/:id', async (req, res) => {
-    try {
-        console.log('🗑️ DELETE /api/tasks/' + req.params.id);
-        
-        const result = await database.deleteTask(req.params.id);
-        res.json({
-            success: true,
-            data: result,
-            message: 'Tarea eliminada correctamente'
-        });
-    } catch (error) {
-        console.error('❌ Error eliminando tarea:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error eliminando tarea',
-            error: error.message
-        });
-    }
-});
-
-// ========================================
-// RUTAS API PARA EVALUACIONES (anteriormente TAREAS)
-// ========================================
-
-// Obtener evaluaciones por grado y materia
-app.get('/api/evaluations', async (req, res) => {
-    try {
-        const { grade, subject } = req.query;
-        
-        if (!grade || !subject) {
-            return res.status(400).json({
-                success: false,
-                message: 'Grado y materia son requeridos'
-            });
-        }
-        
-        console.log('📝 GET /api/evaluations:', { grade, subject });
-        
-        const evaluations = await database.getEvaluationsByGradeAndSubject(grade, subject);
-        res.json({
-            success: true,
-            data: evaluations,
-            message: `${evaluations.length} evaluaciones encontradas`
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo evaluaciones:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo evaluaciones',
-            error: error.message
-        });
-    }
-});
-
-// Crear nueva evaluación
-app.post('/api/evaluations', async (req, res) => {
-    try {
-        console.log('📝 POST /api/evaluations:', req.body);
-        
-        const result = await database.createEvaluation(req.body);
-        res.json({
-            success: true,
-            data: result,
-            message: 'Evaluación creada correctamente'
-        });
-    } catch (error) {
-        console.error('❌ Error creando evaluación:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error creando evaluación',
-            error: error.message
-        });
-    }
-});
-
-// Actualizar evaluación
-app.put('/api/evaluations/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        console.log(`📝 PUT /api/evaluations/${id}:`, req.body);
-        
-        const result = await database.updateEvaluation(id, req.body);
-        res.json({
-            success: true,
-            data: result,
-            message: 'Evaluación actualizada correctamente'
-        });
-    } catch (error) {
-        console.error('❌ Error actualizando evaluación:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error actualizando evaluación',
-            error: error.message
-        });
-    }
-});
-
-// Eliminar evaluación
-app.delete('/api/evaluations/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        console.log(`🗑️ DELETE /api/evaluations/${id}`);
-        
-        const result = await database.deleteTask(id);
-        res.json({
-            success: true,
-            data: result,
-            message: 'Evaluación eliminada correctamente'
-        });
-    } catch (error) {
-        console.error('❌ Error eliminando evaluación:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error eliminando evaluación',
-            error: error.message
-        });
-    }
-});
-
-// Obtener calificaciones de una evaluación
-app.get('/api/evaluation-grades/:evaluationId', async (req, res) => {
+// Debug: Ver qué devuelve getEvaluationGrades
+app.get('/api/debug/evaluation-grades/:evaluationId', async (req, res) => {
     try {
         const { evaluationId } = req.params;
-        console.log('📊 GET /api/evaluation-grades/' + evaluationId);
         
-        const grades = await database.getTaskGrades(evaluationId);
-        res.json({
-            success: true,
-            data: grades,
-            message: `${grades.length} estudiantes encontrados`
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo calificaciones:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo calificaciones',
-            error: error.message
-        });
-    }
-});
-
-// Guardar calificaciones de evaluación
-app.post('/api/evaluation-grades', async (req, res) => {
-    try {
-        const { grades } = req.body;
+        console.log('🐛 DEBUG: Obteniendo evaluation grades para evaluación', evaluationId);
         
-        if (!grades || !Array.isArray(grades)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Array de calificaciones es requerido'
-            });
-        }
-        
-        console.log('💾 POST /api/evaluation-grades:', grades.length, 'calificaciones');
-        
-        const result = await database.saveTaskGrades(grades);
-        res.json({
-            success: true,
-            data: result,
-            message: `${result.savedCount} calificaciones guardadas correctamente`
-        });
-    } catch (error) {
-        console.error('❌ Error guardando calificaciones:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error guardando calificaciones',
-            error: error.message
-        });
-    }
-});
-
-// ========================================
-// RUTAS PARA DASHBOARD DE EVALUACIONES
-// ========================================
-
-// Resumen general de evaluaciones
-app.get('/api/evaluations/summary', async (req, res) => {
-    try {
-        console.log('📊 GET /api/evaluations/summary');
-        
-        const summary = await database.getEvaluationsSummary();
-        res.json({
-            success: true,
-            data: summary
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo resumen:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo resumen',
-            error: error.message
-        });
-    }
-});
-
-// Estadísticas por tipo de evaluación
-app.get('/api/evaluations/stats/types', async (req, res) => {
-    try {
-        console.log('📊 GET /api/evaluations/stats/types');
-        
-        const stats = await database.getEvaluationTypeStats();
-        res.json({
-            success: true,
-            data: stats
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo estadísticas por tipo:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo estadísticas por tipo',
-            error: error.message
-        });
-    }
-});
-
-// Estadísticas por grado
-app.get('/api/evaluations/stats/grades', async (req, res) => {
-    try {
-        console.log('📊 GET /api/evaluations/stats/grades');
-        
-        const stats = await database.getEvaluationGradeStats();
-        res.json({
-            success: true,
-            data: stats
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo estadísticas por grado:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo estadísticas por grado',
-            error: error.message
-        });
-    }
-});
-
-// Progreso de evaluaciones
-app.get('/api/evaluations/progress', async (req, res) => {
-    try {
-        console.log('📊 GET /api/evaluations/progress');
-        
-        const progress = await database.getEvaluationProgress();
-        res.json({
-            success: true,
-            data: progress
-        });
-    } catch (error) {
-        console.error('❌ Error obteniendo progreso:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error obteniendo progreso',
-            error: error.message
-        });
-    }
-});
-
-// Mantener rutas de tareas para compatibilidad (redirigir a evaluaciones)
-app.get('/api/tasks', (req, res) => {
-    res.redirect('/api/evaluations?' + new URLSearchParams(req.query));
-});
-
-app.post('/api/tasks', (req, res) => {
-    console.log('🔄 Redirigiendo POST /api/tasks a /api/evaluations');
-    req.url = '/api/evaluations';
-    req.originalUrl = '/api/evaluations';
-    app._router.handle(req, res);
-});
-
-app.get('/api/task-grades/:id', (req, res) => {
-    res.redirect(`/api/evaluation-grades/${req.params.id}`);
-});
-
-app.post('/api/task-grades', (req, res) => {
-    console.log('🔄 Redirigiendo POST /api/task-grades a /api/evaluation-grades');
-    req.url = '/api/evaluation-grades';
-    req.originalUrl = '/api/evaluation-grades';
-    app._router.handle(req, res);
-});
-// ========================================
-// INICIAR SERVIDOR
-// ========================================
-async function startServer() {
-    try {
-        // Primero inicializar la base de datos
-        await initializeDatabase();
-        
-        // Después iniciar el servidor
-        app.listen(PORT, () => {
-            console.log('🚀 Servidor corriendo en http://localhost:' + PORT);
-            console.log('📊 API disponible en /api/students, /api/subjects, /api/attendance');
-            console.log('🐛 Debug endpoints: /api/debug/connection, /api/debug/database');
-        });
-    } catch (error) {
-        console.error('❌ Error iniciando servidor:', error);
-    }
-}
-
-
-// DEBUG: Ver qué devuelve getTaskGrades
-app.get('/api/debug/task-grades/:taskId', async (req, res) => {
-    try {
-        const { taskId } = req.params;
-        
-        console.log('🐛 DEBUG: Obteniendo task grades para tarea', taskId);
-        
-        const grades = await database.getTaskGrades(taskId);
+        const grades = await database.getEvaluationGrades(evaluationId);
         
         res.json({
             success: true,
             debug: {
-                task_id: taskId,
+                evaluation_id: evaluationId,
                 total_students: grades.length,
                 students: grades.map(g => ({
                     student_id: g.student_id,
@@ -1437,6 +1274,26 @@ app.get('/api/debug/task-grades/:taskId', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+// ========================================
+// INICIAR SERVIDOR
+// ========================================
+async function startServer() {
+    try {
+        // Primero inicializar la base de datos
+        await initializeDatabase();
+        
+        // Después iniciar el servidor
+        app.listen(PORT, () => {
+            console.log('🚀 Servidor corriendo en http://localhost:' + PORT);
+            console.log('📊 API disponible en /api/students, /api/subjects, /api/attendance');
+            console.log('📝 Evaluaciones disponibles en /api/evaluations, /api/evaluation-grades');
+            console.log('🐛 Debug endpoints: /api/debug/connection, /api/debug/database');
+        });
+    } catch (error) {
+        console.error('❌ Error iniciando servidor:', error);
+    }
+}
 
 // Iniciar todo
 startServer();

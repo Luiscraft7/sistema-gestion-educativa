@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📝Evaluaciones - Sistema Educativo</title>
+    <title>📝 Evaluaciones - Sistema Educativo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -123,14 +123,14 @@
             cursor: not-allowed;
         }
         
-        .task-creator {
+        .evaluation-creator {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
         }
         
-        .task-creator.hidden { display: none; }
+        .evaluation-creator.hidden { display: none; }
         
         .form-row {
             display: grid;
@@ -166,11 +166,11 @@
         
         .empty-state h3 { margin-bottom: 10px; color: #333; }
         
-        .tasks-list {
+        .evaluations-list {
             padding: 20px;
         }
         
-        .task-item {
+        .evaluation-item {
             border: 1px solid #eee;
             border-radius: 10px;
             padding: 20px;
@@ -179,30 +179,30 @@
             cursor: pointer;
         }
         
-        .task-item:hover {
+        .evaluation-item:hover {
             border-color: #667eea;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
         }
         
-        .task-item.active {
+        .evaluation-item.active {
             border-color: #667eea;
             background: #f8f9ff;
         }
         
-        .task-header {
+        .evaluation-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
         
-        .task-title {
+        .evaluation-title {
             font-size: 18px;
             font-weight: 600;
             color: #333;
         }
         
-        .task-meta {
+        .evaluation-meta {
             display: flex;
             gap: 15px;
             align-items: center;
@@ -210,13 +210,13 @@
             color: #666;
         }
         
-        .task-description {
+        .evaluation-description {
             color: #666;
             margin: 10px 0;
             line-height: 1.5;
         }
         
-        .task-stats {
+        .evaluation-stats {
             display: flex;
             gap: 20px;
             margin-top: 15px;
@@ -224,21 +224,36 @@
             border-top: 1px solid #eee;
         }
         
-        .task-stat {
+        .evaluation-stat {
             text-align: center;
         }
         
-        .task-stat-number {
+        .evaluation-stat-number {
             font-size: 18px;
             font-weight: 600;
             color: #667eea;
         }
         
-        .task-stat-label {
+        .evaluation-stat-label {
             font-size: 11px;
             color: #666;
             text-transform: uppercase;
         }
+        
+        .evaluation-type-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+        
+        .type-tarea { background: #e3f2fd; color: #1976d2; }
+        .type-examen { background: #fff3e0; color: #f57c00; }
+        .type-proyecto { background: #e8f5e8; color: #388e3c; }
+        .type-quiz { background: #fce4ec; color: #c2185b; }
         
         .students-table {
             overflow-x: auto;
@@ -447,7 +462,7 @@
                 grid-template-columns: 1fr;
             }
             
-            .task-stats {
+            .evaluation-stats {
                 flex-direction: column;
                 gap: 10px;
             }
@@ -460,7 +475,7 @@
         <div class="header">
             <div>
                 <h1>📝 Módulo de Evaluaciones</h1>
-                <p>Gestión y calificación de Evaluaciones por grado y materia</p>
+                <p>Gestión y calificación de evaluaciones por grado y materia</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-success" onclick="exportGrades()" id="exportBtn" style="display: none;">
@@ -494,59 +509,68 @@
                         </div>
                         <div class="filter-group">
                             <label class="filter-label">2. Seleccionar Materia:</label>
-                            <select class="filter-select" id="subjectFilter" onchange="loadStudentsAndTasks()" disabled>
+                            <select class="filter-select" id="subjectFilter" onchange="loadStudentsAndEvaluations()" disabled>
                                 <option value="">Primero seleccione un grado</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <button class="btn btn-primary" style="width: 100%;" onclick="loadStudentsAndTasks()" disabled id="loadBtn">
+                            <button class="btn btn-primary" style="width: 100%;" onclick="loadStudentsAndEvaluations()" disabled id="loadBtn">
                                 🔄 Cargar Curso
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Crear Tarea -->
+                <!-- Crear Evaluación -->
                 <div class="card">
                     <div class="card-header">
-                        ➕ Nueva Tarea
+                        ➕ Nueva Evaluación
                     </div>
                     <div class="card-body">
-                        <div class="task-creator hidden" id="taskCreator">
-                            <form id="taskForm" onsubmit="createTask(event)">
+                        <div class="evaluation-creator hidden" id="evaluationCreator">
+                            <form id="evaluationForm" onsubmit="createEvaluation(event)">
                                 <div class="form-group">
-                                    <label class="filter-label">Título de la evaluacion:</label>
-                                    <input type="text" class="form-input" id="taskTitle" placeholder="Ej: Tarea de Matemáticas #1" required>
+                                    <label class="filter-label">Título de la Evaluación:</label>
+                                    <input type="text" class="form-input" id="evaluationTitle" placeholder="Ej: Examen de Matemáticas #1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="filter-label">Tipo de Evaluación:</label>
+                                    <select class="form-input" id="evaluationType" required>
+                                        <option value="tarea">📋 Tarea</option>
+                                        <option value="examen">📊 Examen</option>
+                                        <option value="proyecto">🎯 Proyecto</option>
+                                        <option value="quiz">⚡ Quiz</option>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label class="filter-label">Descripción/Objetivo:</label>
-                                    <textarea class="form-textarea" id="taskDescription" rows="3" placeholder="Describe el objetivo de la tarea..."></textarea>
+                                    <textarea class="form-textarea" id="evaluationDescription" rows="3" placeholder="Describe el objetivo de la evaluación..."></textarea>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="filter-label">% de la Nota Final:</label>
-                                        <input type="number" class="form-input" id="taskPercentage" min="1" max="100" value="10" required>
+                                        <input type="number" class="form-input" id="evaluationPercentage" min="1" max="100" value="10" required>
                                     </div>
                                     <div class="form-group">
                                         <label class="filter-label">Puntos Máximos:</label>
-                                        <input type="number" class="form-input" id="taskMaxPoints" min="1" max="1000" value="100" required>
+                                        <input type="number" class="form-input" id="evaluationMaxPoints" min="1" max="1000" value="100" required>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="filter-label">Fecha de Entrega (opcional):</label>
-                                    <input type="date" class="form-input" id="taskDueDate">
+                                    <input type="date" class="form-input" id="evaluationDueDate">
                                     <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                                        Puede agregarse después de revisar la tarea
+                                        Puede agregarse después de revisar la evaluación
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-success" style="width: 100%;">
-                                    💾 Crear Tarea
+                                    💾 Crear Evaluación
                                 </button>
                             </form>
                         </div>
-                        <div id="taskCreatorPlaceholder">
+                        <div id="evaluationCreatorPlaceholder">
                             <p style="color: #666; text-align: center; font-style: italic;">
-                                Seleccione grado y materia para crear tareas
+                                Seleccione grado y materia para crear evaluaciones
                             </p>
                         </div>
                     </div>
@@ -558,18 +582,18 @@
                         📊 Estadísticas del Curso
                     </div>
                     <div class="card-body">
-                        <div class="task-stats">
-                            <div class="task-stat">
-                                <div class="task-stat-number" id="totalStudents">0</div>
-                                <div class="task-stat-label">Estudiantes</div>
+                        <div class="evaluation-stats">
+                            <div class="evaluation-stat">
+                                <div class="evaluation-stat-number" id="totalStudents">0</div>
+                                <div class="evaluation-stat-label">Estudiantes</div>
                             </div>
-                            <div class="task-stat">
-                                <div class="task-stat-number" id="totalTasks">0</div>
-                                <div class="task-stat-label">Tareas</div>
+                            <div class="evaluation-stat">
+                                <div class="evaluation-stat-number" id="totalEvaluations">0</div>
+                                <div class="evaluation-stat-label">Evaluaciones</div>
                             </div>
-                            <div class="task-stat">
-                                <div class="task-stat-number" id="avgGrade">0%</div>
-                                <div class="task-stat-label">Promedio</div>
+                            <div class="evaluation-stat">
+                                <div class="evaluation-stat-number" id="avgGrade">0%</div>
+                                <div class="evaluation-stat-label">Promedio</div>
                             </div>
                         </div>
                     </div>
@@ -590,18 +614,18 @@
 
                 <!-- Estados de Carga -->
                 <div id="loadingState" class="loading-state">
-                    🔄 Seleccione grado y materia para cargar Evaluaciones...
+                    🔄 Seleccione grado y materia para cargar evaluaciones...
                 </div>
                 
                 <div id="emptyState" class="empty-state" style="display: none;">
                     <h3>📝 No hay evaluaciones creadas</h3>
-                    <p>Cree la primera evaluacion para este curso</p>
+                    <p>Cree la primera evaluación para este curso</p>
                 </div>
 
-                <!-- Lista de Tareas -->
-                <div id="tasksContainer" style="display: none;">
-                    <div class="tasks-list" id="tasksList">
-                        <!-- Las tareas se cargan aquí -->
+                <!-- Lista de Evaluaciones -->
+                <div id="evaluationsContainer" style="display: none;">
+                    <div class="evaluations-list" id="evaluationsList">
+                        <!-- Las evaluaciones se cargan aquí -->
                     </div>
                 </div>
 
@@ -609,13 +633,13 @@
                 <div id="gradingContainer" style="display: none;">
                     <div class="quick-actions">
                         <span style="font-weight: 600; color: #333;">Calificando:</span>
-                        <span id="currentTaskTitle" style="color: #667eea; font-weight: 600;"></span>
+                        <span id="currentEvaluationTitle" style="color: #667eea; font-weight: 600;"></span>
                         <div style="margin-left: auto; display: flex; gap: 10px;">
                             <button class="btn btn-success btn-sm" onclick="saveAllGrades()">
                                 💾 Guardar Todas las Calificaciones
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="closeGrading()">
-                                ← Volver a evaluaciones
+                                ← Volver a Evaluaciones
                             </button>
                         </div>
                     </div>
@@ -640,42 +664,51 @@
         </div>
     </div>
 
-    <!-- Modal para Editar Tarea -->
-    <div class="modal" id="editTaskModal">
+    <!-- Modal para Editar Evaluación -->
+    <div class="modal" id="editEvaluationModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">✏️ Editar Tarea</h2>
-                <button class="close-btn" onclick="closeEditTaskModal()">&times;</button>
+                <h2 class="modal-title">✏️ Editar Evaluación</h2>
+                <button class="close-btn" onclick="closeEditEvaluationModal()">&times;</button>
             </div>
             
-            <form id="editTaskForm" onsubmit="updateTask(event)">
+            <form id="editEvaluationForm" onsubmit="updateEvaluation(event)">
                 <div class="form-group">
                     <label class="filter-label">Título de la Evaluación:</label>
-                    <input type="text" class="form-input" id="editTaskTitle" required>
+                    <input type="text" class="form-input" id="editEvaluationTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="filter-label">Tipo de Evaluación:</label>
+                    <select class="form-input" id="editEvaluationType" required>
+                        <option value="tarea">📋 Tarea</option>
+                        <option value="examen">📊 Examen</option>
+                        <option value="proyecto">🎯 Proyecto</option>
+                        <option value="quiz">⚡ Quiz</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="filter-label">Descripción/Objetivo:</label>
-                    <textarea class="form-textarea" id="editTaskDescription" rows="3"></textarea>
+                    <textarea class="form-textarea" id="editEvaluationDescription" rows="3"></textarea>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="filter-label">% de la Nota Final:</label>
-                        <input type="number" class="form-input" id="editTaskPercentage" min="1" max="100" required>
+                        <input type="number" class="form-input" id="editEvaluationPercentage" min="1" max="100" required>
                     </div>
                     <div class="form-group">
                         <label class="filter-label">Puntos Máximos:</label>
-                        <input type="number" class="form-input" id="editTaskMaxPoints" min="1" max="1000" required>
+                        <input type="number" class="form-input" id="editEvaluationMaxPoints" min="1" max="1000" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="filter-label">Fecha de Entrega (opcional):</label>
-                    <input type="date" class="form-input" id="editTaskDueDate">
+                    <input type="date" class="form-input" id="editEvaluationDueDate">
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditTaskModal()">Cancelar</button>
-                    <button type="button" class="btn btn-danger" onclick="deleteTask()">Eliminar Tarea</button>
-                    <button type="submit" class="btn btn-primary">Actualizar Tarea</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditEvaluationModal()">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteEvaluation()">Eliminar Evaluación</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Evaluación</button>
                 </div>
             </form>
         </div>
@@ -690,13 +723,13 @@
         let students = [];
         let evaluations = [];
         let currentEvaluation = null;
-        let currentTaskId = null;
+        let currentEvaluationId = null;
 
         // ========================================
         // INICIALIZACIÓN
         // ========================================
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Iniciando módulo de tareas...');
+            console.log('🚀 Iniciando módulo de evaluaciones...');
             loadGrades();
         });
 
@@ -735,7 +768,7 @@
                 subjectFilter.innerHTML = '<option value="">Primero seleccione un grado</option>';
                 subjectFilter.disabled = true;
                 loadBtn.disabled = true;
-                hideTaskCreator();
+                hideEvaluationCreator();
                 resetMainArea();
                 return;
             }
@@ -760,7 +793,7 @@
                 }
                 
                 loadBtn.disabled = true;
-                hideTaskCreator();
+                hideEvaluationCreator();
                 resetMainArea();
                 
             } catch (error) {
@@ -769,12 +802,12 @@
             }
         }
 
-        async function loadStudentsAndTasks() {
+        async function loadStudentsAndEvaluations() {
             const grade = document.getElementById('gradeFilter').value;
             const subject = document.getElementById('subjectFilter').value;
             
             if (!grade || !subject) {
-                hideTaskCreator();
+                hideEvaluationCreator();
                 resetMainArea();
                 return;
             }
@@ -783,21 +816,21 @@
             currentSubject = subject;
             
             try {
-                console.log('👥 Cargando estudiantes y tareas...', { grade, subject });
+                console.log('👥 Cargando estudiantes y evaluaciones...', { grade, subject });
                 
                 // Actualizar interfaz
-                document.getElementById('mainTitle').textContent = `📝 Tareas de ${subject}`;
+                document.getElementById('mainTitle').textContent = `📝 Evaluaciones de ${subject}`;
                 document.getElementById('mainSubtitle').textContent = `Grado: ${grade}`;
                 document.getElementById('loadingState').style.display = 'block';
                 
                 // Cargar estudiantes
                 await loadStudents();
                 
-                // Cargar tareas
-                await loadTasks();
+                // Cargar evaluaciones
+                await loadEvaluations();
                 
-                // Mostrar creador de tareas
-                showTaskCreator();
+                // Mostrar creador de evaluaciones
+                showEvaluationCreator();
                 
                 // Habilitar botón
                 document.getElementById('loadBtn').disabled = false;
@@ -806,7 +839,7 @@
                 
             } catch (error) {
                 console.error('❌ Error cargando datos:', error);
-                showMessage('error', 'Error cargando estudiantes y tareas');
+                showMessage('error', 'Error cargando estudiantes y evaluaciones');
             }
         }
 
@@ -846,21 +879,20 @@
             }
         }
 
-
         // ========================================
         // RENDERIZADO
         // ========================================
         function renderEvaluations() {
             if (!evaluations.length) {
                 document.getElementById('emptyState').style.display = 'block';
-                document.getElementById('tasksContainer').style.display = 'none';
+                document.getElementById('evaluationsContainer').style.display = 'none';
                 return;
             }
             
             document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('tasksContainer').style.display = 'block';
+            document.getElementById('evaluationsContainer').style.display = 'block';
             
-            document.getElementById('tasksList').innerHTML = evaluations.map(evaluation => {
+            document.getElementById('evaluationsList').innerHTML = evaluations.map(evaluation => {
                 const dueDate = evaluation.due_date ? 
                     new Date(evaluation.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
                 const createdDate = new Date(evaluation.created_at).toLocaleDateString('es-ES');
@@ -878,29 +910,34 @@
                 }[evaluation.type] || '📝';
                 
                 return `
-                    <div class="task-item" onclick="selectEvaluation(${evaluation.id})">
-                        <div class="task-header">
-                            <div class="task-title">${typeIcon} ${evaluation.title}</div>
-                            <div class="task-meta">
+                    <div class="evaluation-item" onclick="selectEvaluation(${evaluation.id})">
+                        <div class="evaluation-header">
+                            <div class="evaluation-title">
+                                ${typeIcon} ${evaluation.title}
+                                <span class="evaluation-type-badge type-${evaluation.type || 'tarea'}">
+                                    ${evaluation.type || 'tarea'}
+                                </span>
+                            </div>
+                            <div class="evaluation-meta">
                                 <span>📅 ${evaluation.due_date ? 'Entrega: ' + dueDate : 'Creada: ' + createdDate}</span>
                                 <span>⚖️ ${evaluation.percentage}% de la nota</span>
                                 <span>📊 ${evaluation.max_points} pts máx</span>
                             </div>
                         </div>
-                        <div class="task-description">${evaluation.description || 'Sin descripción'}</div>
-                        <div class="task-stats">
-                            <div class="task-stat">
-                                <div class="task-stat-number">${graded}</div>
-                                <div class="task-stat-label">Calificados</div>
+                        <div class="evaluation-description">${evaluation.description || 'Sin descripción'}</div>
+                        <div class="evaluation-stats">
+                            <div class="evaluation-stat">
+                                <div class="evaluation-stat-number">${graded}</div>
+                                <div class="evaluation-stat-label">Calificados</div>
                             </div>
-                            <div class="task-stat">
-                                <div class="task-stat-number">${pending}</div>
-                                <div class="task-stat-label">Pendientes</div>
+                            <div class="evaluation-stat">
+                                <div class="evaluation-stat-number">${pending}</div>
+                                <div class="evaluation-stat-label">Pendientes</div>
                             </div>
-                            <div class="task-stat">
-                                <div class="task-stat-number">${evaluation.avg_grade ? 
+                            <div class="evaluation-stat">
+                                <div class="evaluation-stat-number">${evaluation.avg_grade ? 
                                     evaluation.avg_grade.toFixed(1) + '%' : '-'}</div>
-                                <div class="task-stat-label">Promedio</div>
+                                <div class="evaluation-stat-label">Promedio</div>
                             </div>
                         </div>
                     </div>
@@ -908,212 +945,214 @@
             }).join('');
         }
 
-        function selectTaskAndStartGrading(taskId) {
-            // Buscar la tarea recién creada
-            currentTask = tasks.find(t => t.id === taskId);
-            if (!currentTask) {
-                console.log('Tarea no encontrada, recargando...');
-                setTimeout(() => selectTaskAndStartGrading(taskId), 1000);
+        function selectEvaluationAndStartGrading(evaluationId) {
+            // Buscar la evaluación recién creada
+            currentEvaluation = evaluations.find(e => e.id === evaluationId);
+            if (!currentEvaluation) {
+                console.log('Evaluación no encontrada, recargando...');
+                setTimeout(() => selectEvaluationAndStartGrading(evaluationId), 1000);
                 return;
             }
             
-            currentTaskId = taskId;
-            showMessage('success', `🎯 Comenzando calificación de: ${currentTask.title}`);
+            currentEvaluationId = evaluationId;
+            showMessage('success', `🎯 Comenzando calificación de: ${currentEvaluation.title}`);
             
             // Ir directamente a calificar
-            startGrading(taskId);
+            startGrading(evaluationId);
         }
 
-        function selectTask(taskId) {
-            currentTaskId = taskId;
-            currentTask = tasks.find(t => t.id === taskId);
+        function selectEvaluation(evaluationId) {
+            currentEvaluationId = evaluationId;
+            currentEvaluation = evaluations.find(e => e.id === evaluationId);
             
-            if (!currentTask) return;
+            if (!currentEvaluation) return;
             
             // Actualizar estilos
-            document.querySelectorAll('.task-item').forEach(item => {
+            document.querySelectorAll('.evaluation-item').forEach(item => {
                 item.classList.remove('active');
             });
             event.currentTarget.classList.add('active');
             
             // Mostrar opciones
-            showTaskActions(currentTask);
+            showEvaluationActions(currentEvaluation);
         }
 
-        function showTaskActions(task) {
+        function showEvaluationActions(evaluation) {
             const actionsHtml = `
-                <div class="task-actions" style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <button class="btn btn-primary btn-sm" onclick="startGrading(${task.id})">
+                <div class="evaluation-actions" style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <button class="btn btn-primary btn-sm" onclick="startGrading(${evaluation.id})">
                         ✏️ Calificar Estudiantes
                     </button>
-                    <button class="btn btn-warning btn-sm" onclick="editTask(${task.id})">
-                        📝 Editar Tarea
+                    <button class="btn btn-warning btn-sm" onclick="editEvaluation(${evaluation.id})">
+                        📝 Editar Evaluación
                     </button>
-                    <button class="btn btn-info btn-sm" onclick="viewTaskStats(${task.id})">
+                    <button class="btn btn-info btn-sm" onclick="viewEvaluationStats(${evaluation.id})">
                         📊 Ver Estadísticas
                     </button>
                 </div>
             `;
             
-            const taskItem = event.currentTarget;
+            const evaluationItem = event.currentTarget;
             
-            // ✅ CORREGIR: Limpiar TODOS los botones anteriores de TODAS las tareas
-            document.querySelectorAll('.task-actions').forEach(actions => {
+            // Limpiar TODOS los botones anteriores de TODAS las evaluaciones
+            document.querySelectorAll('.evaluation-actions').forEach(actions => {
                 actions.remove();
             });
             
             // Agregar nuevos botones
-            taskItem.insertAdjacentHTML('beforeend', actionsHtml);
+            evaluationItem.insertAdjacentHTML('beforeend', actionsHtml);
         }
 
         // ========================================
-        // GESTIÓN DE TAREAS
+        // GESTIÓN DE EVALUACIONES
         // ========================================
-        async function createTask(event) {
+        async function createEvaluation(event) {
             event.preventDefault();
             
             try {
-                const dueDate = document.getElementById('taskDueDate').value;
-                const taskData = {
-                    title: document.getElementById('taskTitle').value,
-                    description: document.getElementById('taskDescription').value,
-                    percentage: parseFloat(document.getElementById('taskPercentage').value),
-                    max_points: parseFloat(document.getElementById('taskMaxPoints').value),
-                    due_date: dueDate || null, // Opcional
+                const dueDate = document.getElementById('evaluationDueDate').value;
+                const evaluationData = {
+                    title: document.getElementById('evaluationTitle').value,
+                    type: document.getElementById('evaluationType').value,
+                    description: document.getElementById('evaluationDescription').value,
+                    percentage: parseFloat(document.getElementById('evaluationPercentage').value),
+                    max_points: parseFloat(document.getElementById('evaluationMaxPoints').value),
+                    due_date: dueDate || null,
                     grade_level: currentGrade,
                     subject_area: currentSubject
                 };
                 
-                console.log('📝 Creando tarea:', taskData);
+                console.log('📝 Creando evaluación:', evaluationData);
                 
-                const response = await fetch('/api/tasks', {
+                const response = await fetch('/api/evaluations', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(taskData)
+                    body: JSON.stringify(evaluationData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('success', '✅ Tarea creada correctamente');
-                    document.getElementById('taskForm').reset();
-                    await loadTasks();
+                    showMessage('success', '✅ Evaluación creada correctamente');
+                    document.getElementById('evaluationForm').reset();
+                    await loadEvaluations();
                     
-                    // Inmediatamente mostrar la nueva tarea para calificación
-                    const newTaskId = result.data.id;
+                    // Inmediatamente mostrar la nueva evaluación para calificación
+                    const newEvaluationId = result.data.id;
                     setTimeout(() => {
-                        selectTaskAndStartGrading(newTaskId);
+                        selectEvaluationAndStartGrading(newEvaluationId);
                     }, 500);
                 } else {
                     showMessage('error', 'Error: ' + result.message);
                 }
                 
             } catch (error) {
-                console.error('❌ Error creando tarea:', error);
-                showMessage('error', 'Error creando tarea: ' + error.message);
+                console.error('❌ Error creando evaluación:', error);
+                showMessage('error', 'Error creando evaluación: ' + error.message);
             }
         }
 
-        function editTask(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
+        function editEvaluation(evaluationId) {
+            const evaluation = evaluations.find(e => e.id === evaluationId);
+            if (!evaluation) return;
             
-            currentTaskId = taskId;
+            currentEvaluationId = evaluationId;
             
-            document.getElementById('editTaskTitle').value = task.title;
-            document.getElementById('editTaskDescription').value = task.description || '';
-            document.getElementById('editTaskPercentage').value = task.percentage;
-            document.getElementById('editTaskMaxPoints').value = task.max_points;
-            document.getElementById('editTaskDueDate').value = task.due_date;
+            document.getElementById('editEvaluationTitle').value = evaluation.title;
+            document.getElementById('editEvaluationType').value = evaluation.type || 'tarea';
+            document.getElementById('editEvaluationDescription').value = evaluation.description || '';
+            document.getElementById('editEvaluationPercentage').value = evaluation.percentage;
+            document.getElementById('editEvaluationMaxPoints').value = evaluation.max_points;
+            document.getElementById('editEvaluationDueDate').value = evaluation.due_date;
             
-            document.getElementById('editTaskModal').classList.add('show');
+            document.getElementById('editEvaluationModal').classList.add('show');
         }
 
-        async function updateTask(event) {
+        async function updateEvaluation(event) {
             event.preventDefault();
             
             try {
-                const dueDate = document.getElementById('editTaskDueDate').value;
-                const taskData = {
-                    title: document.getElementById('editTaskTitle').value,
-                    description: document.getElementById('editTaskDescription').value,
-                    percentage: parseFloat(document.getElementById('editTaskPercentage').value),
-                    max_points: parseFloat(document.getElementById('editTaskMaxPoints').value),
-                    due_date: dueDate || null // Opcional
+                const dueDate = document.getElementById('editEvaluationDueDate').value;
+                const evaluationData = {
+                    title: document.getElementById('editEvaluationTitle').value,
+                    type: document.getElementById('editEvaluationType').value,
+                    description: document.getElementById('editEvaluationDescription').value,
+                    percentage: parseFloat(document.getElementById('editEvaluationPercentage').value),
+                    max_points: parseFloat(document.getElementById('editEvaluationMaxPoints').value),
+                    due_date: dueDate || null
                 };
                 
-                const response = await fetch(`/api/tasks/${currentTaskId}`, {
+                const response = await fetch(`/api/evaluations/${currentEvaluationId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(taskData)
+                    body: JSON.stringify(evaluationData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('success', '✅ Tarea actualizada correctamente');
-                    closeEditTaskModal();
-                    await loadTasks();
+                    showMessage('success', '✅ Evaluación actualizada correctamente');
+                    closeEditEvaluationModal();
+                    await loadEvaluations();
                 } else {
                     showMessage('error', 'Error: ' + result.message);
                 }
                 
             } catch (error) {
-                console.error('❌ Error actualizando tarea:', error);
-                showMessage('error', 'Error actualizando tarea: ' + error.message);
+                console.error('❌ Error actualizando evaluación:', error);
+                showMessage('error', 'Error actualizando evaluación: ' + error.message);
             }
         }
 
-        async function deleteTask() {
-            if (!confirm('¿Está seguro de eliminar esta tarea y todas sus calificaciones?')) {
+        async function deleteEvaluation() {
+            if (!confirm('¿Está seguro de eliminar esta evaluación y todas sus calificaciones?')) {
                 return;
             }
             
             try {
-                const response = await fetch(`/api/tasks/${currentTaskId}`, {
+                const response = await fetch(`/api/evaluations/${currentEvaluationId}`, {
                     method: 'DELETE'
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('success', '✅ Tarea eliminada correctamente');
-                    closeEditTaskModal();
-                    await loadTasks();
+                    showMessage('success', '✅ Evaluación eliminada correctamente');
+                    closeEditEvaluationModal();
+                    await loadEvaluations();
                 } else {
                     showMessage('error', 'Error: ' + result.message);
                 }
                 
             } catch (error) {
-                console.error('❌ Error eliminando tarea:', error);
-                showMessage('error', 'Error eliminando tarea');
+                console.error('❌ Error eliminando evaluación:', error);
+                showMessage('error', 'Error eliminando evaluación');
             }
         }
 
         // ========================================
-        // FUNCIONES DE CALIFICACIÓN CORREGIDAS
+        // FUNCIONES DE CALIFICACIÓN
         // ========================================
-
-        async function startGrading(taskId) {
-            currentTaskId = taskId;
-            currentTask = tasks.find(t => t.id === taskId);
+        async function startGrading(evaluationId) {
+            currentEvaluationId = evaluationId;
+            currentEvaluation = evaluations.find(e => e.id === evaluationId);
             
-            if (!currentTask) {
-                showMessage('error', 'No se encontró la tarea');
+            if (!currentEvaluation) {
+                showMessage('error', 'No se encontró la evaluación');
                 return;
             }
             
             try {
-                console.log('🔄 Iniciando calificación para tarea:', taskId);
+                console.log('🔄 Iniciando calificación para evaluación:', evaluationId);
                 
                 // Mostrar estado de carga
-                document.getElementById('tasksContainer').style.display = 'none';
+                document.getElementById('evaluationsContainer').style.display = 'none';
                 document.getElementById('gradingContainer').style.display = 'block';
-                document.getElementById('currentTaskTitle').textContent = currentTask.title;
+                document.getElementById('currentEvaluationTitle').textContent = currentEvaluation.title;
                 
                 // Mostrar indicador de carga en la tabla
                 document.getElementById('gradingTableBody').innerHTML = `
@@ -1125,7 +1164,7 @@
                 `;
                 
                 // Cargar datos de calificaciones desde la API
-                const response = await fetch(`/api/task-grades/${taskId}`);
+                const response = await fetch(`/api/evaluation-grades/${evaluationId}`);
                 const result = await response.json();
                 
                 console.log('📥 Respuesta completa de la API:', result);
@@ -1137,7 +1176,7 @@
                         document.getElementById('gradingTableBody').innerHTML = `
                             <tr>
                                 <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
-                                    📝 No hay estudiantes registrados para esta tarea
+                                    📝 No hay estudiantes registrados para esta evaluación
                                 </td>
                             </tr>
                         `;
@@ -1207,7 +1246,7 @@
                 
                 // Datos de calificación (pueden existir o no)
                 const pointsEarned = studentData.points_earned || '';
-                const maxPoints = studentData.max_points || currentTask.max_points || 100;
+                const maxPoints = studentData.max_points || currentEvaluation.max_points || 100;
                 const percentage = pointsEarned ? Math.round((pointsEarned / maxPoints) * 100) : 0;
                 const gradeDate = studentData.grade_date ? new Date(studentData.grade_date).toLocaleDateString('es-ES') : '';
                 const notes = studentData.notes || '';
@@ -1270,7 +1309,7 @@
         function updateGradeDisplay(input) {
             const studentId = input.dataset.studentId;
             const pointsEarned = parseFloat(input.value) || 0;
-            const maxPoints = currentTask.max_points || 100;
+            const maxPoints = currentEvaluation.max_points || 100;
             const percentage = Math.round((pointsEarned / maxPoints) * 100);
             
             console.log('📝 Actualizando display de calificación:', { studentId, pointsEarned, percentage });
@@ -1309,10 +1348,10 @@
                     
                     if (pointsEarned >= 0) {
                         const notesInput = document.querySelector(`input[data-field="notes"][data-student-id="${studentId}"]`);
-                        const percentage = Math.round((pointsEarned / currentTask.max_points) * 100);
+                        const percentage = Math.round((pointsEarned / currentEvaluation.max_points) * 100);
                         
                         gradesToSave.push({
-                            assignment_id: currentTaskId,  // ✅ CAMBIAR: era task_id, debe ser assignment_id
+                            assignment_id: currentEvaluationId,
                             student_id: studentId,
                             points_earned: pointsEarned,
                             percentage: percentage,
@@ -1328,7 +1367,7 @@
                 
                 console.log('💾 Guardando calificaciones:', gradesToSave);
                 
-                const response = await fetch('/api/task-grades', {
+                const response = await fetch('/api/evaluation-grades', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1340,7 +1379,7 @@
                 
                 if (result.success) {
                     showMessage('success', `✅ ${gradesToSave.length} calificaciones guardadas correctamente`);
-                    await loadTasks(); // Actualizar estadísticas
+                    await loadEvaluations(); // Actualizar estadísticas
                 } else {
                     showMessage('error', 'Error: ' + result.message);
                 }
@@ -1353,41 +1392,41 @@
 
         function closeGrading() {
             document.getElementById('gradingContainer').style.display = 'none';
-            document.getElementById('tasksContainer').style.display = 'block';
-            currentTaskId = null;
-            currentTask = null;
+            document.getElementById('evaluationsContainer').style.display = 'block';
+            currentEvaluationId = null;
+            currentEvaluation = null;
         }
 
         // ========================================
         // UTILIDADES
         // ========================================
-        function showTaskCreator() {
-            document.getElementById('taskCreator').classList.remove('hidden');
-            document.getElementById('taskCreatorPlaceholder').style.display = 'none';
+        function showEvaluationCreator() {
+            document.getElementById('evaluationCreator').classList.remove('hidden');
+            document.getElementById('evaluationCreatorPlaceholder').style.display = 'none';
         }
 
-        function hideTaskCreator() {
-            document.getElementById('taskCreator').classList.add('hidden');
-            document.getElementById('taskCreatorPlaceholder').style.display = 'block';
+        function hideEvaluationCreator() {
+            document.getElementById('evaluationCreator').classList.add('hidden');
+            document.getElementById('evaluationCreatorPlaceholder').style.display = 'block';
         }
 
         function resetMainArea() {
             document.getElementById('loadingState').style.display = 'block';
-            document.getElementById('tasksContainer').style.display = 'none';
+            document.getElementById('evaluationsContainer').style.display = 'none';
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('gradingContainer').style.display = 'none';
             document.getElementById('statsCard').style.display = 'none';
             
-            document.getElementById('mainTitle').textContent = '📝 Gestión de Tareas';
+            document.getElementById('mainTitle').textContent = '📝 Gestión de Evaluaciones';
             document.getElementById('mainSubtitle').textContent = 'Seleccione grado y materia para comenzar';
         }
 
         function updateStats() {
             document.getElementById('totalStudents').textContent = students.length;
-            document.getElementById('totalTasks').textContent = tasks.length;
+            document.getElementById('totalEvaluations').textContent = evaluations.length;
             
-            if (tasks.length > 0) {
-                const avgGrade = tasks.reduce((sum, task) => sum + (task.avg_grade || 0), 0) / tasks.length;
+            if (evaluations.length > 0) {
+                const avgGrade = evaluations.reduce((sum, evaluation) => sum + (evaluation.avg_grade || 0), 0) / evaluations.length;
                 document.getElementById('avgGrade').textContent = avgGrade.toFixed(1) + '%';
                 document.getElementById('statsCard').style.display = 'block';
                 document.getElementById('exportBtn').style.display = 'inline-flex';
@@ -1398,9 +1437,9 @@
             }
         }
 
-        function closeEditTaskModal() {
-            document.getElementById('editTaskModal').classList.remove('show');
-            currentTaskId = null;
+        function closeEditEvaluationModal() {
+            document.getElementById('editEvaluationModal').classList.remove('show');
+            currentEvaluationId = null;
         }
 
         function showMessage(type, message) {
@@ -1417,13 +1456,13 @@
             showMessage('success', '📄 Función de exportar en desarrollo');
         }
 
-        function viewTaskStats(taskId) {
+        function viewEvaluationStats(evaluationId) {
             showMessage('success', '📊 Función de estadísticas detalladas en desarrollo');
         }
 
         // Cerrar modales al hacer clic fuera
-        document.getElementById('editTaskModal').addEventListener('click', function(event) {
-            if (event.target === this) closeEditTaskModal();
+        document.getElementById('editEvaluationModal').addEventListener('click', function(event) {
+            if (event.target === this) closeEditEvaluationModal();
         });
     </script>
 </body>

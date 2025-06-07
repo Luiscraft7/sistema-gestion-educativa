@@ -540,7 +540,6 @@ class Database {
     // ========================================
 
     // Asignar múltiples materias a un grado
-    // Asignar múltiples materias a un grado
     async assignSubjectsToGrade(gradeData) {
         this.ensureConnection();
         
@@ -602,7 +601,6 @@ class Database {
         });
     }
 
-    // Asignar materias a múltiples grados
     // Asignar materias a múltiples grados
     async assignSubjectsToMultipleGrades(assignmentData) {
         this.ensureConnection();
@@ -974,10 +972,8 @@ class Database {
         });
     }
 
-
-
     // ========================================
-    // FUNCIONES DEL MÓDULO DE EVALUACIONES (anteriormente TAREAS)
+    // FUNCIONES DEL MÓDULO DE EVALUACIONES - CORREGIDAS ✅
     // ========================================
 
     // Obtener evaluaciones por grado y materia
@@ -1088,19 +1084,20 @@ class Database {
             });
         });
     }
-    // Eliminar tarea (soft delete)
-    async deleteTask(taskId) {
+
+    // Eliminar evaluación (soft delete)
+    async deleteEvaluation(evaluationId) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const query = 'UPDATE assignments SET is_active = 0 WHERE id = ?';
             
-            this.db.run(query, [taskId], function(err) {
+            this.db.run(query, [evaluationId], function(err) {
                 if (err) {
                     reject(err);
                 } else {
                     resolve({ 
-                        id: taskId, 
+                        id: evaluationId, 
                         changes: this.changes 
                     });
                 }
@@ -1108,119 +1105,78 @@ class Database {
         });
     }
 
-
     // ========================================
-    // FUNCIONES DE CALIFICACIONES DE TAREAS
+    // FUNCIONES DE CALIFICACIONES DE EVALUACIONES - CORREGIDAS ✅
     // ========================================
 
-    // Obtener calificaciones de una tarea específica
- // Obtener calificaciones de una tarea específica (CORREGIDA - muestra todos los estudiantes)
-async getTaskGrades(taskId) {
-    this.ensureConnection();
-    
-    return new Promise((resolve, reject) => {
-        // Primero obtener información de la tarea
-        const taskQuery = 'SELECT grade_level, subject_area, title, max_points, percentage FROM assignments WHERE id = ?';
-        
-        this.db.get(taskQuery, [taskId], (err, task) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            
-            if (!task) {
-                resolve([]);
-                return;
-            }
-            
-            // Obtener TODOS los estudiantes del grado/materia con sus calificaciones (si las tienen)
-            const query = `
-                SELECT 
-                    s.id as student_id,
-                    s.first_name,
-                    s.first_surname,
-                    s.second_surname,
-                    s.student_id as student_code,
-                    ag.id as grade_id,
-                    ag.points_earned,
-                    ag.grade,
-                    ag.percentage,
-                    ag.is_submitted,
-                    ag.is_late,
-                    ag.notes,
-                    ag.feedback,
-                    ag.submitted_at,
-                    ? as assignment_id,
-                    ? as task_title,
-                    ? as max_points,
-                    ? as task_percentage
-                FROM students s
-                LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ?
-                WHERE s.status = 'active' 
-                    AND s.grade_level = ?
-                    AND (s.subject_area = ? OR s.subject_area IS NULL OR s.subject_area = '')
-                ORDER BY s.first_surname, s.second_surname, s.first_name
-            `;
-            
-            this.db.all(query, [
-                taskId, task.title, task.max_points, task.percentage, // Para los campos SELECT
-                taskId, // Para el LEFT JOIN
-                task.grade_level, // Para el WHERE
-                task.subject_area // Para el WHERE
-            ], (err, rows) => {
-                if (err) {
-                    console.error('❌ Error en getTaskGrades:', err);
-                    reject(err);
-                } else {
-                    console.log(`👥 Estudiantes encontrados para tarea ${taskId} (${task.title}):`, rows.length);
-                    resolve(rows || []);
-                }
-            });
-        });
-    });
-}
-    // Obtener estudiantes para calificar una tarea
-    async getStudentsForTask(taskId) {
+    // Obtener calificaciones de una evaluación específica (CORREGIDA - muestra todos los estudiantes)
+    async getEvaluationGrades(evaluationId) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    s.id,
-                    s.first_name,
-                    s.first_surname,
-                    s.second_surname,
-                    s.student_id as student_code,
-                    a.title as task_title,
-                    a.max_points,
-                    a.percentage as task_percentage,
-                    ag.points_earned,
-                    ag.grade,
-                    ag.percentage as student_percentage,
-                    ag.is_submitted,
-                    ag.is_late,
-                    ag.notes,
-                    ag.feedback
-                FROM students s
-                CROSS JOIN assignments a
-                LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND a.id = ag.assignment_id
-                WHERE a.id = ? AND s.status = 'active' 
-                    AND s.grade_level = a.grade_level
-                ORDER BY s.first_surname, s.second_surname, s.first_name
-            `;
+            // Primero obtener información de la evaluación
+            const evaluationQuery = 'SELECT grade_level, subject_area, title, max_points, percentage FROM assignments WHERE id = ?';
             
-            this.db.all(query, [taskId], (err, rows) => {
+            this.db.get(evaluationQuery, [evaluationId], (err, evaluation) => {
                 if (err) {
                     reject(err);
-                } else {
-                    resolve(rows || []);
+                    return;
                 }
+                
+                if (!evaluation) {
+                    resolve([]);
+                    return;
+                }
+                
+                // Obtener TODOS los estudiantes del grado/materia con sus calificaciones (si las tienen)
+                const query = `
+                    SELECT 
+                        s.id as student_id,
+                        s.first_name,
+                        s.first_surname,
+                        s.second_surname,
+                        s.student_id as student_code,
+                        ag.id as grade_id,
+                        ag.points_earned,
+                        ag.grade,
+                        ag.percentage,
+                        ag.is_submitted,
+                        ag.is_late,
+                        ag.notes,
+                        ag.feedback,
+                        ag.submitted_at,
+                        ? as assignment_id,
+                        ? as task_title,
+                        ? as max_points,
+                        ? as task_percentage
+                    FROM students s
+                    LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ?
+                    WHERE s.status = 'active' 
+                        AND s.grade_level = ?
+                        AND (s.subject_area = ? OR s.subject_area IS NULL OR s.subject_area = '')
+                    ORDER BY s.first_surname, s.second_surname, s.first_name
+                `;
+                
+                this.db.all(query, [
+                    evaluationId, evaluation.title, evaluation.max_points, evaluation.percentage, // Para los campos SELECT
+                    evaluationId, // Para el LEFT JOIN
+                    evaluation.grade_level, // Para el WHERE
+                    evaluation.subject_area // Para el WHERE
+                ], (err, rows) => {
+                    if (err) {
+                        console.error('❌ Error en getEvaluationGrades:', err);
+                        reject(err);
+                    } else {
+                        console.log(`👥 Estudiantes encontrados para evaluación ${evaluationId} (${evaluation.title}):`, rows.length);
+                        resolve(rows || []);
+                    }
+                });
             });
         });
     }
 
-    // Guardar calificaciones de tareas (corregido)
-    async saveTaskGrades(grades) {
+    // Guardar calificaciones de evaluaciones (corregido)
+    async saveEvaluationGrades(grades) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
@@ -1301,15 +1257,16 @@ async getTaskGrades(taskId) {
             });
         });
     }
-    // Obtener estadísticas de tareas por estudiante
-    async getStudentTaskStats(studentId, gradeLevel, subjectArea) {
+
+    // Obtener estadísticas de evaluaciones por estudiante
+    async getStudentEvaluationStats(studentId, gradeLevel, subjectArea) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const query = `
                 SELECT 
-                    COUNT(DISTINCT a.id) as total_tasks,
-                    COUNT(ag.id) as completed_tasks,
+                    COUNT(DISTINCT a.id) as total_evaluations,
+                    COUNT(ag.id) as completed_evaluations,
                     AVG(CASE WHEN ag.percentage IS NOT NULL THEN ag.percentage ELSE 0 END) as avg_percentage,
                     SUM(a.percentage) as total_weight,
                     SUM(CASE WHEN ag.is_late = 1 THEN 1 ELSE 0 END) as late_submissions,
@@ -1326,8 +1283,8 @@ async getTaskGrades(taskId) {
                     reject(err);
                 } else {
                     const stats = row || {
-                        total_tasks: 0,
-                        completed_tasks: 0,
+                        total_evaluations: 0,
+                        completed_evaluations: 0,
                         avg_percentage: 0,
                         total_weight: 0,
                         late_submissions: 0,
@@ -1337,17 +1294,17 @@ async getTaskGrades(taskId) {
                     };
                     
                     // Calcular estadísticas adicionales
-                    const completionRate = stats.total_tasks > 0 
-                        ? (stats.completed_tasks / stats.total_tasks) * 100 
+                    const completionRate = stats.total_evaluations > 0 
+                        ? (stats.completed_evaluations / stats.total_evaluations) * 100 
                         : 0;
                     
                     resolve({
                         student_id: studentId,
                         grade_level: gradeLevel,
                         subject_area: subjectArea,
-                        total_tasks: stats.total_tasks,
-                        completed_tasks: stats.completed_tasks,
-                        pending_tasks: stats.total_tasks - stats.completed_tasks,
+                        total_evaluations: stats.total_evaluations,
+                        completed_evaluations: stats.completed_evaluations,
+                        pending_evaluations: stats.total_evaluations - stats.completed_evaluations,
                         completion_rate: completionRate,
                         avg_percentage: stats.avg_percentage || 0,
                         total_weight: stats.total_weight || 0,
@@ -1362,14 +1319,14 @@ async getTaskGrades(taskId) {
         });
     }
 
-    // Obtener resumen de tareas por grado y materia
-    async getTasksSummary(gradeLevel, subjectArea) {
+    // Obtener resumen de evaluaciones por grado y materia
+    async getEvaluationsSummary(gradeLevel, subjectArea) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const query = `
                 SELECT 
-                    COUNT(DISTINCT a.id) as total_tasks,
+                    COUNT(DISTINCT a.id) as total_evaluations,
                     COUNT(ag.id) as total_submissions,
                     AVG(ag.percentage) as avg_class_percentage,
                     SUM(a.percentage) as total_weight_configured,
@@ -1384,7 +1341,7 @@ async getTaskGrades(taskId) {
                     reject(err);
                 } else {
                     resolve(row || {
-                        total_tasks: 0,
+                        total_evaluations: 0,
                         total_submissions: 0,
                         avg_class_percentage: 0,
                         total_weight_configured: 0,
@@ -1394,7 +1351,6 @@ async getTaskGrades(taskId) {
             });
         });
     }
-
 
     // Obtener resumen general de evaluaciones
     async getEvaluationsSummary() {
@@ -1408,12 +1364,12 @@ async getTaskGrades(taskId) {
                     a.type,
                     COUNT(DISTINCT a.id) as total_evaluations,
                     COUNT(ag.id) as total_grades,
-                    AVG(ag.percentage) as avg_percentage,
+                    ROUND(AVG(ag.percentage), 1) as avg_percentage,
                     COUNT(DISTINCT ag.student_id) as students_graded,
                     (SELECT COUNT(*) FROM students s 
-                    WHERE s.status = 'active' 
-                    AND s.grade_level = a.grade_level 
-                    AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                     WHERE s.status = 'active' 
+                       AND s.grade_level = a.grade_level 
+                       AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
                     ) as total_students
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
@@ -1431,6 +1387,7 @@ async getTaskGrades(taskId) {
             });
         });
     }
+
     async getEvaluationTypeStats() {
         this.ensureConnection();
         
@@ -1530,6 +1487,7 @@ async getTaskGrades(taskId) {
             });
         });
     }
+
     // ========================================
     // CÁLCULOS DE ESTADÍSTICAS MEP
     // ========================================
@@ -1612,10 +1570,6 @@ async getTaskGrades(taskId) {
         });
     }
 }
-
-
-
-
 
 // Crear instancia única
 const database = new Database();

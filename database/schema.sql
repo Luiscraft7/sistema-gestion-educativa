@@ -1,5 +1,6 @@
 -- ========================================
 -- SISTEMA EDUCATIVO - ESQUEMA COMPLETAMENTE LIMPIO
+-- Versión: 2.0 - Optimizado para Evaluaciones
 -- ========================================
 
 -- Tabla de Escuelas
@@ -88,33 +89,10 @@ CREATE TABLE IF NOT EXISTS students (
 );
 
 -- ========================================
--- TABLAS DE EVALUACIONES
+-- MÓDULO DE EVALUACIONES (OPTIMIZADO)
 -- ========================================
 
--- Tabla de Cotidiano
-CREATE TABLE IF NOT EXISTS daily_grades (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER,
-    subject_id INTEGER,
-    date DATE,
-    participation REAL,
-    behavior REAL,
-    homework REAL,
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(id)
-);
-
--- ========================================
--- ACTUALIZACIÓN DE ESQUEMA PARA MÓDULO DE TAREAS
--- ========================================
-
--- Primero, eliminar las tablas existentes si ya existen
-DROP TABLE IF EXISTS assignment_grades;
-DROP TABLE IF EXISTS assignments;
-
--- Tabla de Tareas (ACTUALIZADA)
+-- Tabla de Evaluaciones (assignments - optimizada)
 CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subject_id INTEGER,
@@ -126,20 +104,21 @@ CREATE TABLE IF NOT EXISTS assignments (
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     teacher_name TEXT,
+    type TEXT DEFAULT 'tarea' CHECK (type IN ('tarea', 'examen', 'proyecto', 'quiz')),
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
--- Tabla de Calificaciones de Tareas (ACTUALIZADA)
+-- Tabla de Calificaciones de Evaluaciones (assignment_grades - optimizada)
 CREATE TABLE IF NOT EXISTS assignment_grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    assignment_id INTEGER,
-    student_id INTEGER,
-    points_earned REAL,
-    grade REAL,
-    percentage REAL,
+    assignment_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
+    points_earned REAL DEFAULT 0,
+    grade REAL DEFAULT 0,
+    percentage REAL DEFAULT 0,
     submitted_at DATETIME,
     is_submitted INTEGER DEFAULT 0,
     is_late INTEGER DEFAULT 0,
@@ -147,16 +126,49 @@ CREATE TABLE IF NOT EXISTS assignment_grades (
     feedback TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (assignment_id) REFERENCES assignments(id),
-    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     UNIQUE(assignment_id, student_id)
 );
 
--- Índices para mejorar rendimiento
+-- Índices para Evaluaciones (mejorar rendimiento)
 CREATE INDEX IF NOT EXISTS idx_assignments_grade_subject ON assignments(grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_assignments_due_date ON assignments(due_date);
+CREATE INDEX IF NOT EXISTS idx_assignments_active ON assignments(is_active);
+CREATE INDEX IF NOT EXISTS idx_assignments_type ON assignments(type);
 CREATE INDEX IF NOT EXISTS idx_assignment_grades_assignment ON assignment_grades(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_grades_student ON assignment_grades(student_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_grades_submitted ON assignment_grades(is_submitted);
+
+-- ========================================
+-- MÓDULO DE COTIDIANO
+-- ========================================
+
+-- Tabla de Calificaciones Diarias (Cotidiano)
+CREATE TABLE IF NOT EXISTS daily_grades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    subject_id INTEGER,
+    date DATE NOT NULL,
+    participation REAL,
+    behavior REAL,
+    homework REAL,
+    notes TEXT,
+    grade_level TEXT,
+    subject_area TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id)
+);
+
+-- Índices para Cotidiano
+CREATE INDEX IF NOT EXISTS idx_daily_grades_student_date ON daily_grades(student_id, date);
+CREATE INDEX IF NOT EXISTS idx_daily_grades_grade_subject ON daily_grades(grade_level, subject_area);
+
+-- ========================================
+-- MÓDULO DE EXÁMENES
+-- ========================================
 
 -- Tabla de Exámenes
 CREATE TABLE IF NOT EXISTS exams (
@@ -165,27 +177,44 @@ CREATE TABLE IF NOT EXISTS exams (
     title TEXT NOT NULL,
     exam_date DATE,
     max_points REAL DEFAULT 100,
-    exam_type TEXT DEFAULT 'regular',
+    percentage REAL DEFAULT 0,
+    exam_type TEXT DEFAULT 'regular' CHECK (exam_type IN ('regular', 'parcial', 'final', 'extraordinario')),
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    teacher_name TEXT,
+    is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
 -- Tabla de Calificaciones de Exámenes
 CREATE TABLE IF NOT EXISTS exam_grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exam_id INTEGER,
-    student_id INTEGER,
-    grade REAL,
+    exam_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
+    points_earned REAL DEFAULT 0,
+    grade REAL DEFAULT 0,
+    percentage REAL DEFAULT 0,
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (exam_id) REFERENCES exams(id),
-    FOREIGN KEY (student_id) REFERENCES students(id)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    UNIQUE(exam_id, student_id)
 );
 
+-- Índices para Exámenes
+CREATE INDEX IF NOT EXISTS idx_exams_grade_subject ON exams(grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_exams_date ON exams(exam_date);
+CREATE INDEX IF NOT EXISTS idx_exam_grades_exam ON exam_grades(exam_id);
+CREATE INDEX IF NOT EXISTS idx_exam_grades_student ON exam_grades(student_id);
+
 -- ========================================
--- TABLA DE ASISTENCIA
+-- MÓDULO DE ASISTENCIA
 -- ========================================
 
+-- Tabla de Asistencia
 CREATE TABLE IF NOT EXISTS attendance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,
@@ -195,31 +224,32 @@ CREATE TABLE IF NOT EXISTS attendance (
     justification TEXT,
     notes TEXT,
     lesson_number INTEGER DEFAULT 1,
-    grade_level TEXT,
-    subject_area TEXT,
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id)
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
 -- Tabla de Configuración de Lecciones
 CREATE TABLE IF NOT EXISTS lesson_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     grade_level TEXT NOT NULL,
-    subject_area TEXT,
+    subject_area TEXT NOT NULL,
     lessons_per_week INTEGER DEFAULT 5,
     total_weeks INTEGER DEFAULT 40,
     total_lessons INTEGER DEFAULT 200,
     teacher_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(grade_level, subject_area)
 );
 
 -- Tabla de Períodos de Asistencia
 CREATE TABLE IF NOT EXISTS attendance_periods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     grade_level TEXT NOT NULL,
-    subject_area TEXT,
+    subject_area TEXT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     total_lessons INTEGER NOT NULL,
@@ -228,16 +258,28 @@ CREATE TABLE IF NOT EXISTS attendance_periods (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Índices para Asistencia
+CREATE INDEX IF NOT EXISTS idx_attendance_student_date ON attendance(student_id, date);
+CREATE INDEX IF NOT EXISTS idx_attendance_date_grade ON attendance(date, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_lesson_config_grade_subject ON lesson_config(grade_level, subject_area);
+
 -- ========================================
--- SOLO DATOS MÍNIMOS ESENCIALES
+-- DATOS MÍNIMOS ESENCIALES
 -- ========================================
 
 -- Escuela de ejemplo (necesaria para funcionamiento)
 INSERT OR IGNORE INTO schools (id, name, address, phone, email) 
-VALUES (1, 'Mi Escuela', 'Dirección', '0000-0000', 'contacto@miescuela.cr');
+VALUES (1, 'Mi Escuela', 'Dirección de la Escuela', '0000-0000', 'contacto@miescuela.cr');
 
+-- ========================================
+-- NOTAS IMPORTANTES
+-- ========================================
 -- ✅ SISTEMA COMPLETAMENTE LIMPIO
 -- ✅ Sin grados precargados
 -- ✅ Sin materias precargadas  
--- ✅ Solo estructura de tablas
+-- ✅ Solo estructura de tablas optimizada
 -- ✅ Usuario agrega sus propios datos
+-- ✅ Soporte completo para evaluaciones con tipos
+-- ✅ Índices optimizados para rendimiento
+-- ✅ Constraints y relaciones apropiadas
+-- ✅ ON DELETE CASCADE para integridad de datos
