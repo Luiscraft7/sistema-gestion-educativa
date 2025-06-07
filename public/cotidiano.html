@@ -635,7 +635,7 @@
 
         .history-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
@@ -677,6 +677,113 @@
             gap: 20px;
             font-size: 14px;
             color: #666;
+        }
+
+        /* ========================================
+           MODAL PARA INDICADORES
+           ======================================== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .modal form {
+            padding: 30px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .instruction-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .instruction-box p {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .sub-indicator-row {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 15px;
         }
 
         /* ========================================
@@ -846,16 +953,21 @@
                 <div id="indicatorsSection" class="indicators-section hidden">
                     <div class="indicators-header">
                         <div class="indicators-title">🎯 Indicadores de Evaluación</div>
-                        <button class="btn btn-primary" onclick="addNewIndicator()">
-                            ➕ Agregar Indicador
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="openIndicatorModal()">
+                                ➕ Agregar Indicador Completo
+                            </button>
+                            <button class="btn btn-success" onclick="addNewIndicator()">
+                                ⚡ Agregar Rápido
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="indicatorsList" class="indicators-list">
                         <!-- Los indicadores se cargan dinámicamente -->
                     </div>
 
-                    <!-- Formulario para nuevo indicador -->
+                    <!-- Formulario rápido para nuevo indicador -->
                     <div id="newIndicatorForm" class="indicator-form hidden">
                         <div class="form-group">
                             <label class="form-label">Nombre del Indicador Principal:</label>
@@ -928,6 +1040,86 @@
         </div>
     </div>
 
+    <!-- Modal para Agregar Indicador Completo -->
+    <div class="modal" id="indicatorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🎯 Crear Indicador Completo</h2>
+                <button class="close-btn" onclick="closeIndicatorModal()">&times;</button>
+            </div>
+            
+            <form id="indicatorForm" onsubmit="saveCompleteIndicator(event)">
+                <!-- Indicador Principal -->
+                <h4 style="color: #333; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    🎯 Indicador Principal
+                </h4>
+                
+                <div class="form-group">
+                    <label class="form-label" for="mainIndicatorName">Nombre del Indicador Principal *</label>
+                    <input type="text" class="form-input" id="mainIndicatorName" name="main_indicator" required
+                           placeholder="Ej: Participación en Clase">
+                    <div class="help-text">Este será el indicador principal que agrupa los sub-indicadores</div>
+                </div>
+
+                <!-- Sub-Indicadores -->
+                <h4 style="color: #333; margin: 25px 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    📋 Sub-Indicadores (Opcional)
+                </h4>
+                
+                <div class="instruction-box">
+                    <p><strong>💡 Tip:</strong> Los sub-indicadores son aspectos específicos que quieres evaluar dentro del indicador principal.</p>
+                    <p><strong>Ejemplo:</strong> Si tu indicador principal es "Participación en Clase", los sub-indicadores podrían ser: "Responde preguntas", "Hace preguntas", "Colabora en grupos".</p>
+                </div>
+
+                <div id="subIndicatorsContainer">
+                    <div class="sub-indicator-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Sub-Indicador 1</label>
+                            <input type="text" class="form-input" name="sub_indicator[]" 
+                                   placeholder="Ej: Responde preguntas">
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                            🗑️
+                        </button>
+                    </div>
+                    
+                    <div class="sub-indicator-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Sub-Indicador 2</label>
+                            <input type="text" class="form-input" name="sub_indicator[]" 
+                                   placeholder="Ej: Hace preguntas">
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                            🗑️
+                        </button>
+                    </div>
+                    
+                    <div class="sub-indicator-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Sub-Indicador 3</label>
+                            <input type="text" class="form-input" name="sub_indicator[]" 
+                                   placeholder="Ej: Colabora en grupos">
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0; text-align: center;">
+                    <button type="button" class="btn btn-primary" onclick="addSubIndicatorRow()">
+                        ➕ Agregar Otro Sub-Indicador
+                    </button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeIndicatorModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">💾 Guardar Indicador Completo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // ========================================
         // VARIABLES GLOBALES
@@ -954,6 +1146,9 @@
             document.getElementById('subjectSelect').addEventListener('change', onSubjectChange);
             document.getElementById('prevMonth').addEventListener('click', () => navigateMonth(-1));
             document.getElementById('nextMonth').addEventListener('click', () => navigateMonth(1));
+            document.getElementById('gradeWeight').addEventListener('input', function() {
+                updateAllTotals();
+            });
         });
 
         // ========================================
@@ -1040,20 +1235,41 @@
         }
 
         async function loadIndicators() {
+            if (!currentGrade || !currentSubject) {
+                console.warn('Grado o materia no seleccionados');
+                indicators = [];
+                renderIndicatorsList();
+                return;
+            }
+            
             try {
                 const response = await fetch(`/api/cotidiano/indicators?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
-                indicators = await response.json();
+                const result = await response.json();
                 
-                document.getElementById('totalIndicators').textContent = indicators.filter(i => !i.parent_indicator_id).length;
+                if (result.success) {
+                    indicators = result.data || [];
+                    console.log(`Indicadores cargados: ${indicators.length}`);
+                } else {
+                    console.error('Error en la respuesta:', result.message);
+                    indicators = [];
+                }
                 
+                // Actualizar estadísticas
+                const mainIndicators = indicators.filter(i => !i.parent_indicator_id);
+                document.getElementById('totalIndicators').textContent = mainIndicators.length;
+                
+                // Renderizar la lista
                 renderIndicatorsList();
                 
+                // Si hay indicadores, mostrar la tabla de evaluación
                 if (indicators.length > 0) {
                     loadEvaluationTable();
                 }
+                
             } catch (error) {
                 console.error('Error cargando indicadores:', error);
                 indicators = [];
+                document.getElementById('totalIndicators').textContent = 0;
                 renderIndicatorsList();
             }
         }
@@ -1212,11 +1428,197 @@
         }
 
         // ========================================
+        // GESTIÓN DEL MODAL DE INDICADORES
+        // ========================================
+        function openIndicatorModal() {
+            document.getElementById('indicatorModal').style.display = 'block';
+            document.getElementById('mainIndicatorName').focus();
+        }
+
+        function closeIndicatorModal() {
+            document.getElementById('indicatorModal').style.display = 'none';
+            document.getElementById('indicatorForm').reset();
+            // Resetear sub-indicadores a 3 por defecto
+            resetSubIndicators();
+        }
+
+        function resetSubIndicators() {
+            const container = document.getElementById('subIndicatorsContainer');
+            container.innerHTML = `
+                <div class="sub-indicator-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">Sub-Indicador 1</label>
+                        <input type="text" class="form-input" name="sub_indicator[]" 
+                               placeholder="Ej: Responde preguntas">
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                        🗑️
+                    </button>
+                </div>
+                
+                <div class="sub-indicator-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">Sub-Indicador 2</label>
+                        <input type="text" class="form-input" name="sub_indicator[]" 
+                               placeholder="Ej: Hace preguntas">
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                        🗑️
+                    </button>
+                </div>
+                
+                <div class="sub-indicator-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">Sub-Indicador 3</label>
+                        <input type="text" class="form-input" name="sub_indicator[]" 
+                               placeholder="Ej: Colabora en grupos">
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                        🗑️
+                    </button>
+                </div>
+            `;
+        }
+
+        function addSubIndicatorRow() {
+            const container = document.getElementById('subIndicatorsContainer');
+            const currentRows = container.children.length;
+            const newNumber = currentRows + 1;
+            
+            const newRow = document.createElement('div');
+            newRow.className = 'sub-indicator-row';
+            newRow.innerHTML = `
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Sub-Indicador ${newNumber}</label>
+                    <input type="text" class="form-input" name="sub_indicator[]" 
+                           placeholder="Ej: Nombre del sub-indicador">
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="removeSubIndicator(this)">
+                    🗑️
+                </button>
+            `;
+            
+            container.appendChild(newRow);
+        }
+
+        function removeSubIndicator(button) {
+            const row = button.parentElement;
+            const container = document.getElementById('subIndicatorsContainer');
+            
+            // No permitir eliminar si solo hay una fila
+            if (container.children.length > 1) {
+                row.remove();
+                // Renumerar las etiquetas
+                updateSubIndicatorLabels();
+            } else {
+                alert('Debe tener al menos un sub-indicador');
+            }
+        }
+
+        function updateSubIndicatorLabels() {
+            const container = document.getElementById('subIndicatorsContainer');
+            const rows = container.children;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const label = rows[i].querySelector('.form-label');
+                label.textContent = `Sub-Indicador ${i + 1}`;
+            }
+        }
+
+        async function saveCompleteIndicator(event) {
+            event.preventDefault();
+            
+            const mainIndicatorName = document.getElementById('mainIndicatorName').value.trim();
+            if (!mainIndicatorName) {
+                alert('Por favor ingrese el nombre del indicador principal');
+                return;
+            }
+            
+            const subIndicatorInputs = document.querySelectorAll('input[name="sub_indicator[]"]');
+            const subIndicators = Array.from(subIndicatorInputs)
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+            
+            try {
+                // Crear indicador principal
+                const mainResponse = await fetch('/api/cotidiano/indicators', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        grade_level: currentGrade,
+                        subject_area: currentSubject,
+                        indicator_name: mainIndicatorName,
+                        parent_indicator_id: null
+                    })
+                });
+                
+                const mainResult = await mainResponse.json();
+                if (!mainResult.success) {
+                    alert('Error al crear el indicador principal: ' + mainResult.message);
+                    return;
+                }
+                
+                const mainIndicatorId = mainResult.data.id;
+                
+                // Crear sub-indicadores si existen
+                if (subIndicators.length > 0) {
+                    for (const subIndicatorName of subIndicators) {
+                        const subResponse = await fetch('/api/cotidiano/indicators', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                grade_level: currentGrade,
+                                subject_area: currentSubject,
+                                indicator_name: subIndicatorName,
+                                parent_indicator_id: mainIndicatorId
+                            })
+                        });
+                        
+                        const subResult = await subResponse.json();
+                        if (!subResult.success) {
+                            console.warn('Error creando sub-indicador:', subIndicatorName, subResult.message);
+                        }
+                    }
+                }
+                
+                alert(`Indicador creado exitosamente con ${subIndicators.length} sub-indicadores`);
+                closeIndicatorModal();
+                loadIndicators(); // Recargar la lista
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar el indicador');
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('indicatorModal');
+            if (event.target === modal) {
+                closeIndicatorModal();
+            }
+        }
+
+        // ========================================
         // GESTIÓN DE INDICADORES
         // ========================================
         function renderIndicatorsList() {
             const container = document.getElementById('indicatorsList');
             container.innerHTML = '';
+            
+            if (indicators.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h3>📝 No hay indicadores configurados</h3>
+                        <p>Agregue indicadores para comenzar a evaluar</p>
+                    </div>
+                `;
+                return;
+            }
             
             const mainIndicators = indicators.filter(ind => !ind.parent_indicator_id);
             
@@ -1227,9 +1629,9 @@
                 indicatorElement.className = 'indicator-item';
                 indicatorElement.innerHTML = `
                     <div class="indicator-main">
-                        <div class="indicator-name">${indicator.indicator_name}</div>
+                        <div class="indicator-name">${escapeHtml(indicator.indicator_name)}</div>
                         <div class="indicator-actions">
-                            <button class="btn btn-primary btn-sm" onclick="addSubIndicator(${indicator.id}, '${indicator.indicator_name}')">
+                            <button class="btn btn-primary btn-sm" onclick="addSubIndicator(${indicator.id}, '${escapeHtml(indicator.indicator_name)}')">
                                 ➕ Sub-indicador
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="editIndicator(${indicator.id})">
@@ -1244,7 +1646,7 @@
                     <div class="sub-indicators">
                         ${subIndicators.map(sub => `
                             <div class="sub-indicator">
-                                <div class="sub-indicator-name">• ${sub.indicator_name}</div>
+                                <div class="sub-indicator-name">• ${escapeHtml(sub.indicator_name)}</div>
                                 <div class="indicator-actions">
                                     <button class="btn btn-secondary btn-sm" onclick="editIndicator(${sub.id})">✏️</button>
                                     <button class="btn btn-secondary btn-sm" onclick="deleteIndicator(${sub.id})">🗑️</button>
@@ -1296,23 +1698,37 @@
                     })
                 });
                 
-                if (response.ok) {
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Indicador creado exitosamente');
                     cancelNewIndicator();
-                    loadIndicators();
+                    await loadIndicators();
                 } else {
-                    alert('Error al guardar el indicador');
+                    alert('Error al guardar el indicador: ' + (result.message || 'Error desconocido'));
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error al guardar el indicador');
+                console.error('Error completo:', error);
+                alert('Error al conectar con el servidor: ' + error.message);
             }
         }
 
         function addSubIndicator(parentId, parentName) {
+            if (!parentId || !parentName) {
+                console.error('ID del indicador padre o nombre no válido');
+                return;
+            }
+            
             newIndicatorParentId = parentId;
             document.getElementById('parentIndicatorName').textContent = parentName;
             document.getElementById('newSubIndicatorForm').classList.remove('hidden');
-            document.getElementById('newSubIndicatorName').focus();
+            
+            // Limpiar campo anterior
+            const input = document.getElementById('newSubIndicatorName');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
         }
 
         function cancelNewSubIndicator() {
@@ -1323,8 +1739,15 @@
 
         async function saveNewSubIndicator() {
             const name = document.getElementById('newSubIndicatorName').value.trim();
+            
             if (!name) {
                 alert('Por favor ingrese el nombre del sub-indicador');
+                return;
+            }
+            
+            if (!newIndicatorParentId) {
+                alert('Error: No se ha seleccionado un indicador padre');
+                cancelNewSubIndicator();
                 return;
             }
             
@@ -1342,16 +1765,24 @@
                     })
                 });
                 
-                if (response.ok) {
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Sub-indicador creado exitosamente');
                     cancelNewSubIndicator();
-                    loadIndicators();
+                    await loadIndicators(); // Recargar indicadores
                 } else {
-                    alert('Error al guardar el sub-indicador');
+                    alert('Error al guardar el sub-indicador: ' + (result.message || 'Error desconocido'));
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error al guardar el sub-indicador');
+                console.error('Error completo:', error);
+                alert('Error al conectar con el servidor: ' + error.message);
             }
+        }
+
+        function editIndicator(indicatorId) {
+            // Función placeholder para editar indicador
+            alert('Función de edición en desarrollo. Use eliminar y volver a crear por ahora.');
         }
 
         async function deleteIndicator(indicatorId) {
@@ -1364,14 +1795,17 @@
                     method: 'DELETE'
                 });
                 
-                if (response.ok) {
-                    loadIndicators();
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Indicador eliminado exitosamente');
+                    await loadIndicators();
                 } else {
-                    alert('Error al eliminar el indicador');
+                    alert('Error al eliminar el indicador: ' + (result.message || 'Error desconocido'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error al eliminar el indicador');
+                alert('Error al eliminar el indicador: ' + error.message);
             }
         }
 
@@ -1454,14 +1888,10 @@
             try {
                 const dateStr = formatDateForDB(selectedDate);
                 const response = await fetch(`/api/cotidiano/evaluation?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}&date=${dateStr}`);
+                const result = await response.json();
                 
-                if (response.ok) {
-                    const evaluation = await response.json();
-                    if (evaluation) {
-                        loadExistingEvaluation(evaluation);
-                    } else {
-                        initializeEmptyEvaluation();
-                    }
+                if (result.success && result.data) {
+                    loadExistingEvaluation(result.data);
                 } else {
                     initializeEmptyEvaluation();
                 }
@@ -1478,17 +1908,23 @@
         }
 
         function setScore(studentIndex, indicatorIndex, score) {
-            if (!currentEvaluation) return;
+            if (!currentEvaluation || !currentEvaluation.grades[studentIndex]) return;
             
             // Actualizar puntuación
             currentEvaluation.grades[studentIndex].scores[indicatorIndex] = score;
             
             // Actualizar UI - remover selección previa
-            const scoreButtons = document.querySelectorAll(`tr:nth-child(${studentIndex + 1}) td:nth-child(${indicatorIndex + 2}) .score-btn`);
+            const row = document.querySelector(`#evaluationTableBody tr:nth-child(${studentIndex + 1})`);
+            if (!row) return;
+            
+            const cell = row.querySelector(`td:nth-child(${indicatorIndex + 2})`);
+            if (!cell) return;
+            
+            const scoreButtons = cell.querySelectorAll('.score-btn');
             scoreButtons.forEach(btn => btn.classList.remove('selected'));
             
             // Marcar botón seleccionado
-            const selectedButton = document.querySelector(`tr:nth-child(${studentIndex + 1}) td:nth-child(${indicatorIndex + 2}) .score-btn-${score}`);
+            const selectedButton = cell.querySelector(`.score-btn-${score}`);
             if (selectedButton) {
                 selectedButton.classList.add('selected');
             }
@@ -1512,8 +1948,11 @@
             currentEvaluation.grades[studentIndex].finalGrade = finalGrade;
             
             // Actualizar UI
-            document.getElementById(`total-${studentIndex}`).textContent = total;
-            document.getElementById(`grade-${studentIndex}`).textContent = finalGrade.toFixed(1);
+            const totalElement = document.getElementById(`total-${studentIndex}`);
+            const gradeElement = document.getElementById(`grade-${studentIndex}`);
+            
+            if (totalElement) totalElement.textContent = total;
+            if (gradeElement) gradeElement.textContent = finalGrade.toFixed(1);
         }
 
         function updateAllTotals() {
@@ -1535,7 +1974,7 @@
         // ACCIONES RÁPIDAS
         // ========================================
         function markAllScore(score) {
-            if (!currentEvaluation) return;
+            if (!currentEvaluation || !students.length || !indicators.length) return;
             
             students.forEach((student, studentIndex) => {
                 indicators.forEach((indicator, indicatorIndex) => {
@@ -1546,6 +1985,8 @@
 
         function clearAllScores() {
             if (!confirm('¿Está seguro de limpiar todas las calificaciones?')) return;
+            
+            if (!currentEvaluation) return;
             
             // Limpiar datos
             initializeEmptyEvaluation();
@@ -1582,15 +2023,17 @@
                     })
                 });
                 
-                if (response.ok) {
+                const result = await response.json();
+                
+                if (result.success) {
                     alert('Evaluación guardada exitosamente');
                     renderCalendar(); // Actualizar calendario
                 } else {
-                    alert('Error al guardar la evaluación');
+                    alert('Error al guardar la evaluación: ' + (result.message || 'Error desconocido'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error al guardar la evaluación');
+                alert('Error al guardar la evaluación: ' + error.message);
             }
         }
 
@@ -1612,15 +2055,17 @@
             
             try {
                 const response = await fetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
-                const history = await response.json();
+                const result = await response.json();
                 
                 const historyList = document.getElementById('historyList');
                 historyList.innerHTML = '';
                 
-                if (history.length === 0) {
+                if (!result.success || !result.data || result.data.length === 0) {
                     historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No hay evaluaciones guardadas</p>';
                     return;
                 }
+                
+                const history = result.data;
                 
                 history.forEach(item => {
                     const historyItem = document.createElement('div');
@@ -1638,6 +2083,8 @@
                 });
             } catch (error) {
                 console.error('Error cargando historial:', error);
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 40px;">Error cargando historial</p>';
             }
         }
 
@@ -1664,16 +2111,15 @@
             return date.toISOString().split('T')[0];
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function goBack() {
             window.location.href = 'dashboard.html';
         }
-
-        // ========================================
-        // ACTUALIZACIÓN AUTOMÁTICA DE PESO
-        // ========================================
-        document.getElementById('gradeWeight').addEventListener('input', function() {
-            updateAllTotals();
-        });
     </script>
 </body>
 </html>
