@@ -1487,7 +1487,204 @@ class Database {
             });
         });
     }
+    // ========================================
+    // FUNCIONES PARA EL MÓDULO DE COTIDIANO
+    // ========================================
 
+    // Función genérica para ejecutar queries
+    runQuery(query, params, callback) {
+        this.ensureConnection();
+        return this.db.all(query, params, callback);
+    }
+
+    // Obtener indicadores por grado y materia
+    async getIndicatorsByGradeAndSubject(grade, subject) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT * FROM daily_indicators 
+                WHERE grade_level = ? AND subject_area = ? AND is_active = 1
+                ORDER BY parent_indicator_id IS NULL DESC, parent_indicator_id ASC, id ASC
+            `;
+            
+            this.db.all(query, [grade, subject], (err, rows) => {
+                if (err) {
+                    console.error('Error fetching indicators:', err);
+                    reject(err);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+    }
+
+    // Crear nuevo indicador
+    async createIndicator(indicatorData) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const { grade_level, subject_area, indicator_name, parent_indicator_id } = indicatorData;
+            
+            const query = `
+                INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
+                VALUES (?, ?, ?, ?)
+            `;
+            
+            this.db.run(query, [grade_level, subject_area, indicator_name, parent_indicator_id || null], function(err) {
+                if (err) {
+                    console.error('Error creating indicator:', err);
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID });
+                }
+            });
+        });
+    }
+
+    // Crear múltiples indicadores
+    async createBulkIndicators(bulkData) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const { grade_level, subject_area, indicators } = bulkData;
+            
+            if (!indicators || !Array.isArray(indicators)) {
+                reject(new Error('Indicadores debe ser un array'));
+                return;
+            }
+            
+            const results = [];
+            let successCount = 0;
+            let errorCount = 0;
+            
+            // Procesar cada indicador
+            const processIndicator = (index) => {
+                if (index >= indicators.length) {
+                    // Terminamos - devolver resultados
+                    resolve({
+                        results: results,
+                        summary: {
+                            total: indicators.length,
+                            success: successCount,
+                            errors: errorCount
+                        }
+                    });
+                    return;
+                }
+                
+                const indicatorData = indicators[index];
+                const { indicator_name, parent_indicator_id } = indicatorData;
+                
+                if (!indicator_name || indicator_name.trim() === '') {
+                    results.push({
+                        indicator_name: indicator_name || 'VACIO',
+                        success: false,
+                        error: 'Nombre vacío'
+                    });
+                    errorCount++;
+                    processIndicator(index + 1);
+                    return;
+                }
+                
+                const query = `
+                    INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
+                    VALUES (?, ?, ?, ?)
+                `;
+                
+                this.db.run(query, [grade_level, subject_area, indicator_name.trim(), parent_indicator_id || null], function(err) {
+                    if (err) {
+                        results.push({
+                            indicator_name: indicator_name,
+                            success: false,
+                            error: err.message
+                        });
+                        errorCount++;
+                    } else {
+                        results.push({
+                            indicator_name: indicator_name,
+                            success: true,
+                            id: this.lastID
+                        });
+                        successCount++;
+                    }
+                    
+                    processIndicator(index + 1);
+                });
+            };
+            
+            processIndicator(0);
+        });
+    }
+
+    // Eliminar indicador
+    async deleteIndicator(indicatorId) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = 'DELETE FROM daily_indicators WHERE id = ?';
+            
+            this.db.run(query, [indicatorId], function(err) {
+                if (err) {
+                    console.error('Error deleting indicator:', err);
+                    reject(err);
+                } else {
+                    resolve({ deleted: this.changes });
+                }
+            });
+        });
+    }
+
+    // Obtener evaluación por fecha
+    async getEvaluationByDate(grade, subject, date) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT de.*, dis.indicator_id, dis.score, dis.notes as score_notes
+                FROM daily_evaluations de
+                LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
+                WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+            `;
+            
+            this.db.all(query, [grade, subject, date], (err, rows) => {
+                if (err) {
+                    console.error('Error fetching evaluation:', err);
+                    reject(err);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+    }
+
+    // Obtener historial de evaluaciones
+    async getCotidianoHistory(grade, subject) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    evaluation_date,
+                    COUNT(DISTINCT student_id) as total_students,
+                    AVG(final_grade) as average_grade,
+                    grade_weight
+                FROM daily_evaluations 
+                WHERE grade_level = ? AND subject_area = ?
+                GROUP BY evaluation_date, grade_weight
+                ORDER BY evaluation_date DESC
+            `;
+            
+            this.db.all(query, [grade, subject], (err, rows) => {
+                if (err) {
+                    console.error('Error fetching history:', err);
+                    reject(err);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+    }
     // ========================================
     // CÁLCULOS DE ESTADÍSTICAS MEP
     // ========================================
@@ -1570,6 +1767,10 @@ class Database {
         });
     }
 }
+
+
+
+
 
 // Crear instancia única
 const database = new Database();

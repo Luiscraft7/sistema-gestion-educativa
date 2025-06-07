@@ -1295,12 +1295,10 @@ async function startServer() {
     }
 }
 
-
 // ========================================
-// APIs DEL MÓDULO DE COTIDIANO
+// APIs DEL MÓDULO DE COTIDIANO (VERSIÓN FINAL)
 // ========================================
 
-// Obtener indicadores por grado y materia
 // Obtener indicadores por grado y materia
 app.get('/api/cotidiano/indicators', async (req, res) => {
     try {
@@ -1313,29 +1311,12 @@ app.get('/api/cotidiano/indicators', async (req, res) => {
             });
         }
         
-        database.ensureConnection();
+        const indicators = await database.getIndicatorsByGradeAndSubject(grade, subject);
         
-        const query = `
-            SELECT * FROM daily_indicators 
-            WHERE grade_level = ? AND subject_area = ? AND is_active = 1
-            ORDER BY parent_indicator_id IS NULL DESC, parent_indicator_id ASC, id ASC
-        `;
-        
-        database.db.all(query, [grade, subject], (err, rows) => {
-            if (err) {
-                console.error('Error fetching indicators:', err);
-                res.status(500).json({ 
-                    success: false, 
-                    message: 'Error obteniendo indicadores',
-                    error: err.message 
-                });
-            } else {
-                res.json({
-                    success: true,
-                    data: rows || [],
-                    message: `${(rows || []).length} indicadores encontrados`
-                });
-            }
+        res.json({
+            success: true,
+            data: indicators,
+            message: `${indicators.length} indicadores encontrados`
         });
         
     } catch (error) {
@@ -1360,28 +1341,12 @@ app.post('/api/cotidiano/indicators', async (req, res) => {
             });
         }
         
-        database.ensureConnection();
+        const result = await database.createIndicator(req.body);
         
-        const query = `
-            INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
-            VALUES (?, ?, ?, ?)
-        `;
-        
-        database.db.run(query, [grade_level, subject_area, indicator_name, parent_indicator_id || null], function(err) {
-            if (err) {
-                console.error('Error creating indicator:', err);
-                res.status(500).json({ 
-                    success: false, 
-                    message: 'Error creando indicador',
-                    error: err.message 
-                });
-            } else {
-                res.json({ 
-                    success: true,
-                    data: { id: this.lastID }, 
-                    message: 'Indicador creado exitosamente' 
-                });
-            }
+        res.json({ 
+            success: true,
+            data: result, 
+            message: 'Indicador creado exitosamente' 
         });
         
     } catch (error) {
@@ -1394,86 +1359,15 @@ app.post('/api/cotidiano/indicators', async (req, res) => {
     }
 });
 
+// Crear múltiples indicadores de una vez
 app.post('/api/cotidiano/indicators/bulk', async (req, res) => {
     try {
-        const { grade_level, subject_area, indicators } = req.body;
-        
-        if (!grade_level || !subject_area || !indicators || !Array.isArray(indicators)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Missing required fields: grade_level, subject_area, indicators (array)' 
-            });
-        }
-        
-        database.ensureConnection();
-        
-        const results = [];
-        let successCount = 0;
-        let errorCount = 0;
-        
-        // Procesar cada indicador
-        for (const indicatorData of indicators) {
-            try {
-                const { indicator_name, parent_indicator_id } = indicatorData;
-                
-                if (!indicator_name || indicator_name.trim() === '') {
-                    results.push({
-                        indicator_name: indicator_name || 'VACIO',
-                        success: false,
-                        error: 'Nombre vacío'
-                    });
-                    errorCount++;
-                    continue;
-                }
-                
-                await new Promise((resolve, reject) => {
-                    const query = `
-                        INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
-                        VALUES (?, ?, ?, ?)
-                    `;
-                    
-                    database.db.run(query, [grade_level, subject_area, indicator_name.trim(), parent_indicator_id || null], function(err) {
-                        if (err) {
-                            results.push({
-                                indicator_name: indicator_name,
-                                success: false,
-                                error: err.message
-                            });
-                            errorCount++;
-                            reject(err);
-                        } else {
-                            results.push({
-                                indicator_name: indicator_name,
-                                success: true,
-                                id: this.lastID
-                            });
-                            successCount++;
-                            resolve();
-                        }
-                    });
-                });
-                
-            } catch (error) {
-                results.push({
-                    indicator_name: indicatorData.indicator_name || 'ERROR',
-                    success: false,
-                    error: error.message
-                });
-                errorCount++;
-            }
-        }
+        const result = await database.createBulkIndicators(req.body);
         
         res.json({ 
-            success: successCount > 0,
-            data: {
-                results: results,
-                summary: {
-                    total: indicators.length,
-                    success: successCount,
-                    errors: errorCount
-                }
-            },
-            message: `${successCount} indicadores creados, ${errorCount} errores` 
+            success: result.summary.success > 0,
+            data: result,
+            message: `${result.summary.success} indicadores creados, ${result.summary.errors} errores` 
         });
         
     } catch (error) {
@@ -1485,7 +1379,6 @@ app.post('/api/cotidiano/indicators/bulk', async (req, res) => {
         });
     }
 });
-
 
 // Eliminar indicador
 app.delete('/api/cotidiano/indicators/:id', async (req, res) => {
@@ -1621,35 +1514,12 @@ app.get('/api/cotidiano/history', async (req, res) => {
             });
         }
         
-        database.ensureConnection();
+        const history = await database.getCotidianoHistory(grade, subject);
         
-        const query = `
-            SELECT 
-                evaluation_date,
-                COUNT(DISTINCT student_id) as total_students,
-                AVG(final_grade) as average_grade,
-                grade_weight
-            FROM daily_evaluations 
-            WHERE grade_level = ? AND subject_area = ?
-            GROUP BY evaluation_date, grade_weight
-            ORDER BY evaluation_date DESC
-        `;
-        
-        database.db.all(query, [grade, subject], (err, rows) => {
-            if (err) {
-                console.error('Error fetching history:', err);
-                res.status(500).json({ 
-                    success: false, 
-                    message: 'Error obteniendo historial',
-                    error: err.message 
-                });
-            } else {
-                res.json({
-                    success: true,
-                    data: rows || [],
-                    message: `${(rows || []).length} evaluaciones encontradas en el historial`
-                });
-            }
+        res.json({
+            success: true,
+            data: history,
+            message: `${history.length} evaluaciones encontradas en el historial`
         });
         
     } catch (error) {
@@ -1661,7 +1531,6 @@ app.get('/api/cotidiano/history', async (req, res) => {
         });
     }
 });
-
 
 
 // Iniciar todo
