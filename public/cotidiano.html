@@ -1012,50 +1012,62 @@ Participa activamente en discusiones"
                 mainIndicator = null;
                 indicators = [];
                 
-                // 2. CARGAR INDICADORES - LÓGICA CORREGIDA
+                // 2. CARGAR INDICADORES - DETECCIÓN INTELIGENTE POR CALIFICACIONES
             if (result.data.indicators && result.data.indicators.length > 0) {
                 const loadedIndicators = result.data.indicators;
                 console.log('📋 Indicadores cargados desde servidor:', loadedIndicators.length);
                 console.log('🔍 Lista completa de indicadores:', loadedIndicators);
                 
-                // Separar por tipo
-                const principalIndicators = loadedIndicators.filter(ind => ind.parent_indicator_id === null);
-                const allSubIndicators = loadedIndicators.filter(ind => ind.parent_indicator_id !== null);
+                // Obtener IDs de indicadores que SÍ tienen calificaciones
+                const indicatorsWithGrades = new Set();
+                if (result.data.students) {
+                    Object.values(result.data.students).forEach(studentGrades => {
+                        Object.keys(studentGrades).forEach(indicatorId => {
+                            indicatorsWithGrades.add(parseInt(indicatorId));
+                        });
+                    });
+                }
                 
-                console.log('🎯 Indicadores principales encontrados:', principalIndicators.length);
-                console.log('📝 Sub-indicadores totales encontrados:', allSubIndicators.length);
+                console.log('📊 Indicadores con calificaciones:', Array.from(indicatorsWithGrades));
                 
-                // Procesar indicador principal (tomar el primero si hay varios)
-                if (principalIndicators.length > 0) {
-                    const principal = principalIndicators[0];
+                // DETECCIÓN INTELIGENTE: El indicador SIN calificaciones es el principal
+                const indicatorsWithoutGrades = loadedIndicators.filter(ind => 
+                    !indicatorsWithGrades.has(ind.id)
+                );
+                const indicatorsWithGradesArray = loadedIndicators.filter(ind => 
+                    indicatorsWithGrades.has(ind.id)
+                );
+                
+                console.log('🎯 Indicadores SIN calificaciones (principales):', indicatorsWithoutGrades.length);
+                console.log('📝 Indicadores CON calificaciones (sub-indicadores):', indicatorsWithGradesArray.length);
+                
+                if (indicatorsWithoutGrades.length === 1 && indicatorsWithGradesArray.length > 0) {
+                    // CASO: 1 principal + varios sub-indicadores
+                    console.log('🎯 Estructura detectada: 1 principal + sub-indicadores');
+                    
+                    const principal = indicatorsWithoutGrades[0];
                     mainIndicator = {
                         id: principal.id,
                         text: principal.indicator_name
                     };
                     console.log('🎯 Indicador principal asignado:', mainIndicator);
                     
-                    // Buscar TODOS los sub-indicadores de este principal
-                    const subsOfThisPrincipal = allSubIndicators.filter(sub => sub.parent_indicator_id === principal.id);
-                    console.log('🔗 Sub-indicadores de este principal:', subsOfThisPrincipal.length);
-                    console.log('📋 Sub-indicadores encontrados:', subsOfThisPrincipal);
-                    
-                    // Agregar cada sub-indicador
-                    subsOfThisPrincipal.forEach((sub, index) => {
+                    // Todos los que tienen calificaciones son sub-indicadores
+                    indicatorsWithGradesArray.forEach((sub, index) => {
                         indicators.push({
                             id: sub.id,
                             text: sub.indicator_name,
                             isSubIndicator: true,
-                            parentId: sub.parent_indicator_id
+                            parentId: principal.id // Asignar como hijo del principal
                         });
                         console.log(`  ➕ Sub-indicador ${index + 1}: "${sub.indicator_name}" (ID: ${sub.id})`);
                     });
-                }
-                
-                // Procesar indicadores individuales (sub-indicadores sin principal en esta sesión)
-                if (principalIndicators.length === 0) {
-                    // Si no hay principal, todos los indicadores son individuales
-                    console.log('📄 No hay principal, todos son individuales');
-                    allSubIndicators.forEach((ind, index) => {
+                    
+                } else if (indicatorsWithoutGrades.length === 0 && indicatorsWithGradesArray.length > 0) {
+                    // CASO: Solo indicadores con calificaciones (todos individuales)
+                    console.log('📄 Solo indicadores individuales detectados');
+                    
+                    indicatorsWithGradesArray.forEach((ind, index) => {
                         indicators.push({
                             id: ind.id,
                             text: ind.indicator_name,
@@ -1064,21 +1076,19 @@ Participa activamente en discusiones"
                         });
                         console.log(`  ➕ Indicador individual ${index + 1}: "${ind.indicator_name}"`);
                     });
-                } else {
-                    // Buscar sub-indicadores que no pertenecen al principal actual
-                    const orphanSubIndicators = allSubIndicators.filter(sub => 
-                        !principalIndicators.some(p => p.id === sub.parent_indicator_id)
-                    );
-                    console.log('📄 Indicadores huérfanos (individuales):', orphanSubIndicators.length);
                     
-                    orphanSubIndicators.forEach((ind, index) => {
+                } else {
+                    // CASO: Estructura rara, tratar todos como individuales
+                    console.log('📄 Estructura no reconocida, tratando todos como individuales');
+                    
+                    loadedIndicators.forEach((ind, index) => {
                         indicators.push({
                             id: ind.id,
                             text: ind.indicator_name,
                             isSubIndicator: false,
                             parentId: null
                         });
-                        console.log(`  ➕ Indicador huérfano ${index + 1}: "${ind.indicator_name}"`);
+                        console.log(`  ➕ Indicador individual ${index + 1}: "${ind.indicator_name}"`);
                     });
                 }
                 
@@ -1659,8 +1669,12 @@ Participa activamente en discusiones"
         // ========================================
         // RENDERIZADO DE INDICADORES
         // ========================================
-        function renderIndicatorsList() {
+       function renderIndicatorsList() {
             const container = document.getElementById('indicatorsList');
+            
+            console.log('🖼️ Renderizando lista de indicadores...');
+            console.log('🎯 MainIndicator:', mainIndicator);
+            console.log('📝 Indicators array:', indicators);
             
             if (!currentGrado || !currentMateria) {
                 container.innerHTML = `
@@ -1687,7 +1701,10 @@ Participa activamente en discusiones"
             
             // Mostrar indicador principal si existe
             if (mainIndicator) {
+                console.log('🎯 Renderizando indicador principal:', mainIndicator.text);
+                
                 const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
+                console.log('📝 Sub-indicadores del principal:', subIndicators.length);
                 
                 html += `
                     <div class="indicator-main-item">
@@ -1715,13 +1732,15 @@ Participa activamente en discusiones"
                                     </div>
                                 `).join('')}
                             </div>
-                        ` : ''}
+                        ` : '<p style="color: #666; font-style: italic; margin-top: 10px;">No hay sub-indicadores</p>'}
                     </div>
                 `;
             }
             
             // Mostrar indicadores individuales (que no son sub-indicadores)
             const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
+            console.log('📄 Indicadores individuales:', individualIndicators.length);
+            
             individualIndicators.forEach((indicator, index) => {
                 html += `
                     <div class="indicator-item">
@@ -1737,7 +1756,9 @@ Participa activamente en discusiones"
                 `;
             });
             
+            console.log('📊 HTML generado para indicadores:', html.length, 'caracteres');
             container.innerHTML = html;
+            console.log('✅ Lista de indicadores renderizada');
         }
 
         // ========================================
