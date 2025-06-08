@@ -584,6 +584,49 @@ app.post('/api/lesson-config', async (req, res) => {
     }
 });
 
+// Contar lecciones reales dadas
+app.get('/api/attendance/lesson-count', async (req, res) => {
+    try {
+        const { grade } = req.query;
+        
+        if (!grade) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado es requerido'
+            });
+        }
+        
+        database.ensureConnection();
+        
+        const query = `
+            SELECT COUNT(DISTINCT date) as total_lessons
+            FROM attendance 
+            WHERE grade_level = ? 
+            AND status IN ('present', 'late_justified', 'late_unjustified', 'absent_justified', 'absent_unjustified')
+        `;
+        
+        const result = await new Promise((resolve, reject) => {
+            database.db.get(query, [grade], (err, row) => {
+                if (err) reject(err);
+                else resolve(row || { total_lessons: 0 });
+            });
+        });
+        
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('❌ Error contando lecciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error contando lecciones',
+            error: error.message
+        });
+    }
+});
+
+
 // ========================================
 // RUTAS API PARA ASIGNACIÓN GRADOS-MATERIAS
 // ========================================

@@ -831,12 +831,6 @@
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Materia:</label>
-                            <select class="filter-select" id="subjectFilter" onchange="loadStudents()">
-                                <option value="">Seleccionar materia...</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
                             <button class="btn btn-primary" style="width: 100%;" onclick="loadStudents()">
                                 🔄 Actualizar Lista
                             </button>
@@ -844,33 +838,48 @@
                     </div>
                 </div>
 
-                <!-- Configuración de Lecciones -->
+                <!-- Configuración de Lecciones MEJORADA -->
                 <div class="card">
                     <div class="card-header">
-                        📚 Configuración Actual
+                        📚 Configuración Flexible
                     </div>
                     <div class="card-body">
                         <div class="lesson-config">
                             <div class="config-item">
                                 <span>Lecciones/semana:</span>
-                                <input type="number" class="config-input" id="lessonsPerWeek" value="5" min="1" max="10">
+                                <input type="number" class="config-input" id="lessonsPerWeek" value="5" min="1" max="10" onchange="updateFlexibleCalculation()">
                             </div>
                             <div class="config-item">
-                                <span>Total semanas:</span>
-                                <input type="number" class="config-input" id="totalWeeks" value="40" min="1" max="52">
+                                <span>Semanas planificadas:</span>
+                                <input type="number" class="config-input" id="totalWeeks" value="40" min="1" max="52" onchange="updateFlexibleCalculation()">
                             </div>
                             <div class="config-item">
-                                <span><strong>Total lecciones:</strong></span>
-                                <span id="totalLessons">200</span>
+                                <span><strong>Total teórico:</strong></span>
+                                <span id="theoreticalLessons" style="color: #666;">200</span>
+                            </div>
+                            <div class="config-item">
+                                <span><strong>Lecciones reales:</strong></span>
+                                <span id="actualLessons" style="color: #27ae60; font-weight: bold;">0</span>
+                            </div>
+                            <div class="config-item">
+                                <span><strong>Progreso:</strong></span>
+                                <span id="progressInfo" style="color: #667eea;">0%</span>
                             </div>
                         </div>
-                        <button class="btn btn-warning btn-sm" style="width: 100%;" onclick="saveLessonConfig()">
-                            💾 Guardar Configuración
-                        </button>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="saveLessonConfig()">
+                                💾 Guardar Config
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="recalculateFromReal()">
+                                🔄 Usar Real
+                            </button>
+                        </div>
+                        <div id="flexibleTip" style="margin-top: 10px; padding: 8px; background: #e8f4fd; border-radius: 5px; font-size: 12px; color: #2c5aa0;">
+                            💡 El sistema se ajusta automáticamente a los días reales trabajados
+                        </div>
                     </div>
                 </div>
             </div>
-
             <!-- Área Principal -->
             <div class="attendance-main">
                 <!-- Header de Asistencia -->
@@ -1289,22 +1298,6 @@
                     debugLog('✅ Grados cargados:', gradesResult.data.length);
                 }
                 
-                // Cargar materias
-                const subjectsResponse = await fetch('/api/custom-subjects');
-                const subjectsResult = await subjectsResponse.json();
-                
-                const subjectFilter = document.getElementById('subjectFilter');
-                const configSubject = document.getElementById('configSubject');
-                subjectFilter.innerHTML = '<option value="">Todas las materias</option>';
-                configSubject.innerHTML = '<option value="">Seleccionar materia...</option>';
-                
-                if (subjectsResult.success) {
-                    subjectsResult.data.forEach(subject => {
-                        subjectFilter.innerHTML += `<option value="${subject.name}">${subject.name}</option>`;
-                        configSubject.innerHTML += `<option value="${subject.name}">${subject.name}</option>`;
-                    });
-                    debugLog('✅ Materias cargadas:', subjectsResult.data.length);
-                }
                 
             } catch (error) {
                 debugLog('❌ Error cargando filtros:', error);
@@ -1314,9 +1307,8 @@
 
         async function loadStudents() {
             const grade = document.getElementById('gradeFilter').value;
-            const subject = document.getElementById('subjectFilter').value;
             
-            debugLog('👥 Cargando estudiantes...', { grade, subject });
+            debugLog('👥 Cargando estudiantes...', { grade });
             
             if (!grade) {
                 document.getElementById('loadingState').style.display = 'block';
@@ -1326,7 +1318,7 @@
             }
             
             currentGrade = grade;
-            currentSubject = subject;
+            currentSubject = null; // Ya no usamos filtro de materias
             
             try {
                 document.getElementById('loadingState').style.display = 'block';
@@ -1337,34 +1329,166 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Filtrar estudiantes por grado y materia (si se especifica)
+                    // Filtrar estudiantes solo por grado y status activo
                     students = result.data.filter(student => {
                         const gradeMatch = student.grade_level === grade;
-                        const subjectMatch = !subject || student.subject_area === subject;
                         const statusMatch = student.status === 'active';
                         
-                        return gradeMatch && subjectMatch && statusMatch;
+                        return gradeMatch && statusMatch;
                     });
                     
-                    debugLog(`✅ Estudiantes filtrados: ${students.length}`, { grade, subject });
+                    debugLog(`✅ Estudiantes filtrados: ${students.length}`, { grade });
                     
-                    const subjectText = subject ? ` - ${subject}` : '';
+                    // Actualizar información del header
                     document.getElementById('attendanceInfo').textContent = 
-                        `${students.length} estudiantes en ${grade}${subjectText}`;
+                        `📊 ${grade} - ${students.length} estudiantes (Todas las materias)`;
                     
+                    // Cargar asistencia existente para la fecha
                     await loadAttendanceForDate();
+                    
+                    // Renderizar tabla
                     renderStudentsTable();
+                    updateStats();
+                    
+                    if (students.length > 0) {
+                        document.getElementById('loadingState').style.display = 'none';
+                        document.getElementById('attendanceTable').style.display = 'table';
+                        debugLog('✅ Lista de estudiantes cargada correctamente');
+
+                        // ✅ AGREGAR ESTA LÍNEA AL FINAL
+                        await loadConfigurationForCurrentGrade();
+
+                    } else {
+                        document.getElementById('loadingState').innerHTML = 
+                            `📭 No hay estudiantes activos en ${grade}`;
+                    }
+                    
                 } else {
-                    debugLog('❌ Error del servidor:', result.message);
                     document.getElementById('loadingState').innerHTML = '❌ Error cargando estudiantes';
+                    debugLog('❌ Error en respuesta:', result.message);
                     showMessage('error', 'Error cargando estudiantes: ' + result.message);
                 }
+                
             } catch (error) {
-                debugLog('❌ Error de conexión:', error);
-                document.getElementById('loadingState').innerHTML = '❌ Error de conexión';
+                debugLog('❌ Error cargando estudiantes:', error);
+                document.getElementById('loadingState').innerHTML = '❌ Error de conexión al cargar estudiantes';
                 showMessage('error', 'Error de conexión al cargar estudiantes');
             }
         }
+
+
+
+        async function loadConfigurationForCurrentGrade() {
+            if (!currentGrade) return;
+            
+            try {
+                debugLog('📚 Cargando configuración para grado:', currentGrade);
+                
+                const response = await fetch(`/api/lesson-config?grade=${encodeURIComponent(currentGrade)}&subject=general`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const config = result.data;
+                    
+                    // Actualizar los valores en la interfaz
+                    document.getElementById('lessonsPerWeek').value = config.lessons_per_week || 5;
+                    document.getElementById('totalWeeks').value = config.total_weeks || 40;
+                    
+                    // Calcular total teórico
+                    const theoreticalTotal = (config.lessons_per_week || 5) * (config.total_weeks || 40);
+                    
+                    // Obtener lecciones reales basadas en asistencia
+                    const actualLessons = await getActualLessonsGiven();
+                    
+                    // Actualizar la interfaz con información flexible
+                    updateFlexibleLessonInfo(theoreticalTotal, actualLessons, config);
+                    
+                    debugLog('✅ Configuración cargada:', config);
+                } else {
+                    debugLog('⚠️ No hay configuración guardada, usando valores por defecto');
+                    updateFlexibleLessonInfo(200, 0, null);
+                }
+                
+            } catch (error) {
+                debugLog('❌ Error cargando configuración:', error);
+                updateFlexibleLessonInfo(200, 0, null);
+            }
+        }
+
+
+        async function getActualLessonsGiven() {
+            if (!currentGrade) return 0;
+            
+            try {
+                // Contar días únicos con asistencia registrada para este grado
+                const response = await fetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    return result.data.total_lessons || 0;
+                }
+                
+                return 0;
+            } catch (error) {
+                debugLog('❌ Error obteniendo lecciones reales:', error);
+                return 0;
+            }
+        }
+
+
+
+    function updateFlexibleLessonInfo(theoretical, actual, config) {
+        document.getElementById('theoreticalLessons').textContent = theoretical;
+        document.getElementById('actualLessons').textContent = actual;
+        
+        const progress = theoretical > 0 ? Math.round((actual / theoretical) * 100) : 0;
+        document.getElementById('progressInfo').textContent = `${progress}%`;
+        
+        // Actualizar tip según el progreso
+        const tipElement = document.getElementById('flexibleTip');
+        if (actual > theoretical) {
+            tipElement.innerHTML = '🎯 ¡Excelente! Has dado más lecciones de las planificadas';
+            tipElement.style.background = '#d4edda';
+            tipElement.style.color = '#155724';
+        } else if (actual < theoretical * 0.8) {
+            tipElement.innerHTML = '⚠️ Considera ajustar la planificación por días feriados';
+            tipElement.style.background = '#fff3cd';
+            tipElement.style.color = '#856404';
+        } else {
+            tipElement.innerHTML = '💡 El sistema se ajusta automáticamente a los días reales trabajados';
+            tipElement.style.background = '#e8f4fd';
+            tipElement.style.color = '#2c5aa0';
+        }
+    }
+
+    function updateFlexibleCalculation() {
+        const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
+        const totalWeeks = parseInt(document.getElementById('totalWeeks').value) || 40;
+        const theoretical = lessonsPerWeek * totalWeeks;
+        
+        document.getElementById('theoreticalLessons').textContent = theoretical;
+        
+        // Recalcular progreso
+        const actual = parseInt(document.getElementById('actualLessons').textContent) || 0;
+        const progress = theoretical > 0 ? Math.round((actual / theoretical) * 100) : 0;
+        document.getElementById('progressInfo').textContent = `${progress}%`;
+    }
+
+    function recalculateFromReal() {
+        const actualLessons = parseInt(document.getElementById('actualLessons').textContent) || 0;
+        const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
+        
+        if (actualLessons > 0 && lessonsPerWeek > 0) {
+            const adjustedWeeks = Math.ceil(actualLessons / lessonsPerWeek);
+            document.getElementById('totalWeeks').value = adjustedWeeks;
+            document.getElementById('theoreticalLessons').textContent = actualLessons;
+            document.getElementById('progressInfo').textContent = '100%';
+            
+            showMessage('success', `✅ Ajustado a ${adjustedWeeks} semanas basado en ${actualLessons} lecciones reales`);
+        } else {
+            showMessage('info', 'Necesitas registrar asistencia primero para usar esta función');
+        }
+    }
 
         async function loadAttendanceForDate() {
             if (!currentGrade || students.length === 0) {
@@ -1380,9 +1504,7 @@
                 debugLog('📊 Cargando asistencia para:', { date: dateStr, grade: currentGrade, subject: currentSubject });
                 
                 let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}`;
-                if (currentSubject) {
-                    url += `&subject=${encodeURIComponent(currentSubject)}`;
-                }
+                // Ya no añadimos el parámetro subject porque no usamos filtro de materias
                 
                 const response = await fetch(url);
                 const result = await response.json();
@@ -1581,9 +1703,9 @@
                 const dateStr = selectedDate.toISOString().split('T')[0];
                 const now = new Date();
                 
-                // ✅ CORREGIDO: Usar la materia seleccionada del estudiante
+                // ✅ CORREGIDO: Usar la materia del estudiante o 'general'
                 const student = students.find(s => s.id === studentId);
-                const subjectArea = currentSubject || student?.subject_area || 'general';
+                const subjectArea = student?.subject_area || 'general';
                 
                 const attendanceRecord = {
                     student_id: studentId,
