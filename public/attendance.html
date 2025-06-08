@@ -1267,22 +1267,21 @@
                 const gradesResult = await gradesResponse.json();
                 
                 const gradeFilter = document.getElementById('gradeFilter');
-                const configGrade = document.getElementById('configGrade');
                 gradeFilter.innerHTML = '<option value="">Seleccionar grado...</option>';
-                configGrade.innerHTML = '<option value="">Seleccionar grado...</option>';
                 
                 if (gradesResult.success) {
                     gradesResult.data.forEach(grade => {
                         gradeFilter.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
-                        configGrade.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
                     });
                     debugLog('✅ Grados cargados:', gradesResult.data.length);
+                } else {
+                    debugLog('⚠️ No se pudieron cargar los grados');
+                    showMessage('error', 'No se pudieron cargar los grados');
                 }
-                
                 
             } catch (error) {
                 debugLog('❌ Error cargando filtros:', error);
-                showMessage('error', 'Error cargando filtros');
+                showMessage('error', 'Error cargando filtros: ' + error.message);
             }
         }
 
@@ -1626,7 +1625,7 @@
                                     ${attendancePercentage.toFixed(1)}%
                                 </div>
                                 <div style="font-size: 11px; color: #666;">
-                                    Nota: ${notaAsistencia.toFixed(1)}/5.0
+                                    Nota: ${notaAsistencia.toFixed(1)}/${mepStats.max_scale || 5.0}
                                 </div>
                                 <div style="font-size: 10px; color: #999;" title="Nota en escala 0-10 según MEP">
                                     (${nota10}/10)
@@ -2085,12 +2084,13 @@
         // ✅ FUNCIÓN NUEVA - AGREGAR DESPUÉS DE openLessonConfigModal()
         async function loadCurrentScale() {
             try {
-                if (!currentGrade || !currentSubject) {
+                if (!currentGrade) {
                     document.getElementById('maxScaleInput').value = 5.0;
+                    debugLog('⚠️ No hay grado seleccionado, usando escala por defecto');
                     return;
                 }
                 
-                const response = await fetch(`/api/grade-scale?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
+                const response = await fetch(`/api/grade-scale?grade=${encodeURIComponent(currentGrade)}&subject=general`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -2103,6 +2103,7 @@
             } catch (error) {
                 console.error('Error cargando escala:', error);
                 document.getElementById('maxScaleInput').value = 5.0; // Default en caso de error
+                debugLog('❌ Error cargando escala, usando 5.0 por defecto');
             }
         }
         function closeLessonConfigModal() {
@@ -2252,7 +2253,7 @@
                                     <div style="color: #666; font-size: 12px;">ASISTENCIA PROMEDIO</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #ffc107;">${summary.average_grade.toFixed(1)}/5.0</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #28a745;">${summary.average_grade.toFixed(1)}/${summary.max_scale || 5.0}</div>
                                     <div style="color: #666; font-size: 12px;">NOTA PROMEDIO</div>
                                 </div>
                                 <div style="text-align: center;">

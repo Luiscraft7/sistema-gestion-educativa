@@ -576,7 +576,8 @@ app.get('/api/attendance/class-stats', async (req, res) => {
         const summary = {
             total_students: classStats.length,
             average_attendance: classStats.reduce((sum, s) => sum + s.mep_stats.attendance_percentage, 0) / classStats.length,
-            average_grade: classStats.reduce((sum, s) => sum + s.mep_stats.nota_asistencia, 0) / classStats.length
+            average_grade: classStats.reduce((sum, s) => sum + s.mep_stats.nota_asistencia, 0) / classStats.length,
+            max_scale: classStats.length > 0 ? classStats[0].mep_stats.max_scale || 5.0 : 5.0  // ✅ AGREGAR ESTA LÍNEA
         };
         
         console.log('✅ Estadísticas de clase calculadas:', summary);
