@@ -1705,87 +1705,143 @@ class Database {
             });
         });
     }
+
+    // Guardar escala máxima para grado/materia
+    saveGradeScale(gradeLevel, subjectArea, maxScale) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                INSERT OR REPLACE INTO grade_scale_config 
+                (grade_level, subject_area, max_scale, updated_at)
+                VALUES (?, ?, ?, datetime('now'))
+            `;
+            
+            this.db.run(query, [gradeLevel, subjectArea, maxScale], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ success: true, max_scale: maxScale });
+                }
+            });
+        });
+    }
+
+    // Obtener escala máxima
+    getGradeScale(gradeLevel, subjectArea) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT max_scale 
+                FROM grade_scale_config 
+                WHERE grade_level = ? AND subject_area = ?
+            `;
+            
+            this.db.get(query, [gradeLevel, subjectArea], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row ? row.max_scale : 5.0); // Default 5.0 si no existe
+                }
+            });
+        });
+    }
+
     // ========================================
     // CÁLCULOS DE ESTADÍSTICAS MEP
     // ========================================
     async calculateMEPAttendanceGrade(studentId, grade, subject = 'general', totalLessons = 200) {
         this.ensureConnection();
         
-        return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    status,
-                    COUNT(*) as count
-                FROM attendance 
-                WHERE student_id = ? AND grade_level = ? AND subject_area = ?
-                GROUP BY status
-            `;
-            
-            this.db.all(query, [studentId, grade, subject], (err, rows) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+        return new Promise(async (resolve, reject) => {  // ✅ Agregar async aquí
+            try {
+                const query = `
+                    SELECT 
+                        status,
+                        COUNT(*) as count
+                    FROM attendance 
+                    WHERE student_id = ? AND grade_level = ? AND subject_area = ?
+                    GROUP BY status
+                `;
                 
-                // Inicializar contadores
-                const stats = {
-                    present: 0,
-                    late_justified: 0,
-                    late_unjustified: 0,
-                    absent_justified: 0,
-                    absent_unjustified: 0
-                };
-                
-                // Procesar resultados
-                rows.forEach(row => {
-                    stats[row.status] = row.count;
+                this.db.all(query, [studentId, grade, subject], async (err, rows) => {  // ✅ Agregar async aquí también
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    
+                    try {
+                        // Inicializar contadores
+                        const stats = {
+                            present: 0,
+                            late_justified: 0,
+                            late_unjustified: 0,
+                            absent_justified: 0,
+                            absent_unjustified: 0
+                        };
+                        
+                        // Procesar resultados
+                        rows.forEach(row => {
+                            stats[row.status] = row.count;
+                        });
+                        
+                        // Calcular ausencias según fórmula MEP
+                        const totalAbsences = stats.absent_unjustified + 
+                                        (stats.late_unjustified * 0.5) + 
+                                        (stats.late_justified * 0.5);
+                        
+                        // Calcular porcentaje de ausencias
+                        const absencePercentage = (totalAbsences / totalLessons) * 100;
+                        const attendancePercentage = 100 - absencePercentage;
+                        
+                        // Convertir porcentaje de ausencias a nota MEP (escala 0-10)
+                        let nota0_10;
+                        if (absencePercentage <= 5) nota0_10 = 10;
+                        else if (absencePercentage <= 10) nota0_10 = 9;
+                        else if (absencePercentage <= 15) nota0_10 = 8;
+                        else if (absencePercentage <= 20) nota0_10 = 7;
+                        else if (absencePercentage <= 25) nota0_10 = 6;
+                        else if (absencePercentage <= 30) nota0_10 = 5;
+                        else if (absencePercentage <= 35) nota0_10 = 4;
+                        else if (absencePercentage <= 40) nota0_10 = 3;
+                        else if (absencePercentage <= 45) nota0_10 = 2;
+                        else if (absencePercentage <= 50) nota0_10 = 1;
+                        else nota0_10 = 0;
+                        
+                        // ✅ AQUÍ USAS AWAIT PARA OBTENER LA ESCALA
+                        const maxScale = await this.getGradeScale(grade, subject || 'general');
+                        const notaAsistencia = (nota0_10 / 10) * maxScale;
+                        
+                        const result = {
+                            student_id: studentId,
+                            grade_level: grade,
+                            subject_area: subject,
+                            total_lessons: totalLessons,
+                            stats: stats,
+                            total_records: Object.values(stats).reduce((sum, count) => sum + count, 0),
+                            total_absences: totalAbsences,
+                            absence_percentage: absencePercentage,
+                            attendance_percentage: attendancePercentage,
+                            nota_0_10: nota0_10,
+                            nota_asistencia: notaAsistencia,
+                            max_scale: maxScale,  // ✅ Incluir la escala usada
+                            calculated_at: new Date().toISOString()
+                        };
+                        
+                        resolve(result);
+                    } catch (error) {
+                        reject(error);
+                    }
                 });
-                
-                // Calcular ausencias según fórmula MEP
-                const totalAbsences = stats.absent_unjustified + 
-                                   (stats.late_unjustified * 0.5) + 
-                                   (stats.late_justified * 0.5);
-                
-                // Calcular porcentaje de ausencias
-                const absencePercentage = (totalAbsences / totalLessons) * 100;
-                const attendancePercentage = 100 - absencePercentage;
-                
-                // Convertir porcentaje de ausencias a nota MEP (escala 0-10)
-                let nota0_10;
-                if (absencePercentage <= 5) nota0_10 = 10;
-                else if (absencePercentage <= 10) nota0_10 = 9;
-                else if (absencePercentage <= 15) nota0_10 = 8;
-                else if (absencePercentage <= 20) nota0_10 = 7;
-                else if (absencePercentage <= 25) nota0_10 = 6;
-                else if (absencePercentage <= 30) nota0_10 = 5;
-                else if (absencePercentage <= 35) nota0_10 = 4;
-                else if (absencePercentage <= 40) nota0_10 = 3;
-                else if (absencePercentage <= 45) nota0_10 = 2;
-                else if (absencePercentage <= 50) nota0_10 = 1;
-                else nota0_10 = 0;
-                
-                // Convertir a escala 0-5 (nota final = nota_0_10 * 0.5)
-                const notaAsistencia = nota0_10 * 0.5;
-                
-                const result = {
-                    student_id: studentId,
-                    grade_level: grade,
-                    subject_area: subject,
-                    total_lessons: totalLessons,
-                    stats: stats,
-                    total_records: Object.values(stats).reduce((sum, count) => sum + count, 0),
-                    total_absences: totalAbsences,
-                    absence_percentage: absencePercentage,
-                    attendance_percentage: attendancePercentage,
-                    nota_0_10: nota0_10,
-                    nota_asistencia: notaAsistencia,
-                    calculated_at: new Date().toISOString()
-                };
-                
-                resolve(result);
-            });
+            } catch (error) {
+                reject(error);
+            }
         });
     }
+
+
+
+
+
+
+    
 }
 
 

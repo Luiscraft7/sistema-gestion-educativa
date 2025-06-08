@@ -263,7 +263,15 @@ CREATE INDEX IF NOT EXISTS idx_attendance_student_date ON attendance(student_id,
 CREATE INDEX IF NOT EXISTS idx_attendance_date_grade ON attendance(date, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_lesson_config_grade_subject ON lesson_config(grade_level, subject_area);
 
-
+-- Tabla para configurar escala máxima de notas por grado/materia
+CREATE TABLE IF NOT EXISTS grade_scale_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    max_scale REAL DEFAULT 5.0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(grade_level, subject_area)
+);
 
 -- ========================================
 -- MÓDULO DE COTIDIANO AVANZADO

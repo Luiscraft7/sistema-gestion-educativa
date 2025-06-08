@@ -761,7 +761,7 @@
             </div>
             <div class="header-actions">
                 <button class="btn btn-info" onclick="openLessonConfigModal()">
-                    ⚙️ Configurar Lecciones
+                    ⚙️ Configuración de la nota
                 </button>
                 <button class="btn btn-purple" onclick="showClassStats()">
                     📊 Estadísticas MEP
@@ -1018,47 +1018,28 @@
         </div>
     </div>
 
-    <!-- Modal para Configuración de Lecciones -->
+    <!-- Modal para Configuración de Notas -->
     <div class="modal" id="lessonConfigModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">⚙️ Configurar Lecciones</h2>
+                <h2 class="modal-title">⚙️ Configuración de la Nota</h2>
                 <button class="close-btn" onclick="closeLessonConfigModal()">&times;</button>
             </div>
             
             <form id="lessonConfigForm" onsubmit="saveLessonConfigModal(event)">
                 <div class="form-group">
-                    <label class="form-label">Grado:</label>
-                    <select class="form-input" id="configGrade" required>
-                        <option value="">Seleccionar grado...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Materia:</label>
-                    <select class="form-input" id="configSubject" required>
-                        <option value="">Seleccionar materia...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Lecciones por Semana:</label>
-                    <input type="number" class="form-input" id="configLessonsPerWeek" min="1" max="10" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Total de Semanas en el Período:</label>
-                    <input type="number" class="form-input" id="configTotalWeeks" min="1" max="52" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Nombre del Profesor:</label>
-                    <input type="text" class="form-input" id="configTeacher" placeholder="Profesor encargado">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Total de Lecciones Calculado:</label>
-                    <div id="calculatedLessons" style="font-size: 18px; font-weight: 600; color: #667eea;">0</div>
+                    <label class="form-label">📊 Escala Máxima de Notas:</label>
+                    <input type="number" 
+                        class="form-input" 
+                        id="maxScaleInput" 
+                        step="0.1" 
+                        min="1" 
+                        max="100" 
+                        value="5.0" 
+                        required>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        5.0 = MEP tradicional | 10.0 = escala de 10 | 100 = porcentajes
+                    </div>
                 </div>
                 
                 <div class="modal-actions">
@@ -1983,11 +1964,11 @@
             
             try {
                 const configData = {
-                    grade_level: currentGrade,
-                    subject_area: currentSubject || 'general',
-                    lessons_per_week: parseInt(document.getElementById('lessonsPerWeek').value),
-                    total_weeks: parseInt(document.getElementById('totalWeeks').value),
-                    total_lessons: lessonConfig.totalLessons
+                    grade_level: document.getElementById('configGrade').value,
+                    subject_area: 'general', // ✅ Siempre usar 'general'
+                    lessons_per_week: parseInt(document.getElementById('configLessonsPerWeek').value),
+                    total_weeks: parseInt(document.getElementById('configTotalWeeks').value),
+                    teacher_name: document.getElementById('configTeacher').value || null
                 };
                 
                 const response = await fetch('/api/lesson-config', {
@@ -2090,17 +2071,40 @@
         }
 
         function openLessonConfigModal() {
+            if (!currentGrade) {
+                showMessage('error', 'Seleccione un grado primero');
+                return;
+            }
+            
             document.getElementById('lessonConfigModal').classList.add('show');
             
-            document.getElementById('configGrade').value = currentGrade;
-            document.getElementById('configSubject').value = currentSubject;
-            document.getElementById('configLessonsPerWeek').value = lessonConfig.lessonsPerWeek;
-            document.getElementById('configTotalWeeks').value = lessonConfig.totalWeeks;
-            document.getElementById('configTeacher').value = '';
-            
-            calculateTotalLessons();
+            // ✅ CARGAR ESCALA ACTUAL
+            loadCurrentScale();
         }
 
+        // ✅ FUNCIÓN NUEVA - AGREGAR DESPUÉS DE openLessonConfigModal()
+        async function loadCurrentScale() {
+            try {
+                if (!currentGrade || !currentSubject) {
+                    document.getElementById('maxScaleInput').value = 5.0;
+                    return;
+                }
+                
+                const response = await fetch(`/api/grade-scale?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('maxScaleInput').value = data.max_scale;
+                    debugLog(`✅ Escala cargada: ${data.max_scale}`);
+                } else {
+                    document.getElementById('maxScaleInput').value = 5.0; // Default
+                    debugLog('⚠️ No se encontró escala, usando 5.0 por defecto');
+                }
+            } catch (error) {
+                console.error('Error cargando escala:', error);
+                document.getElementById('maxScaleInput').value = 5.0; // Default en caso de error
+            }
+        }
         function closeLessonConfigModal() {
             document.getElementById('lessonConfigModal').classList.remove('show');
         }
@@ -2109,35 +2113,41 @@
             event.preventDefault();
             
             try {
-                const configData = {
-                    grade_level: document.getElementById('configGrade').value,
-                    subject_area: document.getElementById('configSubject').value,
-                    lessons_per_week: parseInt(document.getElementById('configLessonsPerWeek').value),
-                    total_weeks: parseInt(document.getElementById('configTotalWeeks').value),
-                    teacher_name: document.getElementById('configTeacher').value || null
-                };
+                // ✅ OBTENER LA ESCALA MÁXIMA
+                const maxScale = parseFloat(document.getElementById('maxScaleInput').value);
                 
-                configData.total_lessons = configData.lessons_per_week * configData.total_weeks;
+                if (!currentGrade) {
+                    showMessage('error', 'Seleccione un grado primero');
+                    return;
+                }
                 
-                const response = await fetch('/api/lesson-config', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(configData)
+                // ✅ GUARDAR ESCALA MÁXIMA (usando grado/materia actual)
+                const scaleResponse = await fetch('/api/grade-scale', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        grade: currentGrade,
+                        subject: currentSubject || 'general',
+                        maxScale: maxScale
+                    })
                 });
                 
-                const result = await response.json();
+                const scaleResult = await scaleResponse.json();
                 
-                if (result.success) {
-                    showMessage('success', '✅ Configuración guardada correctamente');
+                if (scaleResult.success) {
+                    showMessage('success', '✅ Configuración de nota guardada correctamente');
                     closeLessonConfigModal();
+                    // Recargar estadísticas para ver los cambios
+                    if (typeof showClassStats === 'function') {
+                        showClassStats();
+                    }
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showMessage('error', 'Error guardando configuración: ' + scaleResult.message);
                 }
+                
             } catch (error) {
                 debugLog('Error guardando configuración:', error);
-                showMessage('error', 'Error guardando configuración');
+                showMessage('error', 'Error guardando configuración: ' + error.message);
             }
         }
 
@@ -2288,7 +2298,7 @@
                                                 </td>
                                                 <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
                                                     <span style="color: ${stats.nota_asistencia >= 4 ? '#28a745' : stats.nota_asistencia >= 3 ? '#ffc107' : '#dc3545'}; font-weight: 600;">
-                                                        ${stats.nota_asistencia.toFixed(1)}/5.0
+                                                        ${stats.nota_asistencia.toFixed(1)}/${stats.max_scale || 5.0}
                                                     </span>
                                                 </td>
                                                 <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">

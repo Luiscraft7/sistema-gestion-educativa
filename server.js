@@ -404,6 +404,70 @@ app.delete('/api/attendance', async (req, res) => {
     }
 });
 
+// Guardar escala máxima de notas
+app.put('/api/grade-scale', async (req, res) => {
+    try {
+        const { grade, subject, maxScale } = req.body;
+        
+        if (!grade || !subject || maxScale === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado, materia y escala máxima son requeridos'
+            });
+        }
+        
+        if (maxScale <= 0 || maxScale > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'La escala debe estar entre 0.1 y 100'
+            });
+        }
+        
+        await database.saveGradeScale(grade, subject, maxScale);
+        
+        res.json({
+            success: true,
+            message: 'Escala de notas guardada correctamente'
+        });
+    } catch (error) {
+        console.error('Error guardando escala:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error guardando escala',
+            error: error.message
+        });
+    }
+});
+
+// Obtener escala máxima actual
+app.get('/api/grade-scale', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        if (!grade || !subject) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado y materia son requeridos'
+            });
+        }
+        
+        const maxScale = await database.getGradeScale(grade, subject);
+        
+        res.json({
+            success: true,
+            max_scale: maxScale
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+
+
+
 // ========================================
 // ESTADÍSTICAS MEP - ENDPOINTS CORREGIDOS ✅
 // ========================================
