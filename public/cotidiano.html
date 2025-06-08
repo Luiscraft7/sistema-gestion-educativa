@@ -989,6 +989,55 @@ Participa activamente en discusiones"
             }
         }
 
+        function resetIndicatorsOnDateChange() {
+            console.log('🔄 Reseteando indicadores por cambio de fecha...');
+            
+            // Limpiar variables globales de indicadores
+            mainIndicator = null;
+            indicators = [];
+            
+            // Limpiar el contenedor de indicadores en la UI
+            const indicatorsContainer = document.getElementById('indicatorsList');
+            if (indicatorsContainer) {
+                indicatorsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📝 No hay indicadores configurados</h3>
+                        <p>Agregue indicadores para comenzar a evaluar</p>
+                        <button class="btn btn-primary" onclick="openUnifiedIndicatorModal()">🎯 Crear Indicador Principal</button>
+                    </div>
+                `;
+            }
+            
+            // Limpiar la tabla de calificaciones
+            const calificacionesTable = document.getElementById('calificacionesTable');
+            if (calificacionesTable) {
+                const tbody = calificacionesTable.querySelector('tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 40px; color: #6c757d;">
+                                <h3>📝 Seleccione grado y materia</h3>
+                                <p>Configure el grado y materia en el panel superior para comenzar</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            // Resetear suma del cotidiano
+            const sumaCotidianoElement = document.getElementById('sumaCotidiano');
+            if (sumaCotidianoElement) {
+                sumaCotidianoElement.textContent = '0';
+            }
+            
+            // Resetear indicador de cambios
+            hasUnsavedChanges = false;
+            updateStatusIndicator();
+            
+            console.log('✅ Reset de indicadores completado');
+        }
+
+
       async function loadCurrentData() {
         if (!currentGrado || !currentMateria) {
             resetInterface();
@@ -1010,62 +1059,54 @@ Participa activamente en discusiones"
                 mainIndicator = null;
                 indicators = [];
                 
-                // 2. CARGAR INDICADORES - DETECCIÓN INTELIGENTE POR CALIFICACIONES
+                // 2. CARGAR INDICADORES - USAR parent_indicator_id DEL BACKEND
             if (result.data.indicators && result.data.indicators.length > 0) {
                 const loadedIndicators = result.data.indicators;
                 console.log('📋 Indicadores cargados desde servidor:', loadedIndicators.length);
                 console.log('🔍 Lista completa de indicadores:', loadedIndicators);
                 
-                // Obtener IDs de indicadores que SÍ tienen calificaciones
-                const indicatorsWithGrades = new Set();
-                if (result.data.students) {
-                    Object.values(result.data.students).forEach(studentGrades => {
-                        Object.keys(studentGrades).forEach(indicatorId => {
-                            indicatorsWithGrades.add(parseInt(indicatorId));
-                        });
-                    });
-                }
+                // 🔧 CORRECCIÓN: Usar parent_indicator_id en lugar de "detección inteligente"
                 
-                console.log('📊 Indicadores con calificaciones:', Array.from(indicatorsWithGrades));
-                
-                // DETECCIÓN INTELIGENTE: El indicador SIN calificaciones es el principal
-                const indicatorsWithoutGrades = loadedIndicators.filter(ind => 
-                    !indicatorsWithGrades.has(ind.id)
-                );
-                const indicatorsWithGradesArray = loadedIndicators.filter(ind => 
-                    indicatorsWithGrades.has(ind.id)
+                // Buscar indicadores principales (parent_indicator_id IS NULL)
+                const principalIndicators = loadedIndicators.filter(ind => 
+                    ind.parent_indicator_id === null || ind.parent_indicator_id === undefined
                 );
                 
-                console.log('🎯 Indicadores SIN calificaciones (principales):', indicatorsWithoutGrades.length);
-                console.log('📝 Indicadores CON calificaciones (sub-indicadores):', indicatorsWithGradesArray.length);
+                // Buscar sub-indicadores (parent_indicator_id IS NOT NULL)
+                const subIndicators = loadedIndicators.filter(ind => 
+                    ind.parent_indicator_id !== null && ind.parent_indicator_id !== undefined
+                );
                 
-                if (indicatorsWithoutGrades.length === 1 && indicatorsWithGradesArray.length > 0) {
-                    // CASO: 1 principal + varios sub-indicadores
+                console.log('🎯 Indicadores principales encontrados:', principalIndicators.length);
+                console.log('📝 Sub-indicadores encontrados:', subIndicators.length);
+                
+                if (principalIndicators.length === 1 && subIndicators.length > 0) {
+                    // CASO: 1 principal + sub-indicadores
                     console.log('🎯 Estructura detectada: 1 principal + sub-indicadores');
                     
-                    const principal = indicatorsWithoutGrades[0];
+                    const principal = principalIndicators[0];
                     mainIndicator = {
                         id: principal.id,
                         text: principal.indicator_name
                     };
                     console.log('🎯 Indicador principal asignado:', mainIndicator);
                     
-                    // Todos los que tienen calificaciones son sub-indicadores
-                    indicatorsWithGradesArray.forEach((sub, index) => {
+                    // Agregar sub-indicadores vinculados al principal
+                    subIndicators.forEach((sub, index) => {
                         indicators.push({
                             id: sub.id,
                             text: sub.indicator_name,
                             isSubIndicator: true,
-                            parentId: principal.id // Asignar como hijo del principal
+                            parentId: sub.parent_indicator_id // Usar el ID del backend
                         });
-                        console.log(`  ➕ Sub-indicador ${index + 1}: "${sub.indicator_name}" (ID: ${sub.id})`);
+                        console.log(`  ➕ Sub-indicador ${index + 1}: "${sub.indicator_name}" (Padre: ${sub.parent_indicator_id})`);
                     });
                     
-                } else if (indicatorsWithoutGrades.length === 0 && indicatorsWithGradesArray.length > 0) {
-                    // CASO: Solo indicadores con calificaciones (todos individuales)
-                    console.log('📄 Solo indicadores individuales detectados');
+                } else if (principalIndicators.length > 0 && subIndicators.length === 0) {
+                    // CASO: Solo indicadores principales (tratarlos como individuales)
+                    console.log('📄 Solo indicadores principales (sin sub-indicadores)');
                     
-                    indicatorsWithGradesArray.forEach((ind, index) => {
+                    principalIndicators.forEach((ind, index) => {
                         indicators.push({
                             id: ind.id,
                             text: ind.indicator_name,
@@ -1073,20 +1114,58 @@ Participa activamente en discusiones"
                             parentId: null
                         });
                         console.log(`  ➕ Indicador individual ${index + 1}: "${ind.indicator_name}"`);
+                    });
+                    
+                } else if (principalIndicators.length === 0 && subIndicators.length > 0) {
+                    // CASO: Solo sub-indicadores (estructura rara, buscar su principal)
+                    console.log('⚠️ Solo sub-indicadores encontrados - buscando principal...');
+                    
+                    // Buscar el principal al que pertenecen
+                    const parentId = subIndicators[0].parent_indicator_id;
+                    const principalInDB = loadedIndicators.find(ind => ind.id === parentId);
+                    
+                    if (principalInDB) {
+                        mainIndicator = {
+                            id: principalInDB.id,
+                            text: principalInDB.indicator_name
+                        };
+                        console.log('🎯 Principal encontrado:', mainIndicator);
+                    }
+                    
+                    subIndicators.forEach((sub, index) => {
+                        indicators.push({
+                            id: sub.id,
+                            text: sub.indicator_name,
+                            isSubIndicator: true,
+                            parentId: sub.parent_indicator_id
+                        });
+                        console.log(`  ➕ Sub-indicador ${index + 1}: "${sub.indicator_name}"`);
                     });
                     
                 } else {
-                    // CASO: Estructura rara, tratar todos como individuales
-                    console.log('📄 Estructura no reconocida, tratando todos como individuales');
+                    // CASO: Mezcla compleja - procesar todos
+                    console.log('📄 Estructura mixta detectada');
                     
                     loadedIndicators.forEach((ind, index) => {
-                        indicators.push({
-                            id: ind.id,
-                            text: ind.indicator_name,
-                            isSubIndicator: false,
-                            parentId: null
-                        });
-                        console.log(`  ➕ Indicador individual ${index + 1}: "${ind.indicator_name}"`);
+                        if (ind.parent_indicator_id === null || ind.parent_indicator_id === undefined) {
+                            // Es un indicador individual
+                            indicators.push({
+                                id: ind.id,
+                                text: ind.indicator_name,
+                                isSubIndicator: false,
+                                parentId: null
+                            });
+                            console.log(`  ➕ Indicador individual ${index + 1}: "${ind.indicator_name}"`);
+                        } else {
+                            // Es un sub-indicador
+                            indicators.push({
+                                id: ind.id,
+                                text: ind.indicator_name,
+                                isSubIndicator: true,
+                                parentId: ind.parent_indicator_id
+                            });
+                            console.log(`  ➕ Sub-indicador ${index + 1}: "${ind.indicator_name}" (Padre: ${ind.parent_indicator_id})`);
+                        }
                     });
                 }
                 
@@ -1337,22 +1416,39 @@ Participa activamente en discusiones"
             const fechaInput = document.getElementById('fecha');
             const nuevaFecha = fechaInput.value;
             
+            if (!nuevaFecha) {
+                alert('Por favor seleccione una fecha válida');
+                fechaInput.value = currentDate;
+                return;
+            }
+            
+            // Verificar si hay cambios sin guardar
             if (hasUnsavedChanges) {
-                if (!confirm('Tiene cambios sin guardar. ¿Desea continuar sin guardar?')) {
+                if (!confirm('Hay cambios sin guardar. ¿Desea continuar sin guardar?')) {
                     fechaInput.value = currentDate;
                     return;
                 }
             }
             
+            // Guardar la fecha anterior para logs
+            const fechaAnterior = currentDate;
+            
+            // Actualizar fecha actual
             currentDate = nuevaFecha;
             
+            console.log(`📅 Cambio de fecha: ${fechaAnterior} → ${currentDate}`);
+            
+            // IMPORTANTE: Resetear indicadores antes de cargar nuevos datos
+            resetIndicatorsOnDateChange();
+            
+            // Cargar datos para la nueva fecha (si hay grado y materia seleccionados)
             if (currentGrado && currentMateria) {
+                console.log('🔄 Cargando datos para nueva fecha...');
                 loadCurrentData();
             }
             
-            updateStatusIndicator();
+            console.log('✅ Cambio de fecha completado');
         }
-
         function resetInterface() {
             indicators = [];
             mainIndicator = null;
@@ -1470,7 +1566,7 @@ Participa activamente en discusiones"
             preview.innerHTML = previewHTML;
         }
 
-        function saveUnifiedIndicators() {
+       function saveUnifiedIndicators() {
             const mainIndicatorText = document.getElementById('unifiedMainIndicator').value.trim();
             const bulkText = document.getElementById('unifiedBulkIndicators').value;
             const individualIndicators = bulkText.split('\n').filter(line => line.trim() !== '');
@@ -1494,8 +1590,27 @@ Participa activamente en discusiones"
                     id: Date.now(),
                     text: mainIndicatorText
                 };
+                totalIndicators++; // Contar el principal
                 
-                // Obtener sub-indicadores del principal
+                // 🔧 CORRECCIÓN: Si hay indicador principal, los individuales se convierten en sub-indicadores
+                if (individualIndicators.length > 0) {
+                    console.log('🔄 Convirtiendo indicadores individuales en sub-indicadores del principal');
+                    
+                    // Agregar indicadores de la lista como SUB-INDICADORES del principal
+                    individualIndicators.forEach((indicatorText, index) => {
+                        indicators.push({
+                            id: Date.now() + index + 1,
+                            text: indicatorText.trim(),
+                            isSubIndicator: true,        // ✅ Marcados como sub-indicadores
+                            parentId: mainIndicator.id   // ✅ Vinculados al principal
+                        });
+                        totalIndicators++;
+                    });
+                    
+                    console.log(`✅ ${individualIndicators.length} indicadores convertidos a sub-indicadores`);
+                }
+                
+                // Obtener sub-indicadores del formulario de sub-indicadores (si los hay)
                 const principalSubs = [];
                 const subInputs = document.querySelectorAll('input[name="principal_sub[]"]');
                 subInputs.forEach(input => {
@@ -1504,10 +1619,10 @@ Participa activamente en discusiones"
                     }
                 });
                 
-                // Agregar sub-indicadores
+                // Agregar sub-indicadores adicionales del formulario
                 principalSubs.forEach((subText, index) => {
                     indicators.push({
-                        id: Date.now() + index + 1,
+                        id: Date.now() + 1000 + index,
                         text: subText,
                         isSubIndicator: true,
                         parentId: mainIndicator.id
@@ -1515,17 +1630,20 @@ Participa activamente en discusiones"
                     totalIndicators++;
                 });
                 
-                totalIndicators++; // Contar el principal
-            }
-            
-            // Agregar indicadores individuales
-            individualIndicators.forEach((indicatorText, index) => {
-                indicators.push({
-                    id: Date.now() + 1000 + index,
-                    text: indicatorText.trim()
+            } else {
+                // 🔧 Si NO hay indicador principal, los individuales quedan como independientes
+                console.log('📝 Agregando indicadores como independientes (sin principal)');
+                
+                individualIndicators.forEach((indicatorText, index) => {
+                    indicators.push({
+                        id: Date.now() + 1000 + index,
+                        text: indicatorText.trim(),
+                        isSubIndicator: false,    // ✅ Independientes
+                        parentId: null           // ✅ Sin padre
+                    });
+                    totalIndicators++;
                 });
-                totalIndicators++;
-            });
+            }
             
             renderIndicatorsList();
             renderCalificacionesTable();
@@ -1534,7 +1652,14 @@ Participa activamente en discusiones"
             hasUnsavedChanges = true;
             updateStatusIndicator();
             
-            alert(`${totalIndicators} indicadores creados exitosamente`);
+            // Mensaje más claro
+            if (mainIndicator) {
+                const subCount = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id).length;
+                alert(`✅ Indicador principal creado con ${subCount} sub-indicadores`);
+            } else {
+                alert(`✅ ${totalIndicators} indicadores individuales agregados`);
+            }
+            
             closeUnifiedIndicatorModal();
         }
 
@@ -2014,64 +2139,85 @@ Participa activamente en discusiones"
             else if (val === 3) input.classList.add('grade-3');
         }
 
-        function updateStudentSums(studentKey) {
-            let cotidianoDay = 0;
-            let cotidianoTotal = 0;
+       function updateStudentSums(studentKey) {
+            const porcentajeTotal = parseInt(document.getElementById('porcentajeTotal').value) || 65;
             
-            // Suma del día actual (porcentaje)
+            // CALCULAR COTIDIANO DEL DÍA (suma directa de indicadores)
+            let cotidianoDay = 0;
+            
+            // Obtener calificaciones del estudiante para la fecha actual
             if (calificaciones[currentGrado] && 
                 calificaciones[currentGrado][currentMateria] && 
                 calificaciones[currentGrado][currentMateria][currentDate] &&
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes &&
                 calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
                 
-                const grades = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
-                const sumaTotal = Object.values(grades).reduce((sum, grade) => sum + grade, 0);
-                const maxPosible = Object.keys(grades).length * 3;
+                const gradesToday = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
                 
-                if (maxPosible > 0) {
-                    cotidianoDay = Math.round((sumaTotal / maxPosible) * 100);
-                }
+                // Sumar directamente todas las calificaciones del día
+                Object.values(gradesToday).forEach(grade => {
+                    if (grade !== null && grade !== undefined && !isNaN(grade)) {
+                        cotidianoDay += parseInt(grade);
+                    }
+                });
             }
             
-            // Cotidiano total (promedio de todas las fechas con porcentaje configurado)
-            const porcentajeTotal = parseInt(document.getElementById('porcentajeTotal').value) || 65;
-            let totalFechas = 0;
+            // CALCULAR COTIDIANO TOTAL (promedio de todas las fechas)
+            let cotidianoTotal = 0;
             let sumaPromedios = 0;
+            let totalFechas = 0;
             
+            // Recorrer todas las fechas para calcular promedio general
             if (calificaciones[currentGrado] && calificaciones[currentGrado][currentMateria]) {
                 Object.keys(calificaciones[currentGrado][currentMateria]).forEach(fecha => {
                     const dateData = calificaciones[currentGrado][currentMateria][fecha];
                     if (dateData.estudiantes && dateData.estudiantes[studentKey]) {
                         const grades = dateData.estudiantes[studentKey];
-                        const sumaFecha = Object.values(grades).reduce((sum, grade) => sum + grade, 0);
-                        const maxPosibleFecha = Object.keys(grades).length * 3;
+                        
+                        // Sumar calificaciones de esta fecha
+                        const sumaFecha = Object.values(grades).reduce((sum, grade) => {
+                            return sum + (grade !== null && grade !== undefined && !isNaN(grade) ? parseInt(grade) : 0);
+                        }, 0);
+                        
+                        // Calcular el máximo posible para esta fecha
+                        const indicadoresEnFecha = Object.keys(grades).length;
+                        const maxPosibleFecha = indicadoresEnFecha * 3;
                         
                         if (maxPosibleFecha > 0) {
-                            const promedioFecha = (sumaFecha / maxPosibleFecha) * 100;
-                            sumaPromedios += promedioFecha;
+                            // Calcular porcentaje de esta fecha
+                            const porcentajeFecha = (sumaFecha / maxPosibleFecha) * 100;
+                            sumaPromedios += porcentajeFecha;
                             totalFechas++;
                         }
                     }
                 });
             }
             
+            // Calcular cotidiano total basado en el promedio de todas las fechas
             if (totalFechas > 0) {
                 const promedioGeneral = sumaPromedios / totalFechas;
                 cotidianoTotal = Math.round((promedioGeneral * porcentajeTotal) / 100);
             }
             
-            // Actualizar en la tabla
+            // Actualizar elementos en la tabla
             const cotidianoElement = document.getElementById(`cotidiano-${studentKey}`);
             const totalElement = document.getElementById(`total-${studentKey}`);
             
-            if (cotidianoElement) cotidianoElement.textContent = cotidianoDay;
-            if (totalElement) totalElement.textContent = cotidianoTotal;
+            if (cotidianoElement) {
+                cotidianoElement.textContent = cotidianoDay; // Suma directa del día
+            }
+            if (totalElement) {
+                totalElement.textContent = cotidianoTotal; // Promedio ponderado de todas las fechas
+            }
+            
+            console.log(`📊 Actualizado ${studentKey}: Día=${cotidianoDay}, Total=${cotidianoTotal}`);
         }
 
         // ========================================
         // CONFIGURACIÓN DE NOTAS
         // ========================================
         function calculateSumaCotidiano() {
+            // Obtener todos los indicadores que se pueden calificar
             const allIndicators = [];
             if (mainIndicator) {
                 const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
@@ -2080,10 +2226,59 @@ Participa activamente en discusiones"
             const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
             allIndicators.push(...individualIndicators);
             
-            const suma = allIndicators.length * 3; // Cada indicador vale máximo 3
-            document.getElementById('sumaCotidiano').textContent = suma;
+            // Calcular la suma máxima posible por estudiante para la fecha actual
+            const sumaPosiblePorEstudiante = allIndicators.length * 3; // Cada indicador vale máximo 3
+            
+            // Actualizar el display de la suma máxima
+            document.getElementById('sumaCotidiano').textContent = sumaPosiblePorEstudiante;
+            
+            // Calcular las sumas reales para cada estudiante basándose en sus calificaciones
+            if (students && students.length > 0) {
+                const studentsInGrade = students.filter(student => {
+                    const studentGrade = student.grade_level || student.grade || student.grado || '';
+                    const normalizedStudentGrade = studentGrade.toString().toLowerCase().trim();
+                    const normalizedCurrentGrade = currentGrado.toLowerCase().trim();
+                    
+                    return normalizedStudentGrade === normalizedCurrentGrade ||
+                        studentGrade === currentGrado ||
+                        normalizedStudentGrade.includes(normalizedCurrentGrade) ||
+                        normalizedCurrentGrade.includes(normalizedStudentGrade);
+                });
+                
+                studentsInGrade.forEach(student => {
+                    const studentKey = `student_${student.id}`;
+                    
+                    // Calcular la suma real de calificaciones para esta fecha
+                    let sumaRealEstudiante = 0;
+                    
+                    // Obtener las calificaciones del estudiante para la fecha actual
+                    if (calificaciones[currentGrado] && 
+                        calificaciones[currentGrado][currentMateria] && 
+                        calificaciones[currentGrado][currentMateria][currentDate] &&
+                        calificaciones[currentGrado][currentMateria][currentDate].estudiantes &&
+                        calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
+                        
+                        const gradesToday = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
+                        
+                        // Sumar todas las calificaciones del día
+                        Object.values(gradesToday).forEach(grade => {
+                            if (grade !== null && grade !== undefined && !isNaN(grade)) {
+                                sumaRealEstudiante += parseInt(grade);
+                            }
+                        });
+                    }
+                    
+                    // Actualizar el campo "Cotidiano" en la tabla con la suma real
+                    const cotidianoElement = document.getElementById(`cotidiano-${studentKey}`);
+                    if (cotidianoElement) {
+                        cotidianoElement.textContent = sumaRealEstudiante;
+                    }
+                    
+                    // Recalcular el total del estudiante
+                    updateStudentSums(studentKey);
+                });
+            }
         }
-
         function aplicarConfiguracion() {
             const porcentaje = document.getElementById('porcentajeTotal').value;
             
