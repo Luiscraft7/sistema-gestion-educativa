@@ -933,6 +933,49 @@ Participa activamente en discusiones"
             initializeSystem();
         });
 
+
+
+
+        async function loadSystemData() {
+            console.log('🔄 Iniciando carga de datos del sistema...');
+            
+            // Cargar grados
+            const gradesResponse = await fetch('/api/grades');
+            const gradesData = await gradesResponse.json();
+            if (gradesData.success) {
+                const uniqueGrades = [];
+                const seenNames = new Set();
+                
+                gradesData.data.forEach(grade => {
+                    if (!seenNames.has(grade.name)) {
+                        seenNames.add(grade.name);
+                        uniqueGrades.push(grade);
+                    }
+                });
+                
+                allGrades = uniqueGrades;
+                console.log('✅ Grados cargados:', allGrades.length);
+                populateGradeSelector();
+            }
+
+            // Cargar materias
+            const subjectsResponse = await fetch('/api/custom-subjects');
+            const subjectsData = await subjectsResponse.json();
+            if (subjectsData.success) {
+                allSubjects = subjectsData.data;
+                console.log('✅ Materias cargadas:', allSubjects.length);
+            }
+
+            // Cargar estudiantes
+            const studentsResponse = await fetch('/api/students');
+            const studentsData = await studentsResponse.json();
+            if (studentsData.success) {
+                students = studentsData.data;
+                console.log('✅ Estudiantes cargados:', students.length);
+            }
+        }
+
+
         async function initializeSystem() {
             try {
                 showLoading();
@@ -948,47 +991,98 @@ Participa activamente en discusiones"
             }
         }
 
-       async function loadSystemData() {
-        console.log('🔄 Iniciando carga de datos del sistema...');
+       async function loadCurrentData() {
+        if (!currentGrado || !currentMateria) {
+            resetInterface();
+            return;
+        }
         
-        // Cargar grados
-        const gradesResponse = await fetch('/api/grades');
-        const gradesData = await gradesResponse.json();
-        if (gradesData.success) {
-            const uniqueGrades = [];
-            const seenNames = new Set();
+        try {
+            console.log('📖 Cargando datos desde servidor:', { currentGrado, currentMateria, currentDate });
             
-            gradesData.data.forEach(grade => {
-                if (!seenNames.has(grade.name)) {
-                    seenNames.add(grade.name);
-                    uniqueGrades.push(grade);
+            const response = await fetch(`/api/cotidiano/evaluation?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&evaluation_date=${currentDate}`);
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                console.log('✅ Datos cargados desde servidor:', result.data);
+                
+                // Cargar indicadores
+                if (result.data.indicators && result.data.indicators.length > 0) {
+                    const loadedIndicators = result.data.indicators;
+                    
+                    // Separar indicador principal y sub-indicadores
+                    mainIndicator = loadedIndicators.find(ind => ind.parent_indicator_id === null);
+                    indicators = loadedIndicators.filter(ind => ind.parent_indicator_id !== null);
+                    
+                    // Convertir al formato que espera la interfaz
+                    if (mainIndicator) {
+                        mainIndicator = {
+                            id: mainIndicator.id,
+                            text: mainIndicator.indicator_name
+                        };
+                    }
+                    
+                    indicators = indicators.map(ind => ({
+                        id: ind.id,
+                        text: ind.indicator_name,
+                        isSubIndicator: ind.parent_indicator_id !== null,
+                        parentId: ind.parent_indicator_id
+                    }));
+                    
+                    console.log('📋 Indicadores cargados:', { mainIndicator, indicators: indicators.length });
                 }
-            });
+                
+                // Cargar calificaciones de estudiantes
+                if (result.data.students && Object.keys(result.data.students).length > 0) {
+                    // Inicializar estructura de calificaciones si no existe
+                    if (!calificaciones[currentGrado]) {
+                        calificaciones[currentGrado] = {};
+                    }
+                    if (!calificaciones[currentGrado][currentMateria]) {
+                        calificaciones[currentGrado][currentMateria] = {};
+                    }
+                    if (!calificaciones[currentGrado][currentMateria][currentDate]) {
+                        calificaciones[currentGrado][currentMateria][currentDate] = {
+                            indicators: indicators,
+                            mainIndicator: mainIndicator,
+                            estudiantes: {}
+                        };
+                    }
+                    
+                    // Convertir nombres a claves de estudiante
+                    Object.entries(result.data.students).forEach(([studentName, scores]) => {
+                        // Buscar el ID del estudiante por nombre
+                        const student = students.find(s => {
+                            const fullName = `${s.first_surname} ${s.second_surname || ''} ${s.first_name}`.trim();
+                            return fullName === studentName;
+                        });
+                        
+                        if (student) {
+                            const studentKey = `student_${student.id}`;
+                            calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey] = scores;
+                        }
+                    });
+                    
+                    console.log('📊 Calificaciones cargadas para', Object.keys(result.data.students).length, 'estudiantes');
+                }
+                
+                renderIndicatorsList();
+                renderCalificacionesTable();
+                calculateSumaCotidiano();
+                
+            } else {
+                console.log('ℹ️ No hay datos guardados para esta fecha');
+                resetInterface();
+            }
             
-            allGrades = uniqueGrades;
-            console.log('✅ Grados cargados:', allGrades.length);
-            populateGradeSelector();
-        }
-
-        // Cargar materias
-        const subjectsResponse = await fetch('/api/custom-subjects');
-        const subjectsData = await subjectsResponse.json();
-        if (subjectsData.success) {
-            allSubjects = subjectsData.data;
-            console.log('✅ Materias cargadas:', allSubjects.length);
-        }
-
-        // Cargar estudiantes
-        const studentsResponse = await fetch('/api/students');
-        const studentsData = await studentsResponse.json();
-        if (studentsData.success) {
-            students = studentsData.data;
-            console.log('✅ Estudiantes cargados:', students.length);
+        } catch (error) {
+            console.error('❌ Error cargando datos:', error);
+            resetInterface();
         }
         
-       
+        hasUnsavedChanges = false;
+        updateStatusIndicator();
     }
-
         function populateGradeSelector() {
             const gradoSelect = document.getElementById('grado');
             

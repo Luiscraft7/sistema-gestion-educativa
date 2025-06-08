@@ -1537,12 +1537,12 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
                     // ✅ CONSULTA CORREGIDA - Sin second_name
                     const studentQuery = `
                         SELECT id, 
-                               (first_surname || ' ' || COALESCE(second_surname, '') || ' ' || first_name) as full_name
+                            (first_surname || ' ' || COALESCE(second_surname, '') || ' ' || first_name) as full_name
                         FROM students 
-                        WHERE grade_level = ? OR grade = ? OR grado = ?
+                        WHERE grade_level = ?
                     `;
                     
-                    database.db.all(studentQuery, [grade_level, grade_level, grade_level], (err, studentsInGrade) => {
+                    database.db.all(studentQuery, [grade_level], (err, studentsInGrade) => {
                         if (err) {
                             console.error('❌ Error buscando estudiantes:', err);
                             reject(err);
@@ -1661,6 +1661,89 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
         });
     }
 });
+
+
+// Cargar evaluación existente (AGREGAR DESPUÉS del endpoint de guardar)
+app.get('/api/cotidiano/evaluation', async (req, res) => {
+    try {
+        const { grade_level, subject_area, evaluation_date } = req.query;
+        
+        if (!grade_level || !subject_area || !evaluation_date) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Grado, materia y fecha son requeridos' 
+            });
+        }
+        
+        console.log('📖 Cargando evaluación cotidiano:', { grade_level, subject_area, evaluation_date });
+        
+        database.ensureConnection();
+        
+        // Cargar indicadores
+        const indicatorsQuery = `
+            SELECT * FROM daily_indicators 
+            WHERE grade_level = ? AND subject_area = ?
+            ORDER BY parent_indicator_id, id
+        `;
+        
+        const indicators = await new Promise((resolve, reject) => {
+            database.db.all(indicatorsQuery, [grade_level, subject_area], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        // Cargar evaluaciones de estudiantes
+        const evaluationsQuery = `
+            SELECT de.*, dis.indicator_id, dis.score, s.first_surname, s.second_surname, s.first_name
+            FROM daily_evaluations de
+            LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
+            LEFT JOIN students s ON de.student_id = s.id
+            WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+        `;
+        
+        const evaluations = await new Promise((resolve, reject) => {
+            database.db.all(evaluationsQuery, [grade_level, subject_area, evaluation_date], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        // Organizar datos por estudiante
+        const studentsData = {};
+        evaluations.forEach(row => {
+            if (row.student_id) {
+                const studentName = `${row.first_surname} ${row.second_surname || ''} ${row.first_name}`.trim();
+                
+                if (!studentsData[studentName]) {
+                    studentsData[studentName] = {};
+                }
+                
+                if (row.indicator_id && row.score !== null) {
+                    studentsData[studentName][row.indicator_id] = row.score;
+                }
+            }
+        });
+        
+        res.json({
+            success: true,
+            data: {
+                indicators: indicators,
+                students: studentsData
+            },
+            message: `Evaluación cargada: ${indicators.length} indicadores, ${Object.keys(studentsData).length} estudiantes`
+        });
+        
+    } catch (error) {
+        console.error('❌ Error cargando evaluación cotidiano:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error cargando evaluación',
+            error: error.message 
+        });
+    }
+});
+
 // Obtener historial de evaluaciones
 app.get('/api/cotidiano/history', async (req, res) => {
     try {
@@ -1690,6 +1773,8 @@ app.get('/api/cotidiano/history', async (req, res) => {
         });
     }
 });
+
+
 
 
 // Iniciar todo
