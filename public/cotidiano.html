@@ -1065,6 +1065,16 @@ Participa activamente en discusiones"
                 console.log('📋 Indicadores cargados desde servidor:', loadedIndicators.length);
                 console.log('🔍 Lista completa de indicadores:', loadedIndicators);
                 
+                // 🔧 DEBUG DETALLADO: Ver estructura de cada indicador
+                loadedIndicators.forEach((ind, index) => {
+                    console.log(`📝 Indicador ${index + 1}:`, {
+                        id: ind.id,
+                        name: ind.indicator_name,
+                        parent_id: ind.parent_indicator_id,
+                        es_principal: ind.parent_indicator_id === null || ind.parent_indicator_id === undefined
+                    });
+                });
+                
                 // 🔧 CORRECCIÓN: Usar parent_indicator_id en lugar de "detección inteligente"
                 
                 // Buscar indicadores principales (parent_indicator_id IS NULL)
@@ -1077,19 +1087,30 @@ Participa activamente en discusiones"
                     ind.parent_indicator_id !== null && ind.parent_indicator_id !== undefined
                 );
                 
-                console.log('🎯 Indicadores principales encontrados:', principalIndicators.length);
-                console.log('📝 Sub-indicadores encontrados:', subIndicators.length);
+                console.log('🎯 Indicadores principales filtrados:', principalIndicators.length);
+                if (principalIndicators.length > 0) {
+                    principalIndicators.forEach(principal => {
+                        console.log(`  🎯 Principal encontrado: ID ${principal.id} - "${principal.indicator_name}"`);
+                    });
+                }
+                
+                console.log('📝 Sub-indicadores filtrados:', subIndicators.length);
+                if (subIndicators.length > 0) {
+                    subIndicators.forEach(sub => {
+                        console.log(`  📝 Sub-indicador: ID ${sub.id} - "${sub.indicator_name}" (Padre: ${sub.parent_indicator_id})`);
+                    });
+                }
                 
                 if (principalIndicators.length === 1 && subIndicators.length > 0) {
                     // CASO: 1 principal + sub-indicadores
-                    console.log('🎯 Estructura detectada: 1 principal + sub-indicadores');
+                    console.log('🎯 ✅ ESTRUCTURA DETECTADA: 1 principal + sub-indicadores');
                     
                     const principal = principalIndicators[0];
                     mainIndicator = {
                         id: principal.id,
                         text: principal.indicator_name
                     };
-                    console.log('🎯 Indicador principal asignado:', mainIndicator);
+                    console.log('🎯 ✅ Indicador principal asignado:', mainIndicator);
                     
                     // Agregar sub-indicadores vinculados al principal
                     subIndicators.forEach((sub, index) => {
@@ -1104,7 +1125,7 @@ Participa activamente en discusiones"
                     
                 } else if (principalIndicators.length > 0 && subIndicators.length === 0) {
                     // CASO: Solo indicadores principales (tratarlos como individuales)
-                    console.log('📄 Solo indicadores principales (sin sub-indicadores)');
+                    console.log('📄 ✅ ESTRUCTURA DETECTADA: Solo indicadores principales (sin sub-indicadores)');
                     
                     principalIndicators.forEach((ind, index) => {
                         indicators.push({
@@ -1117,11 +1138,14 @@ Participa activamente en discusiones"
                     });
                     
                 } else if (principalIndicators.length === 0 && subIndicators.length > 0) {
-                    // CASO: Solo sub-indicadores (estructura rara, buscar su principal)
-                    console.log('⚠️ Solo sub-indicadores encontrados - buscando principal...');
+                    // CASO: Solo sub-indicadores (PROBLEMA - no se encontró el principal)
+                    console.log('⚠️ ❌ PROBLEMA: Solo sub-indicadores encontrados - el principal NO vino del backend');
+                    console.log('🔍 Esto indica que el backend no está enviando el indicador principal');
                     
                     // Buscar el principal al que pertenecen
                     const parentId = subIndicators[0].parent_indicator_id;
+                    console.log(`🔍 Buscando principal con ID: ${parentId}`);
+                    
                     const principalInDB = loadedIndicators.find(ind => ind.id === parentId);
                     
                     if (principalInDB) {
@@ -1129,7 +1153,17 @@ Participa activamente en discusiones"
                             id: principalInDB.id,
                             text: principalInDB.indicator_name
                         };
-                        console.log('🎯 Principal encontrado:', mainIndicator);
+                        console.log('🎯 ✅ Principal encontrado en la lista:', mainIndicator);
+                    } else {
+                        console.log(`❌ PRINCIPAL NO ENCONTRADO: ID ${parentId} no está en la lista devuelta por el backend`);
+                        console.log('🔧 SOLUCIÓN: El backend debe incluir el indicador principal en la respuesta');
+                        
+                        // Como fallback, crear un principal temporal
+                        mainIndicator = {
+                            id: parentId,
+                            text: 'Indicador Principal (temporalmente no disponible)'
+                        };
+                        console.log('⚠️ Creando principal temporal:', mainIndicator);
                     }
                     
                     subIndicators.forEach((sub, index) => {
@@ -1142,9 +1176,9 @@ Participa activamente en discusiones"
                         console.log(`  ➕ Sub-indicador ${index + 1}: "${sub.indicator_name}"`);
                     });
                     
-                } else {
-                    // CASO: Mezcla compleja - procesar todos
-                    console.log('📄 Estructura mixta detectada');
+                } else if (principalIndicators.length > 1) {
+                    // CASO: Múltiples principales - estructura compleja
+                    console.log('📄 ✅ ESTRUCTURA DETECTADA: Múltiples indicadores principales');
                     
                     loadedIndicators.forEach((ind, index) => {
                         if (ind.parent_indicator_id === null || ind.parent_indicator_id === undefined) {
@@ -1167,10 +1201,14 @@ Participa activamente en discusiones"
                             console.log(`  ➕ Sub-indicador ${index + 1}: "${ind.indicator_name}" (Padre: ${ind.parent_indicator_id})`);
                         }
                     });
+                    
+                } else {
+                    // CASO: Sin indicadores
+                    console.log('❌ No se encontraron indicadores principales ni sub-indicadores');
                 }
                 
                 console.log('📊 RESUMEN FINAL DE INDICADORES:');
-                console.log('  🎯 Principal:', mainIndicator ? `"${mainIndicator.text}"` : 'Ninguno');
+                console.log('  🎯 Principal:', mainIndicator ? `"${mainIndicator.text}" (ID: ${mainIndicator.id})` : '❌ NINGUNO');
                 console.log('  📝 Sub-indicadores:', indicators.filter(i => i.isSubIndicator).length);
                 console.log('  📄 Individuales:', indicators.filter(i => !i.isSubIndicator).length);
                 console.log('  📊 Total indicators array:', indicators.length);
@@ -1246,6 +1284,10 @@ Participa activamente en discusiones"
                 
                 // 4. RENDERIZAR INTERFAZ
                 console.log('🖼️ Renderizando interfaz...');
+                console.log('🎯 Estado final - MainIndicator:', mainIndicator);
+                console.log('📝 Estado final - Indicators array:', indicators.length, 'indicadores');
+                console.log('📊 Lista detallada de indicators:', indicators);
+                
                 renderIndicatorsList();
                 renderCalificacionesTable();
                 calculateSumaCotidiano();
@@ -1792,14 +1834,16 @@ Participa activamente en discusiones"
         // ========================================
         // RENDERIZADO DE INDICADORES
         // ========================================
-       function renderIndicatorsList() {
+      function renderIndicatorsList() {
             const container = document.getElementById('indicatorsList');
             
-            console.log('🖼️ Renderizando lista de indicadores...');
-            console.log('🎯 MainIndicator:', mainIndicator);
-            console.log('📝 Indicators array:', indicators);
+            console.log('🖼️ === INICIO renderIndicatorsList ===');
+            console.log('🎯 MainIndicator en render:', mainIndicator);
+            console.log('📝 Indicators array en render:', indicators.length, 'elementos');
+            console.log('📊 currentGrado:', currentGrado, 'currentMateria:', currentMateria);
             
             if (!currentGrado || !currentMateria) {
+                console.log('⚠️ Falta grado o materia - mostrando mensaje inicial');
                 container.innerHTML = `
                     <div class="empty-state">
                         <h3>📝 Seleccione grado y materia</h3>
@@ -1810,16 +1854,25 @@ Participa activamente en discusiones"
             }
             
             if (!mainIndicator && indicators.length === 0) {
+                console.log('⚠️ No hay indicadores - mostrando opciones para fecha limpia');
                 container.innerHTML = `
                     <div class="empty-state">
-                        <h3>📝 No hay indicadores configurados</h3>
-                        <p>Agregue indicadores para comenzar a evaluar</p>
-                        <button class="btn btn-primary" onclick="openUnifiedIndicatorModal()">🎯 Crear Indicador Principal</button>
+                        <h3>✨ Fecha sin evaluaciones</h3>
+                        <p>Esta fecha está limpia. Puede crear nuevos indicadores o cargar de fechas previas.</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="openUnifiedIndicatorModal()">
+                                🎯 Crear Nuevos Indicadores
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadPreviousIndicators()">
+                                📋 Cargar de Fecha Previa
+                            </button>
+                        </div>
                     </div>
                 `;
                 return;
             }
             
+            console.log('✅ Procediendo a generar HTML para indicadores');
             let html = '';
             
             // Mostrar indicador principal si existe
@@ -1882,6 +1935,89 @@ Participa activamente en discusiones"
             console.log('📊 HTML generado para indicadores:', html.length, 'caracteres');
             container.innerHTML = html;
             console.log('✅ Lista de indicadores renderizada');
+            console.log('🖼️ === FIN renderIndicatorsList ===');
+        }
+
+        // Nueva función para cargar indicadores de fechas previas
+        async function loadPreviousIndicators() {
+            if (!currentGrado || !currentMateria) {
+                alert('Por favor seleccione grado y materia primero');
+                return;
+            }
+            
+            try {
+                console.log('🔄 Buscando indicadores de fechas previas...');
+                
+                const response = await fetch(`/api/cotidiano/latest-indicators?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}`);
+                const result = await response.json();
+                
+                if (result.success && result.data.indicators && result.data.indicators.length > 0) {
+                    console.log(`📋 Encontrados ${result.data.indicators.length} indicadores de fecha ${result.data.latest_date}`);
+                    
+                    // Confirmar con el usuario
+                    const confirmed = confirm(`¿Cargar indicadores de la fecha ${result.data.latest_date}?\n\nSe encontraron ${result.data.indicators.length} indicadores.`);
+                    
+                    if (confirmed) {
+                        // Procesar indicadores como en loadCurrentData
+                        const loadedIndicators = result.data.indicators;
+                        
+                        // Resetear variables
+                        mainIndicator = null;
+                        indicators = [];
+                        
+                        // Procesar indicadores (usar misma lógica)
+                        const principalIndicators = loadedIndicators.filter(ind => 
+                            ind.parent_indicator_id === null || ind.parent_indicator_id === undefined
+                        );
+                        
+                        const subIndicators = loadedIndicators.filter(ind => 
+                            ind.parent_indicator_id !== null && ind.parent_indicator_id !== undefined
+                        );
+                        
+                        if (principalIndicators.length === 1 && subIndicators.length > 0) {
+                            const principal = principalIndicators[0];
+                            mainIndicator = {
+                                id: principal.id,
+                                text: principal.indicator_name
+                            };
+                            
+                            subIndicators.forEach((sub) => {
+                                indicators.push({
+                                    id: sub.id,
+                                    text: sub.indicator_name,
+                                    isSubIndicator: true,
+                                    parentId: sub.parent_indicator_id
+                                });
+                            });
+                        } else {
+                            loadedIndicators.forEach((ind) => {
+                                indicators.push({
+                                    id: ind.id,
+                                    text: ind.indicator_name,
+                                    isSubIndicator: ind.parent_indicator_id !== null,
+                                    parentId: ind.parent_indicator_id
+                                });
+                            });
+                        }
+                        
+                        // Renderizar interfaz
+                        renderIndicatorsList();
+                        renderCalificacionesTable();
+                        calculateSumaCotidiano();
+                        
+                        hasUnsavedChanges = true;
+                        updateStatusIndicator();
+                        
+                        alert(`✅ Indicadores cargados de fecha ${result.data.latest_date}`);
+                    }
+                } else {
+                    alert('No se encontraron indicadores previos para este grado y materia');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error cargando indicadores previos:', error);
+                alert('Error cargando indicadores previos: ' + error.message);
+            }
         }
 
         // ========================================
