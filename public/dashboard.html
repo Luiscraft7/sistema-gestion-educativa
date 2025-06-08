@@ -204,7 +204,7 @@
                     <div class="stat-label">Materias Configuradas</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">6</div>
+                    <div class="stat-number">7</div>
                     <div class="stat-label">Módulos Disponibles</div>
                 </div>
             </div>
@@ -274,7 +274,17 @@
                 </div>
                 <div class="module-status status-planned">Planificado</div>
             </div>
-        </div>
+            
+            <!-- Módulo SEA --> 
+            <div class="module-card" onclick="openModule('sea')">
+                <div class="module-icon">🎯</div>
+                <div class="module-title">SEA</div>
+                <div class="module-description">
+                    Sistema de Evaluación Académica - Vista consolidada con ponderaciones reales
+                </div>
+                <div class="module-status status-ready">Disponible</div>
+            </div>
+        </div>  <!-- ⬅️ AQUÍ SE CIERRA modules-grid -->
         
         <!-- Footer -->
         <div class="footer">
@@ -297,7 +307,11 @@
             window.location.href = 'evaluations.html';  // ← Agregar esta línea
         } else if (moduleName === 'cotidiano') {
             window.location.href = 'cotidiano.html';
+        } else if (moduleName === 'sea') {
+             window.location.href = 'sea.html';            
         } else {
+
+            
             const messages = {
                 'tareas': '📝 Módulo Tareas - Próximamente disponible',
                 'examenes': '📋 Módulo Exámenes - En planificación',

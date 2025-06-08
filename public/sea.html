@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEA - Sistema de Evaluación Académica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .filters-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .filters-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 200px 120px;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .form-select, .btn {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .content-section {
+            padding: 30px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .summary-card h3 {
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .summary-card p {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .sea-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .sea-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 8px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sea-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+        .sea-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .sea-table tbody tr:hover {
+            background: #e7f3ff;
+        }
+
+        .student-name {
+            text-align: left !important;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .grade-cell {
+            font-weight: 600;
+        }
+
+        .grade-excellent {
+            color: #28a745;
+        }
+
+        .grade-good {
+            color: #ffc107;
+        }
+
+        .grade-poor {
+            color: #dc3545;
+        }
+
+        .grade-missing {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .evaluation-column {
+            min-width: 80px;
+        }
+
+        .cotidiano-column {
+            background: #e8f5e8 !important;
+            font-weight: 600;
+        }
+
+        .attendance-column {
+            background: #fff3cd !important;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .back-button {
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .filters-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .content-section {
+                padding: 15px;
+            }
+            
+            .sea-table {
+                font-size: 11px;
+            }
+            
+            .sea-table th,
+            .sea-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 SEA - Sistema de Evaluación Académica</h1>
+            <p>Vista consolidada de evaluaciones, cotidiano y asistencia</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="back-button">
+                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">
+                    ← Volver al Dashboard
+                </button>
+            </div>
+            
+            <div class="filters-row">
+                <div class="form-group">
+                    <label for="gradeSelect">📚 Grado:</label>
+                    <select id="gradeSelect" class="form-select">
+                        <option value="">Seleccione un grado...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subjectSelect">🔬 Materia:</label>
+                    <select id="subjectSelect" class="form-select">
+                        <option value="">Seleccione una materia...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn" onclick="loadSEAData()">
+                        🔍 Cargar Datos SEA
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-secondary" onclick="exportSEAData()">
+                        📄 Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-section">
+            <!-- Summary Cards -->
+            <div class="summary-cards" id="summaryCards" style="display: none;">
+                <div class="summary-card">
+                    <h3 id="totalStudents">0</h3>
+                    <p>👥 Estudiantes</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="totalEvaluations">0</h3>
+                    <p>📝 Evaluaciones</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="totalPercentage">0%</h3>
+                    <p>🎯 % Configurado</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="cotidianoWeight">25%</h3>
+                    <p>📊 Peso Cotidiano</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="attendanceWeight">5%</h3>
+                    <p>📅 Peso Asistencia</p>
+                </div>
+            </div>
+
+            <!-- Main Table -->
+            <div id="tableContainer">
+                <div class="empty-state">
+                    <h3>🎯 Bienvenido al Módulo SEA</h3>
+                    <p>Seleccione un grado y materia para ver la evaluación consolidada</p>
+                    <p style="margin-top: 10px; font-size: 14px; color: #6c757d;">
+                        SEA muestra evaluaciones, cotidiano y asistencia en una sola vista
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+
+        // Cargar al inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGradeSubjects();
+        });
+
+        // Cargar combinaciones de grado-materia disponibles
+        async function loadGradeSubjects() {
+            try {
+                const response = await fetch('/api/sea/grade-subjects');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const grades = [...new Set(result.data.map(item => item.grade_level))].sort();
+                    const gradeSelect = document.getElementById('gradeSelect');
+                    
+                    gradeSelect.innerHTML = '<option value="">Seleccione un grado...</option>';
+                    grades.forEach(grade => {
+                        gradeSelect.innerHTML += `<option value="${grade}">${grade}</option>`;
+                    });
+                    
+                    // Event listener para cargar materias cuando se seleccione grado
+                    gradeSelect.addEventListener('change', function() {
+                        const selectedGrade = this.value;
+                        const subjects = result.data
+                            .filter(item => item.grade_level === selectedGrade)
+                            .map(item => item.subject_area)
+                            .sort();
+                            
+                        const subjectSelect = document.getElementById('subjectSelect');
+                        subjectSelect.innerHTML = '<option value="">Seleccione una materia...</option>';
+                        
+                        subjects.forEach(subject => {
+                            subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando grados-materias:', error);
+                showError('Error cargando lista de grados y materias');
+            }
+        }
+
+        // Cargar datos SEA
+        async function loadSEAData() {
+            const grade = document.getElementById('gradeSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            
+            if (!grade || !subject) {
+                alert('Por favor seleccione grado y materia');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`/api/sea/consolidated?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentData = result.data;
+                    displaySEAData(result.data);
+                } else {
+                    showError(result.message || 'Error cargando datos SEA');
+                }
+            } catch (error) {
+                console.error('Error cargando datos SEA:', error);
+                showError('Error de conexión al cargar datos SEA');
+            }
+        }
+
+        // Mostrar datos SEA en la tabla
+        function displaySEAData(data) {
+            updateSummaryCards(data.summary);
+            
+            if (!data.students || data.students.length === 0) {
+                document.getElementById('tableContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 No hay datos disponibles</h3>
+                        <p>No se encontraron estudiantes con evaluaciones para esta combinación</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Obtener configuración de pesos
+            const weightConfig = data.weight_config || { cotidiano_weight: 25, attendance_weight: 5 };
+
+            // Construir tabla
+            let tableHTML = `
+                <div class="table-container">
+                    <table class="sea-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">👥 Estudiante</th>
+                                <th rowspan="2">🆔 Código</th>`;
+            
+            // Headers de evaluaciones
+            if (data.evaluations_list && data.evaluations_list.length > 0) {
+                tableHTML += `<th colspan="${data.evaluations_list.length}">📝 Evaluaciones</th>`;
+            }
+            
+            tableHTML += `
+                                <th rowspan="2" class="cotidiano-column">📊 Cotidiano<br><small>(${weightConfig.cotidiano_weight}%)</small></th>
+                                <th rowspan="2" class="attendance-column">📅 Asistencia<br><small>(${weightConfig.attendance_weight}%)</small></th>
+                            </tr>
+                            <tr>`;
+            
+            // Nombres de evaluaciones individuales
+            if (data.evaluations_list && data.evaluations_list.length > 0) {
+                data.evaluations_list.forEach(eval => {
+                    tableHTML += `<th class="evaluation-column">${eval.title}<br><small>(${eval.percentage}%)</small></th>`;
+                });
+            }
+            
+            tableHTML += `</tr>
+                        </thead>
+                        <tbody>`;
+
+            // Filas de estudiantes
+            data.students.forEach(student => {
+                tableHTML += `
+                    <tr>
+                        <td class="student-name">${student.student_name}</td>
+                        <td>${student.student_code || '-'}</td>`;
+                
+                // Calificaciones de evaluaciones
+                if (data.evaluations_list && data.evaluations_list.length > 0) {
+                    data.evaluations_list.forEach(eval => {
+                        const evalGrade = student.evaluations[eval.title];
+                        if (evalGrade && evalGrade.grade !== 'Sin calificar') {
+                            const gradeClass = getGradeClass(parseFloat(evalGrade.grade));
+                            tableHTML += `<td class="grade-cell ${gradeClass}">${evalGrade.grade}</td>`;
+                        } else {
+                            tableHTML += `<td class="grade-missing">Sin calificar</td>`;
+                        }
+                    });
+                }
+                
+                // Nota de cotidiano total
+                const cotidianoClass = student.cotidiano.total_grade !== 'Sin datos' ? 
+                    getGradeClass(parseFloat(student.cotidiano.total_grade)) : 'grade-missing';
+                tableHTML += `<td class="cotidiano-column ${cotidianoClass}">${student.cotidiano.total_grade}</td>`;
+                
+                // Nota de asistencia (solo una columna)
+                const attendanceClass = student.attendance.grade_0_5 !== 'Sin datos' ? 
+                    getGradeClass(parseFloat(student.attendance.grade_0_5) * 20) : 'grade-missing'; // Convertir a escala 100 para clasificación
+                tableHTML += `<td class="attendance-column ${attendanceClass}">${student.attendance.grade_0_5}</td>`;
+                
+                tableHTML += `</tr>`;
+            });
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>`;
+
+            document.getElementById('tableContainer').innerHTML = tableHTML;
+            document.getElementById('summaryCards').style.display = 'grid';
+        }
+
+        // Actualizar tarjetas de resumen
+        function updateSummaryCards(summary) {
+            document.getElementById('totalStudents').textContent = summary.total_students;
+            document.getElementById('totalEvaluations').textContent = summary.total_evaluations;
+            document.getElementById('totalPercentage').textContent = summary.total_percentage_configured + '%';
+            document.getElementById('cotidianoWeight').textContent = (summary.cotidiano_weight || 25) + '%';
+            document.getElementById('attendanceWeight').textContent = (summary.attendance_weight || 5) + '%';
+        }
+
+        // Clasificar calificaciones por color
+        function getGradeClass(grade) {
+            if (grade >= 85) return 'grade-excellent';
+            if (grade >= 70) return 'grade-good';
+            return 'grade-poor';
+        }
+
+        // Mostrar loading
+        function showLoading() {
+            document.getElementById('tableContainer').innerHTML = `
+                <div class="loading">
+                    <h3>🔄 Cargando datos SEA...</h3>
+                    <p>Consolidando evaluaciones, cotidiano y asistencia</p>
+                </div>
+            `;
+            document.getElementById('summaryCards').style.display = 'none';
+        }
+
+        // Mostrar error
+        function showError(message) {
+            document.getElementById('tableContainer').innerHTML = `
+                <div class="error">
+                    <strong>❌ Error:</strong> ${message}
+                </div>
+            `;
+            document.getElementById('summaryCards').style.display = 'none';
+        }
+
+        // Exportar datos (placeholder)
+        function exportSEAData() {
+            if (!currentData) {
+                alert('No hay datos para exportar. Cargue los datos SEA primero.');
+                return;
+            }
+            
+            // Implementar exportación a Excel/PDF
+            alert('Función de exportación en desarrollo');
+        }
+    </script>
+</body>
+</html>

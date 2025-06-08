@@ -1937,7 +1937,261 @@ app.get('/api/cotidiano/history', async (req, res) => {
 });
 
 
+// ========================================
+// MÓDULO SEA - Sistema de Evaluación Académica
+// AGREGAR ESTE CÓDIGO AL FINAL DE server.js (ANTES DE startServer())
+// ========================================
 
+// Endpoint para obtener lista de grados y materias disponibles para SEA
+app.get('/api/sea/grade-subjects', async (req, res) => {
+    try {
+        console.log('🎯 GET /api/sea/grade-subjects');
+        
+        database.ensureConnection();
+        
+        const query = `
+            SELECT DISTINCT grade_level, subject_area
+            FROM assignments 
+            WHERE is_active = 1
+            ORDER BY grade_level, subject_area
+        `;
+        
+        const gradeSubjects = await new Promise((resolve, reject) => {
+            database.db.all(query, [], (err, rows) => {
+                if (err) {
+                    console.error('❌ Error obteniendo grados-materias:', err);
+                    reject(err);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+
+        console.log(`📚 Grados-materias encontrados: ${gradeSubjects.length}`);
+
+        res.json({
+            success: true,
+            data: gradeSubjects,
+            message: `${gradeSubjects.length} combinaciones grado-materia encontradas`
+        });
+        
+    } catch (error) {
+        console.error('❌ Error en /api/sea/grade-subjects:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo datos',
+            error: error.message
+        });
+    }
+});
+
+// Endpoint principal para datos consolidados del SEA
+app.get('/api/sea/consolidated', async (req, res) => {
+    try {
+        const { grade, subject } = req.query;
+        
+        if (!grade || !subject) {
+            return res.status(400).json({
+                success: false,
+                message: 'Grado y materia son requeridos'
+            });
+        }
+
+        console.log(`🎯 GET /api/sea/consolidated - Grado: ${grade}, Materia: ${subject}`);
+
+        database.ensureConnection();
+
+        // 1. Obtener todas las evaluaciones activas del grado/materia
+        const evaluations = await new Promise((resolve, reject) => {
+            const evaluationsQuery = `
+                SELECT id, title, percentage, max_points, type, due_date
+                FROM assignments 
+                WHERE grade_level = ? AND subject_area = ? AND is_active = 1
+                ORDER BY created_at DESC
+            `;
+            
+            database.db.all(evaluationsQuery, [grade, subject], (err, rows) => {
+                if (err) {
+                    console.error('❌ Error obteniendo evaluaciones:', err);
+                    reject(err);
+                } else {
+                    console.log(`📝 Evaluaciones encontradas: ${rows?.length || 0}`);
+                    resolve(rows || []);
+                }
+            });
+        });
+
+        // 2. Obtener todos los estudiantes activos del grado
+        const students = await new Promise((resolve, reject) => {
+            const studentsQuery = `
+                SELECT id, first_name, first_surname, second_surname, student_id
+                FROM students 
+                WHERE grade_level = ? AND status = 'active'
+                ORDER BY first_surname, first_name
+            `;
+            
+            database.db.all(studentsQuery, [grade], (err, rows) => {
+                if (err) {
+                    console.error('❌ Error obteniendo estudiantes:', err);
+                    reject(err);
+                } else {
+                    console.log(`👥 Estudiantes encontrados: ${rows?.length || 0}`);
+                    resolve(rows || []);
+                }
+            });
+        });
+
+        // 3. Para cada estudiante, obtener todas sus notas
+        const studentsWithSEA = [];
+        
+        for (const student of students) {
+            const studentName = `${student.first_surname} ${student.second_surname || ''} ${student.first_name}`.trim();
+            
+            try {
+                // 3.1 Calificaciones en evaluaciones
+                const evaluationGrades = {};
+                let totalWeightedGrade = 0;
+                let totalPercentage = 0;
+                
+                for (const evaluation of evaluations) {
+                    const gradeResult = await new Promise((resolve, reject) => {
+                        const gradeQuery = `
+                            SELECT points_earned, grade, percentage 
+                            FROM assignment_grades 
+                            WHERE assignment_id = ? AND student_id = ?
+                        `;
+                        
+                        database.db.get(gradeQuery, [evaluation.id, student.id], (err, row) => {
+                            if (err) {
+                                console.error(`❌ Error obteniendo calificación estudiante ${student.id}, evaluación ${evaluation.id}:`, err);
+                                resolve(null); // No fallar por un estudiante
+                            } else {
+                                resolve(row);
+                            }
+                        });
+                    });
+                    
+                    if (gradeResult && gradeResult.points_earned !== null) {
+                        const studentGrade = (gradeResult.points_earned / evaluation.max_points) * 100;
+                        totalWeightedGrade += studentGrade * (evaluation.percentage / 100);
+                        totalPercentage += evaluation.percentage;
+                        
+                        evaluationGrades[evaluation.title] = {
+                            grade: studentGrade.toFixed(1),
+                            percentage: evaluation.percentage,
+                            points: `${gradeResult.points_earned}/${evaluation.max_points}`
+                        };
+                    } else {
+                        evaluationGrades[evaluation.title] = {
+                            grade: 'Sin calificar',
+                            percentage: evaluation.percentage,
+                            points: '-'
+                        };
+                    }
+                }
+
+                // 3.2 Nota de cotidiano total (la más reciente o promedio)
+                const cotidianoResult = await new Promise((resolve, reject) => {
+                    const cotidianoQuery = `
+                        SELECT final_grade as cotidiano_total, evaluation_date
+                        FROM daily_evaluations 
+                        WHERE student_id = ? AND grade_level = ? AND subject_area = ?
+                        ORDER BY evaluation_date DESC
+                        LIMIT 1
+                    `;
+                    
+                    database.db.get(cotidianoQuery, [student.id, grade, subject], (err, row) => {
+                        if (err) {
+                            console.error(`❌ Error obteniendo cotidiano estudiante ${student.id}:`, err);
+                            resolve(null);
+                        } else {
+                            resolve(row);
+                        }
+                    });
+                });
+
+                // 3.3 Nota de asistencia (usando función existente)
+                let attendanceStats = null;
+                try {
+                    attendanceStats = await database.getAttendanceStats(student.id, grade, subject);
+                } catch (error) {
+                    console.error(`❌ Error obteniendo asistencia estudiante ${student.id}:`, error);
+                }
+
+                // 3.4 Calcular nota SEA de evaluaciones
+                const seaEvaluationsGrade = totalPercentage > 0 ? (totalWeightedGrade / totalPercentage * 100) : 0;
+
+                studentsWithSEA.push({
+                    student_id: student.id,
+                    student_code: student.student_id,
+                    student_name: studentName,
+                    
+                    // Evaluaciones individuales
+                    evaluations: evaluationGrades,
+                    evaluations_summary: {
+                        weighted_grade: seaEvaluationsGrade.toFixed(1),
+                        total_percentage: totalPercentage,
+                        completed_evaluations: Object.values(evaluationGrades).filter(e => e.grade !== 'Sin calificar').length,
+                        total_evaluations: evaluations.length
+                    },
+                    
+                    // Nota de cotidiano total
+                    cotidiano: {
+                        total_grade: cotidianoResult?.cotidiano_total ? cotidianoResult.cotidiano_total.toFixed(1) : 'Sin datos',
+                        last_evaluation_date: cotidianoResult?.evaluation_date || null
+                    },
+                    
+                    // Nota de asistencia (solo una columna)
+                    attendance: {
+                        grade_0_5: attendanceStats?.nota_asistencia ? attendanceStats.nota_asistencia.toFixed(1) : 'Sin datos',
+                        total_lessons: attendanceStats?.total_lessons || 0,
+                        attendance_percentage: attendanceStats?.attendance_percentage ? attendanceStats.attendance_percentage.toFixed(1) : 'Sin datos'
+                    }
+                });
+
+            } catch (studentError) {
+                console.error(`❌ Error procesando estudiante ${student.id}:`, studentError);
+                // Continuar con el siguiente estudiante
+            }
+        }
+
+        // 4. Obtener configuración de pesos (valores que suman hacia 100)
+        const weightConfig = {
+            cotidiano_weight: 65, // 65 puntos del total
+            attendance_weight: 10,  // 10 puntos del total 
+            evaluations_weight: 25 // 25 puntos restantes (o lo que tengan configurado las evaluaciones)
+        };
+
+        console.log(`✅ SEA procesado: ${studentsWithSEA.length} estudiantes completados`);
+
+        res.json({
+            success: true,
+            data: {
+                students: studentsWithSEA,
+                evaluations_list: evaluations,
+                weight_config: weightConfig,
+                summary: {
+                    total_students: students.length,
+                    total_evaluations: evaluations.length,
+                    grade_level: grade,
+                    subject_area: subject,
+                    total_percentage_configured: evaluations.reduce((sum, e) => sum + e.percentage, 0),
+                    cotidiano_weight: weightConfig.cotidiano_weight,
+                    attendance_weight: weightConfig.attendance_weight
+                }
+            },
+            message: `Datos SEA cargados: ${students.length} estudiantes, ${evaluations.length} evaluaciones`
+        });
+        
+    } catch (error) {
+        console.error('❌ Error en /api/sea/consolidated:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo datos SEA',
+            error: error.message
+        });
+    }
+});
 
 // Iniciar todo
 startServer();
