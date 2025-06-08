@@ -1659,29 +1659,48 @@ class Database {
         });
     }
 
-    // Obtener historial de evaluaciones
+    // Obtener historial de evaluaciones CORREGIDO
     async getCotidianoHistory(grade, subject) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
             const query = `
                 SELECT 
-                    evaluation_date,
-                    COUNT(DISTINCT student_id) as total_students,
-                    AVG(final_grade) as average_grade,
-                    grade_weight
-                FROM daily_evaluations 
-                WHERE grade_level = ? AND subject_area = ?
-                GROUP BY evaluation_date, grade_weight
-                ORDER BY evaluation_date DESC
+                    de.evaluation_date,
+                    de.grade_level,
+                    de.subject_area,
+                    s.first_surname,
+                    s.second_surname,
+                    s.first_name,
+                    di.indicator_name,
+                    dis.score,
+                    dis.notes
+                FROM daily_evaluations de
+                LEFT JOIN students s ON de.student_id = s.id
+                LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
+                LEFT JOIN daily_indicators di ON dis.indicator_id = di.id
+                WHERE de.grade_level = ? AND de.subject_area = ?
+                ORDER BY de.evaluation_date DESC, s.first_surname, di.indicator_name
             `;
             
             this.db.all(query, [grade, subject], (err, rows) => {
                 if (err) {
-                    console.error('Error fetching history:', err);
+                    console.error('❌ Error obteniendo historial cotidiano:', err);
                     reject(err);
                 } else {
-                    resolve(rows || []);
+                    // Procesar filas para agregar student_name
+                    const processedRows = rows.map(row => ({
+                        ...row,
+                        student_name: row.first_surname ? 
+                            `${row.first_surname} ${row.second_surname || ''} ${row.first_name}`.trim() : 
+                            null
+                    }));
+                    
+                    console.log(`📚 Historial obtenido: ${processedRows.length} registros para ${grade} - ${subject}`);
+                    if (processedRows.length > 0) {
+                        console.log('📝 Ejemplo de registro:', processedRows[0]);
+                    }
+                    resolve(processedRows);
                 }
             });
         });

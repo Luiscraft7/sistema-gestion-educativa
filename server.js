@@ -1416,49 +1416,103 @@ app.delete('/api/cotidiano/indicators/:id', async (req, res) => {
     }
 });
 
-// Obtener evaluación de una fecha específica
+// Cargar evaluación existente - CORREGIDO
 app.get('/api/cotidiano/evaluation', async (req, res) => {
     try {
-        const { grade, subject, date } = req.query;
+        const { grade_level, subject_area, evaluation_date } = req.query;
         
-        if (!grade || !subject || !date) {
+        if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Grade, subject and date are required' 
+                message: 'Grado, materia y fecha son requeridos' 
             });
         }
         
+        console.log('📖 Cargando evaluación cotidiano:', { grade_level, subject_area, evaluation_date });
+        
         database.ensureConnection();
         
-        const query = `
-            SELECT de.*, dis.indicator_id, dis.score, dis.notes as score_notes
-            FROM daily_evaluations de
-            LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
-            WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+        // 1. Cargar indicadores para este grado y materia
+        const indicatorsQuery = `
+            SELECT * FROM daily_indicators 
+            WHERE grade_level = ? AND subject_area = ?
+            ORDER BY parent_indicator_id, id
         `;
         
-        database.db.all(query, [grade, subject, date], (err, rows) => {
-            if (err) {
-                console.error('Error fetching evaluation:', err);
-                res.status(500).json({ 
-                    success: false, 
-                    message: 'Error obteniendo evaluación',
-                    error: err.message 
-                });
-            } else {
-                res.json({
-                    success: true,
-                    data: rows || [],
-                    message: `Evaluación encontrada para ${date}`
-                });
+        const indicators = await new Promise((resolve, reject) => {
+            database.db.all(indicatorsQuery, [grade_level, subject_area], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        console.log(`📋 Indicadores encontrados: ${indicators.length}`);
+        
+        // 2. Cargar evaluaciones de estudiantes para esta fecha
+        const evaluationsQuery = `
+            SELECT 
+                de.id as evaluation_id,
+                de.student_id,
+                de.evaluation_date,
+                de.grade_level,
+                de.subject_area,
+                s.first_surname,
+                s.second_surname,
+                s.first_name,
+                dis.indicator_id,
+                dis.score,
+                dis.notes
+            FROM daily_evaluations de
+            LEFT JOIN students s ON de.student_id = s.id
+            LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
+            WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+            ORDER BY s.first_surname, s.first_name, dis.indicator_id
+        `;
+        
+        const evaluations = await new Promise((resolve, reject) => {
+            database.db.all(evaluationsQuery, [grade_level, subject_area, evaluation_date], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        console.log(`👥 Evaluaciones encontradas: ${evaluations.length} registros`);
+        
+        // 3. Organizar datos por estudiante
+        const studentsData = {};
+        evaluations.forEach(row => {
+            if (row.student_id && row.first_surname) {
+                const studentName = `${row.first_surname} ${row.second_surname || ''} ${row.first_name}`.trim();
+                
+                if (!studentsData[studentName]) {
+                    studentsData[studentName] = {};
+                }
+                
+                if (row.indicator_id && row.score !== null) {
+                    studentsData[studentName][row.indicator_id] = row.score;
+                }
             }
         });
         
+        console.log(`📊 Estudiantes con calificaciones: ${Object.keys(studentsData).length}`);
+        if (Object.keys(studentsData).length > 0) {
+            console.log('👥 Estudiantes encontrados:', Object.keys(studentsData));
+        }
+        
+        res.json({
+            success: true,
+            data: {
+                indicators: indicators,
+                students: studentsData
+            },
+            message: `Evaluación cargada: ${indicators.length} indicadores, ${Object.keys(studentsData).length} estudiantes`
+        });
+        
     } catch (error) {
-        console.error('Error in get evaluation API:', error);
+        console.error('❌ Error cargando evaluación cotidiano:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Error obteniendo evaluación',
+            message: 'Error cargando evaluación',
             error: error.message 
         });
     }

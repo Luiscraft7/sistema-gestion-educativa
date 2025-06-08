@@ -991,7 +991,7 @@ Participa activamente en discusiones"
             }
         }
 
-       async function loadCurrentData() {
+      async function loadCurrentData() {
         if (!currentGrado || !currentMateria) {
             resetInterface();
             return;
@@ -1003,38 +1003,102 @@ Participa activamente en discusiones"
             const response = await fetch(`/api/cotidiano/evaluation?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&evaluation_date=${currentDate}`);
             const result = await response.json();
             
+            console.log('📥 Respuesta completa del servidor:', result);
+            
             if (result.success && result.data) {
-                console.log('✅ Datos cargados desde servidor:', result.data);
+                console.log('✅ Datos recibidos del servidor:', result.data);
                 
-                // Cargar indicadores
-                if (result.data.indicators && result.data.indicators.length > 0) {
-                    const loadedIndicators = result.data.indicators;
+                // 1. RESETEAR VARIABLES GLOBALES
+                mainIndicator = null;
+                indicators = [];
+                
+                // 2. CARGAR INDICADORES - LÓGICA CORREGIDA
+            if (result.data.indicators && result.data.indicators.length > 0) {
+                const loadedIndicators = result.data.indicators;
+                console.log('📋 Indicadores cargados desde servidor:', loadedIndicators.length);
+                console.log('🔍 Lista completa de indicadores:', loadedIndicators);
+                
+                // Separar por tipo
+                const principalIndicators = loadedIndicators.filter(ind => ind.parent_indicator_id === null);
+                const allSubIndicators = loadedIndicators.filter(ind => ind.parent_indicator_id !== null);
+                
+                console.log('🎯 Indicadores principales encontrados:', principalIndicators.length);
+                console.log('📝 Sub-indicadores totales encontrados:', allSubIndicators.length);
+                
+                // Procesar indicador principal (tomar el primero si hay varios)
+                if (principalIndicators.length > 0) {
+                    const principal = principalIndicators[0];
+                    mainIndicator = {
+                        id: principal.id,
+                        text: principal.indicator_name
+                    };
+                    console.log('🎯 Indicador principal asignado:', mainIndicator);
                     
-                    // Separar indicador principal y sub-indicadores
-                    mainIndicator = loadedIndicators.find(ind => ind.parent_indicator_id === null);
-                    indicators = loadedIndicators.filter(ind => ind.parent_indicator_id !== null);
+                    // Buscar TODOS los sub-indicadores de este principal
+                    const subsOfThisPrincipal = allSubIndicators.filter(sub => sub.parent_indicator_id === principal.id);
+                    console.log('🔗 Sub-indicadores de este principal:', subsOfThisPrincipal.length);
+                    console.log('📋 Sub-indicadores encontrados:', subsOfThisPrincipal);
                     
-                    // Convertir al formato que espera la interfaz
-                    if (mainIndicator) {
-                        mainIndicator = {
-                            id: mainIndicator.id,
-                            text: mainIndicator.indicator_name
-                        };
-                    }
-                    
-                    indicators = indicators.map(ind => ({
-                        id: ind.id,
-                        text: ind.indicator_name,
-                        isSubIndicator: ind.parent_indicator_id !== null,
-                        parentId: ind.parent_indicator_id
-                    }));
-                    
-                    console.log('📋 Indicadores cargados:', { mainIndicator, indicators: indicators.length });
+                    // Agregar cada sub-indicador
+                    subsOfThisPrincipal.forEach((sub, index) => {
+                        indicators.push({
+                            id: sub.id,
+                            text: sub.indicator_name,
+                            isSubIndicator: true,
+                            parentId: sub.parent_indicator_id
+                        });
+                        console.log(`  ➕ Sub-indicador ${index + 1}: "${sub.indicator_name}" (ID: ${sub.id})`);
+                    });
                 }
                 
-                // Cargar calificaciones de estudiantes
+                // Procesar indicadores individuales (sub-indicadores sin principal en esta sesión)
+                if (principalIndicators.length === 0) {
+                    // Si no hay principal, todos los indicadores son individuales
+                    console.log('📄 No hay principal, todos son individuales');
+                    allSubIndicators.forEach((ind, index) => {
+                        indicators.push({
+                            id: ind.id,
+                            text: ind.indicator_name,
+                            isSubIndicator: false,
+                            parentId: null
+                        });
+                        console.log(`  ➕ Indicador individual ${index + 1}: "${ind.indicator_name}"`);
+                    });
+                } else {
+                    // Buscar sub-indicadores que no pertenecen al principal actual
+                    const orphanSubIndicators = allSubIndicators.filter(sub => 
+                        !principalIndicators.some(p => p.id === sub.parent_indicator_id)
+                    );
+                    console.log('📄 Indicadores huérfanos (individuales):', orphanSubIndicators.length);
+                    
+                    orphanSubIndicators.forEach((ind, index) => {
+                        indicators.push({
+                            id: ind.id,
+                            text: ind.indicator_name,
+                            isSubIndicator: false,
+                            parentId: null
+                        });
+                        console.log(`  ➕ Indicador huérfano ${index + 1}: "${ind.indicator_name}"`);
+                    });
+                }
+                
+                console.log('📊 RESUMEN FINAL DE INDICADORES:');
+                console.log('  🎯 Principal:', mainIndicator ? `"${mainIndicator.text}"` : 'Ninguno');
+                console.log('  📝 Sub-indicadores:', indicators.filter(i => i.isSubIndicator).length);
+                console.log('  📄 Individuales:', indicators.filter(i => !i.isSubIndicator).length);
+                console.log('  📊 Total indicators array:', indicators.length);
+                console.log('  🔍 Lista completa indicators:', indicators);
+                
+            } else {
+                console.log('ℹ️ No hay indicadores guardados para esta combinación');
+            }
+                
+                // 3. CARGAR CALIFICACIONES DE ESTUDIANTES
                 if (result.data.students && Object.keys(result.data.students).length > 0) {
-                    // Inicializar estructura de calificaciones si no existe
+                    console.log('👥 Datos de estudiantes recibidos:', Object.keys(result.data.students).length);
+                    console.log('📊 Nombres de estudiantes en respuesta:', Object.keys(result.data.students));
+                    
+                    // Inicializar estructura de calificaciones
                     if (!calificaciones[currentGrado]) {
                         calificaciones[currentGrado] = {};
                     }
@@ -1043,16 +1107,31 @@ Participa activamente en discusiones"
                     }
                     if (!calificaciones[currentGrado][currentMateria][currentDate]) {
                         calificaciones[currentGrado][currentMateria][currentDate] = {
-                            indicators: indicators,
+                            indicators: [...indicators],
                             mainIndicator: mainIndicator,
                             estudiantes: {}
                         };
                     }
                     
-                    // Convertir nombres a claves de estudiante
+                    // Obtener estudiantes del grado actual para mapeo
+                    const studentsInGrade = students.filter(student => {
+                        const studentGrade = student.grade_level || student.grade || student.grado || '';
+                        const normalizedStudentGrade = studentGrade.toString().toLowerCase().trim();
+                        const normalizedCurrentGrade = currentGrado.toLowerCase().trim();
+                        
+                        return normalizedStudentGrade === normalizedCurrentGrade ||
+                            studentGrade === currentGrado;
+                    });
+                    
+                    console.log('🎓 Estudiantes filtrados del grado:', studentsInGrade.length);
+                    
+                    // Mapear estudiantes del servidor a claves locales
+                    let estudiantesEncontrados = 0;
                     Object.entries(result.data.students).forEach(([studentName, scores]) => {
-                        // Buscar el ID del estudiante por nombre
-                        const student = students.find(s => {
+                        console.log(`🔍 Procesando estudiante: "${studentName}" con ${Object.keys(scores).length} calificaciones`);
+                        
+                        // Buscar el estudiante por nombre
+                        const student = studentsInGrade.find(s => {
                             const fullName = `${s.first_surname} ${s.second_surname || ''} ${s.first_name}`.trim();
                             return fullName === studentName;
                         });
@@ -1060,23 +1139,40 @@ Participa activamente en discusiones"
                         if (student) {
                             const studentKey = `student_${student.id}`;
                             calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey] = scores;
+                            console.log(`✅ Estudiante mapeado: ${studentName} -> ${studentKey}`);
+                            console.log(`📊 Calificaciones:`, scores);
+                            estudiantesEncontrados++;
+                        } else {
+                            console.log(`❌ Estudiante NO encontrado: "${studentName}"`);
                         }
                     });
                     
-                    console.log('📊 Calificaciones cargadas para', Object.keys(result.data.students).length, 'estudiantes');
+                    console.log(`✅ Total estudiantes mapeados: ${estudiantesEncontrados} de ${Object.keys(result.data.students).length}`);
+                    
+                    // Verificar estructura final
+                    console.log('🔍 Estructura de calificaciones cargada:', 
+                        calificaciones[currentGrado][currentMateria][currentDate]);
+                    
+                } else {
+                    console.log('ℹ️ No hay calificaciones de estudiantes para esta fecha');
                 }
                 
+                // 4. RENDERIZAR INTERFAZ
+                console.log('🖼️ Renderizando interfaz...');
                 renderIndicatorsList();
                 renderCalificacionesTable();
                 calculateSumaCotidiano();
                 
+                console.log('✅ Interfaz actualizada con datos del servidor');
+                
             } else {
-                console.log('ℹ️ No hay datos guardados para esta fecha');
+                console.log('ℹ️ No hay datos guardados para esta fecha en el servidor');
                 resetInterface();
             }
             
         } catch (error) {
             console.error('❌ Error cargando datos:', error);
+            alert('❌ Error cargando datos: ' + error.message);
             resetInterface();
         }
         
@@ -1202,7 +1298,15 @@ Participa activamente en discusiones"
                 console.log('🚫 Selector de materias deshabilitado');
             }
             
-            resetInterface();
+            // Cargar datos si ambos están seleccionados
+            if (currentGrado && currentMateria) {
+                loadCurrentData(); // ✅ Cargar datos del servidor
+            } else {
+                resetInterface(); // ✅ Limpiar si falta algo
+            }
+            
+            // Actualizar estado
+            updateStatusIndicator();    
         }
 
         function cambiarMateria() {
@@ -1214,7 +1318,7 @@ Participa activamente en discusiones"
             
             if (currentGrado && currentMateria) {
                 console.log('✅ Grado y materia seleccionados, cargando datos...');
-                loadCurrentData();
+                loadCurrentData(); // ✅ ESTA LÍNEA ES CLAVE
             } else {
                 console.log('⚠️ Falta seleccionar grado o materia');
                 resetInterface();
@@ -1251,26 +1355,7 @@ Participa activamente en discusiones"
             updateStatusIndicator();
         }
 
-        function loadCurrentData() {
-            // Cargar datos de grado + materia + fecha actual
-            if (calificaciones[currentGrado] && 
-                calificaciones[currentGrado][currentMateria] && 
-                calificaciones[currentGrado][currentMateria][currentDate]) {
-                
-                const data = calificaciones[currentGrado][currentMateria][currentDate];
-                indicators = data.indicators || [];
-                mainIndicator = data.mainIndicator || null;
-                renderIndicatorsList();
-                renderCalificacionesTable();
-                calculateSumaCotidiano();
-            } else {
-                resetInterface();
-            }
-            
-            hasUnsavedChanges = false;
-            updateStatusIndicator();
-        }
-
+        
         // ========================================
         // GESTIÓN DEL MODAL UNIFICADO
         // ========================================
@@ -1794,11 +1879,17 @@ Participa activamente en discusiones"
         }
 
         function loadExistingGrades() {
+            console.log('🔄 Cargando calificaciones existentes...');
+            
             if (!calificaciones[currentGrado] || 
                 !calificaciones[currentGrado][currentMateria] || 
-                !calificaciones[currentGrado][currentMateria][currentDate]) return;
+                !calificaciones[currentGrado][currentMateria][currentDate]) {
+                console.log('⚠️ No hay calificaciones guardadas para cargar');
+                return;
+            }
             
             const dateData = calificaciones[currentGrado][currentMateria][currentDate];
+            console.log('📊 Datos del día encontrados:', dateData);
             
             // Filtrar estudiantes por grado actual
             const studentsInGrade = students.filter(student => {
@@ -1807,16 +1898,22 @@ Participa activamente en discusiones"
                 const normalizedCurrentGrade = currentGrado.toLowerCase().trim();
                 
                 return normalizedStudentGrade === normalizedCurrentGrade ||
-                       studentGrade === currentGrado ||
-                       normalizedStudentGrade.includes(normalizedCurrentGrade) ||
-                       normalizedCurrentGrade.includes(normalizedStudentGrade);
+                    studentGrade === currentGrado;
             });
+            
+            console.log('👥 Estudiantes del grado a cargar:', studentsInGrade.length);
+            
+            let calificacionesCargadas = 0;
             
             studentsInGrade.forEach(student => {
                 const studentKey = `student_${student.id}`;
+                const studentName = `${student.first_surname} ${student.second_surname || ''} ${student.first_name}`.trim();
+                
                 if (dateData.estudiantes && dateData.estudiantes[studentKey]) {
                     const studentGrades = dateData.estudiantes[studentKey];
+                    console.log(`📝 Cargando calificaciones para ${studentName}:`, studentGrades);
                     
+                    // Construir lista de todos los indicadores
                     const allIndicators = [];
                     if (mainIndicator) {
                         const subIndicators = indicators.filter(ind => ind.isSubIndicator && ind.parentId === mainIndicator.id);
@@ -1825,20 +1922,32 @@ Participa activamente en discusiones"
                     const individualIndicators = indicators.filter(ind => !ind.isSubIndicator);
                     allIndicators.push(...individualIndicators);
                     
+                    console.log(`🎯 Indicadores disponibles para ${studentName}:`, allIndicators.length);
+                    
+                    // Cargar cada calificación en el input correspondiente
                     allIndicators.forEach(indicator => {
                         if (studentGrades[indicator.id]) {
                             const input = document.querySelector(`input[onchange*="'${studentKey}', ${indicator.id}"]`);
                             if (input) {
                                 input.value = studentGrades[indicator.id];
                                 updateGradeStyle(input, studentGrades[indicator.id]);
+                                console.log(`✅ Calificación cargada: Indicador ${indicator.id} = ${studentGrades[indicator.id]}`);
+                                calificacionesCargadas++;
+                            } else {
+                                console.log(`⚠️ Input no encontrado para indicador ${indicator.id}`);
                             }
                         }
                     });
+                    
+                    // Actualizar sumas del estudiante
                     updateStudentSums(studentKey);
+                } else {
+                    console.log(`⚠️ No hay calificaciones para ${studentName} (${studentKey})`);
                 }
             });
+            
+            console.log(`✅ Total calificaciones cargadas: ${calificacionesCargadas}`);
         }
-
         // ========================================
         // GESTIÓN DE CALIFICACIONES
         // ========================================
@@ -2160,26 +2269,91 @@ Participa activamente en discusiones"
             }
         }
 
-        function verHistorial() {
-            let mensaje = 'Historial de fechas guardadas:\n\n';
-            let hayDatos = false;
-            
-            Object.keys(calificaciones).forEach(grado => {
-                Object.keys(calificaciones[grado]).forEach(materia => {
-                    Object.keys(calificaciones[grado][materia]).forEach(fecha => {
-                        const data = calificaciones[grado][materia][fecha];
-                        const numIndicadores = (data.indicators ? data.indicators.length : 0) + (data.mainIndicator ? 1 : 0);
-                        mensaje += `📅 ${fecha} - Grado ${grado} - ${materia} - ${numIndicadores} indicadores\n`;
-                        hayDatos = true;
-                    });
-                });
-            });
-            
-            if (!hayDatos) {
-                mensaje = 'No hay fechas guardadas en el historial';
+        async function verHistorial() {
+            if (!currentGrado || !currentMateria) {
+                alert('❌ Por favor seleccione grado y materia primero');
+                return;
             }
             
-            alert(mensaje);
+            try {
+                console.log('📚 Consultando historial desde servidor...');
+                
+                const response = await fetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrado)}&subject=${encodeURIComponent(currentMateria)}`);
+                const result = await response.json();
+                
+                console.log('📥 Respuesta del historial:', result);
+                
+                if (result.success) {
+                    const history = result.data;
+                    
+                    let mensaje = `Historial de evaluaciones guardadas:\n\n`;
+                    mensaje += `📊 Grado: ${currentGrado}\n`;
+                    mensaje += `📚 Materia: ${currentMateria}\n\n`;
+                    
+                    if (history && history.length > 0) {
+                        // Agrupar por fecha y obtener información detallada
+                        const fechasInfo = {};
+                        
+                        history.forEach(item => {
+                            const fecha = item.evaluation_date;
+                            
+                            if (!fechasInfo[fecha]) {
+                                fechasInfo[fecha] = {
+                                    estudiantes: new Set(),
+                                    indicadores: new Set(),
+                                    totalCalificaciones: 0
+                                };
+                            }
+                            
+                            // Contar estudiantes únicos por fecha
+                            if (item.student_name) {
+                                fechasInfo[fecha].estudiantes.add(item.student_name);
+                            }
+                            
+                            // Contar indicadores únicos por fecha  
+                            if (item.indicator_name) {
+                                fechasInfo[fecha].indicadores.add(item.indicator_name);
+                            }
+                            
+                            // Contar calificaciones
+                            if (item.score !== null && item.score !== undefined) {
+                                fechasInfo[fecha].totalCalificaciones++;
+                            }
+                        });
+                        
+                        // Mostrar resumen por fecha ordenado
+                        const fechasOrdenadas = Object.keys(fechasInfo).sort();
+                        
+                        fechasOrdenadas.forEach(fecha => {
+                            const info = fechasInfo[fecha];
+                            mensaje += `📅 ${fecha}\n`;
+                            mensaje += `   👥 ${info.estudiantes.size} estudiantes evaluados\n`;
+                            mensaje += `   📝 ${info.indicadores.size} indicadores\n`;
+                            mensaje += `   📊 ${info.totalCalificaciones} calificaciones registradas\n\n`;
+                        });
+                        
+                        mensaje += `\n📈 Resumen total:\n`;
+                        mensaje += `📅 ${fechasOrdenadas.length} fechas con evaluaciones\n`;
+                        mensaje += `👥 Total de registros: ${history.length}`;
+                        
+                    } else {
+                        mensaje += '📭 No hay evaluaciones guardadas para esta combinación\n';
+                        mensaje += 'de grado y materia.\n\n';
+                        mensaje += '💡 Tip: Cree indicadores y califique estudiantes para\n';
+                        mensaje += 'comenzar a generar historial.';
+                    }
+                    
+                    alert(mensaje);
+                    
+                } else {
+                    console.error('❌ Error en respuesta del historial:', result);
+                    alert('❌ Error obteniendo historial: ' + (result.message || 'Error desconocido'));
+                }
+                
+            } catch (error) {
+                console.error('❌ Error consultando historial:', error);
+                alert('❌ Error de conexión al consultar historial');
+            }
         }
 
         // ========================================
