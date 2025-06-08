@@ -1936,7 +1936,6 @@ app.get('/api/cotidiano/history', async (req, res) => {
     }
 });
 
-
 // ========================================
 // MÓDULO SEA - Sistema de Evaluación Académica
 // AGREGAR ESTE CÓDIGO AL FINAL DE server.js (ANTES DE startServer())
@@ -2024,7 +2023,7 @@ app.get('/api/sea/consolidated', async (req, res) => {
         // 2. Obtener todos los estudiantes activos del grado
         const students = await new Promise((resolve, reject) => {
             const studentsQuery = `
-                SELECT id, first_name, first_surname, second_surname, student_id
+                SELECT id, first_name, first_surname, second_surname, student_id, cedula
                 FROM students 
                 WHERE grade_level = ? AND status = 'active'
                 ORDER BY first_surname, first_name
@@ -2076,16 +2075,21 @@ app.get('/api/sea/consolidated', async (req, res) => {
                         totalWeightedGrade += studentGrade * (evaluation.percentage / 100);
                         totalPercentage += evaluation.percentage;
                         
+                        // Calcular puntos obtenidos del porcentaje total
+                        const pointsFromPercentage = (studentGrade / 100) * evaluation.percentage;
+                        
                         evaluationGrades[evaluation.title] = {
-                            grade: studentGrade.toFixed(1),
+                            grade: pointsFromPercentage.toFixed(1), // Puntos obtenidos del porcentaje
                             percentage: evaluation.percentage,
-                            points: `${gradeResult.points_earned}/${evaluation.max_points}`
+                            points: `${gradeResult.points_earned}/${evaluation.max_points}`,
+                            original_grade: studentGrade.toFixed(1) // Guardar nota original para debug
                         };
                     } else {
                         evaluationGrades[evaluation.title] = {
                             grade: 'Sin calificar',
                             percentage: evaluation.percentage,
-                            points: '-'
+                            points: '-',
+                            original_grade: 'Sin calificar'
                         };
                     }
                 }
@@ -2105,15 +2109,40 @@ app.get('/api/sea/consolidated', async (req, res) => {
                             console.error(`❌ Error obteniendo cotidiano estudiante ${student.id}:`, err);
                             resolve(null);
                         } else {
+                            console.log(`📊 Cotidiano estudiante ${student.first_surname} (${grade}-${subject}): ${row?.cotidiano_total || 'Sin datos'}`);
+                            
+                            // Si no hay datos, verificar si existe con otra consulta
+                            if (!row) {
+                                const debugQuery = `
+                                    SELECT COUNT(*) as total, MAX(evaluation_date) as last_date
+                                    FROM daily_evaluations 
+                                    WHERE student_id = ?
+                                `;
+                                database.db.get(debugQuery, [student.id], (debugErr, debugRow) => {
+                                    if (!debugErr && debugRow) {
+                                        console.log(`🔍 Debug cotidiano ${student.first_surname}: ${debugRow.total} registros totales, última fecha: ${debugRow.last_date}`);
+                                    }
+                                });
+                            }
+                            
                             resolve(row);
                         }
                     });
                 });
 
-                // 3.3 Nota de asistencia (usando función existente)
+                // 3.3 Nota de asistencia (usando función correcta y materia específica)
                 let attendanceStats = null;
                 try {
-                    attendanceStats = await database.getAttendanceStats(student.id, grade, subject);
+                    // Primero intentar con la materia específica
+                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject);
+                    console.log(`📊 Asistencia estudiante ${student.first_surname} (${subject}): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
+                    
+                    // Si no hay datos con la materia específica, intentar con 'general'
+                    if (!attendanceStats || attendanceStats.total_records === 0) {
+                        console.log(`🔍 Intentando asistencia general para ${student.first_surname}...`);
+                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general');
+                        console.log(`📊 Asistencia estudiante ${student.first_surname} (general): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
+                    }
                 } catch (error) {
                     console.error(`❌ Error obteniendo asistencia estudiante ${student.id}:`, error);
                 }
@@ -2124,6 +2153,7 @@ app.get('/api/sea/consolidated', async (req, res) => {
                 studentsWithSEA.push({
                     student_id: student.id,
                     student_code: student.student_id,
+                    student_cedula: student.cedula,
                     student_name: studentName,
                     
                     // Evaluaciones individuales

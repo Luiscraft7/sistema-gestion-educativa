@@ -214,6 +214,12 @@
             font-weight: 600;
         }
 
+        .total-column {
+            background: #d4edda !important;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -324,16 +330,16 @@
                     <p>📝 Evaluaciones</p>
                 </div>
                 <div class="summary-card">
-                    <h3 id="totalPercentage">0%</h3>
-                    <p>🎯 % Configurado</p>
+                    <h3 id="attendanceWeight">10</h3>
+                    <p>📅 Valor Asistencia</p>
                 </div>
                 <div class="summary-card">
-                    <h3 id="cotidianoWeight">25%</h3>
-                    <p>📊 Peso Cotidiano</p>
+                    <h3 id="cotidianoWeight">65</h3>
+                    <p>📊 Valor Cotidiano</p>
                 </div>
                 <div class="summary-card">
-                    <h3 id="attendanceWeight">5%</h3>
-                    <p>📅 Peso Asistencia</p>
+                    <h3 id="totalPercentage">0</h3>
+                    <p>🎯 Total Configurado</p>
                 </div>
             </div>
 
@@ -446,8 +452,10 @@
                     <table class="sea-table">
                         <thead>
                             <tr>
+                                <th rowspan="2">🆔 Cédula/ID</th>
                                 <th rowspan="2">👥 Estudiante</th>
-                                <th rowspan="2">🆔 Código</th>`;
+                                <th rowspan="2" class="attendance-column">📅 Asistencia<br><small>(${weightConfig.attendance_weight})</small></th>
+                                <th rowspan="2" class="cotidiano-column">📊 Cotidiano<br><small>(${weightConfig.cotidiano_weight})</small></th>`;
             
             // Headers de evaluaciones
             if (data.evaluations_list && data.evaluations_list.length > 0) {
@@ -455,15 +463,14 @@
             }
             
             tableHTML += `
-                                <th rowspan="2" class="cotidiano-column">📊 Cotidiano<br><small>(${weightConfig.cotidiano_weight}%)</small></th>
-                                <th rowspan="2" class="attendance-column">📅 Asistencia<br><small>(${weightConfig.attendance_weight}%)</small></th>
+                                <th rowspan="2" class="total-column">🎯 Total SEA<br><small>(/100)</small></th>
                             </tr>
                             <tr>`;
             
             // Nombres de evaluaciones individuales
             if (data.evaluations_list && data.evaluations_list.length > 0) {
                 data.evaluations_list.forEach(eval => {
-                    tableHTML += `<th class="evaluation-column">${eval.title}<br><small>(${eval.percentage}%)</small></th>`;
+                    tableHTML += `<th class="evaluation-column">${eval.title}<br><small>de ${eval.percentage}</small></th>`;
                 });
             }
             
@@ -475,8 +482,20 @@
             data.students.forEach(student => {
                 tableHTML += `
                     <tr>
-                        <td class="student-name">${student.student_name}</td>
-                        <td>${student.student_code || '-'}</td>`;
+                        <td>${student.student_cedula || student.student_code || '-'}</td>
+                        <td class="student-name">${student.student_name}</td>`;
+                
+                // Nota de asistencia (solo el número)
+                const attendanceGrade = student.attendance.grade_0_5 !== 'Sin datos' ? 
+                    student.attendance.grade_0_5 : 'Sin datos';
+                const attendanceClass = attendanceGrade !== 'Sin datos' ? 
+                    getGradeClass(parseFloat(attendanceGrade) * 20) : 'grade-missing';
+                tableHTML += `<td class="attendance-column ${attendanceClass}">${attendanceGrade}</td>`;
+                
+                // Nota de cotidiano total
+                const cotidianoClass = student.cotidiano.total_grade !== 'Sin datos' ? 
+                    getGradeClass(parseFloat(student.cotidiano.total_grade)) : 'grade-missing';
+                tableHTML += `<td class="cotidiano-column ${cotidianoClass}">${student.cotidiano.total_grade}</td>`;
                 
                 // Calificaciones de evaluaciones
                 if (data.evaluations_list && data.evaluations_list.length > 0) {
@@ -491,15 +510,36 @@
                     });
                 }
                 
-                // Nota de cotidiano total
-                const cotidianoClass = student.cotidiano.total_grade !== 'Sin datos' ? 
-                    getGradeClass(parseFloat(student.cotidiano.total_grade)) : 'grade-missing';
-                tableHTML += `<td class="cotidiano-column ${cotidianoClass}">${student.cotidiano.total_grade}</td>`;
+                // Total SEA (calcular dinámicamente)
+                let totalSEA = 0;
+                let hasData = false;
                 
-                // Nota de asistencia (solo una columna)
-                const attendanceClass = student.attendance.grade_0_5 !== 'Sin datos' ? 
-                    getGradeClass(parseFloat(student.attendance.grade_0_5) * 20) : 'grade-missing'; // Convertir a escala 100 para clasificación
-                tableHTML += `<td class="attendance-column ${attendanceClass}">${student.attendance.grade_0_5}</td>`;
+                // Sumar asistencia
+                if (attendanceGrade !== 'Sin datos') {
+                    totalSEA += parseFloat(attendanceGrade);
+                    hasData = true;
+                }
+                
+                // Sumar cotidiano
+                if (student.cotidiano.total_grade !== 'Sin datos') {
+                    totalSEA += parseFloat(student.cotidiano.total_grade);
+                    hasData = true;
+                }
+                
+                // Sumar evaluaciones (usando puntos obtenidos del porcentaje)
+                if (data.evaluations_list && data.evaluations_list.length > 0) {
+                    data.evaluations_list.forEach(eval => {
+                        const evalGrade = student.evaluations[eval.title];
+                        if (evalGrade && evalGrade.grade !== 'Sin calificar') {
+                            totalSEA += parseFloat(evalGrade.grade); // Ya son puntos del porcentaje
+                            hasData = true;
+                        }
+                    });
+                }
+                
+                const totalSEADisplay = hasData ? totalSEA.toFixed(1) : 'Sin datos';
+                const totalClass = hasData ? getGradeClass(totalSEA) : 'grade-missing';
+                tableHTML += `<td class="total-column ${totalClass}"><strong>${totalSEADisplay}</strong></td>`;
                 
                 tableHTML += `</tr>`;
             });
@@ -517,9 +557,16 @@
         function updateSummaryCards(summary) {
             document.getElementById('totalStudents').textContent = summary.total_students;
             document.getElementById('totalEvaluations').textContent = summary.total_evaluations;
-            document.getElementById('totalPercentage').textContent = summary.total_percentage_configured + '%';
-            document.getElementById('cotidianoWeight').textContent = (summary.cotidiano_weight || 25) + '%';
-            document.getElementById('attendanceWeight').textContent = (summary.attendance_weight || 5) + '%';
+            
+            // Calcular total configurado (suma de todos los valores)
+            const evaluationsTotal = summary.total_percentage_configured || 0;
+            const cotidianoValue = summary.cotidiano_weight || 65;
+            const attendanceValue = summary.attendance_weight || 10;
+            const grandTotal = evaluationsTotal + cotidianoValue + attendanceValue;
+            
+            document.getElementById('totalPercentage').textContent = grandTotal;
+            document.getElementById('cotidianoWeight').textContent = cotidianoValue;
+            document.getElementById('attendanceWeight').textContent = attendanceValue;
         }
 
         // Clasificar calificaciones por color
