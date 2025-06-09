@@ -1837,6 +1837,189 @@ class Database {
     }
 
 
+// ========================================
+// MÉTODOS PARA PROFESORES
+// ========================================
+
+async createTeacher(teacherData) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO teachers (
+                full_name, cedula, school_name, email, password,
+                teacher_type, specialized_type, school_code, 
+                circuit_code, regional
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        
+        const params = [
+            teacherData.full_name,
+            teacherData.cedula,
+            teacherData.school_name,
+            teacherData.email,
+            teacherData.password, // En producción, hash this
+            teacherData.teacher_type,
+            teacherData.specialized_type,
+            teacherData.school_code,
+            teacherData.circuit_code,
+            teacherData.regional
+        ];
+        
+        this.db.run(query, params, function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    id: this.lastID,
+                    message: 'Profesor creado exitosamente'
+                });
+            }
+        });
+    });
+}
+
+async getAllTeachers() {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                id, full_name, cedula, school_name, email,
+                teacher_type, specialized_type, school_code,
+                circuit_code, regional, is_active, is_paid,
+                registration_date, activation_date, last_login
+            FROM teachers 
+            ORDER BY registration_date DESC
+        `;
+        
+        this.db.all(query, [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows || []);
+            }
+        });
+    });
+}
+
+async getTeacherByEmail(email) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM teachers WHERE email = ?`;
+        
+        this.db.get(query, [email], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+async toggleTeacherStatus(teacherId, action) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const isActive = action === 'activate' ? 1 : 0;
+        const activationDate = action === 'activate' ? 'CURRENT_TIMESTAMP' : 'NULL';
+        
+        const query = `
+            UPDATE teachers 
+            SET is_active = ?, 
+                activation_date = ${action === 'activate' ? 'CURRENT_TIMESTAMP' : 'NULL'},
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `;
+        
+        this.db.run(query, [isActive, teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    id: teacherId,
+                    changes: this.changes,
+                    action: action
+                });
+            }
+        });
+    });
+}
+
+async updateTeacherPayment(teacherId, isPaid) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            UPDATE teachers 
+            SET is_paid = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `;
+        
+        this.db.run(query, [isPaid ? 1 : 0, teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    id: teacherId,
+                    changes: this.changes
+                });
+            }
+        });
+    });
+}
+
+
+
+
+// ========================================
+// MÉTODOS PARA ADMINISTRADOR
+// ========================================
+
+async updateAdminLastLogin() {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            UPDATE admin_users 
+            SET last_login = CURRENT_TIMESTAMP
+            WHERE email = 'Luiscraft'
+        `;
+        
+        this.db.run(query, [], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    changes: this.changes,
+                    lastLogin: new Date().toISOString()
+                });
+            }
+        });
+    });
+}
+
+async getAdminUser() {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT username, email, last_login, created_at 
+            FROM admin_users 
+            WHERE email = 'Luiscraft'
+        `;
+        
+        this.db.get(query, [], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
 
 
 

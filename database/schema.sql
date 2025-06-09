@@ -13,6 +13,42 @@ CREATE TABLE IF NOT EXISTS schools (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- ========================================
+-- TABLA DE PROFESORES/USUARIOS
+-- ========================================
+
+CREATE TABLE IF NOT EXISTS teachers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name TEXT NOT NULL,
+    cedula TEXT UNIQUE NOT NULL,
+    school_name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    -- Datos opcionales
+    teacher_type TEXT,
+    specialized_type TEXT,
+    school_code TEXT,
+    circuit_code TEXT,
+    regional TEXT,
+    -- Control administrativo
+    is_active INTEGER DEFAULT 0,
+    is_paid INTEGER DEFAULT 0,
+    registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    activation_date DATETIME,
+    last_login DATETIME,
+    -- Metadatos
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Índices para optimización
+CREATE INDEX IF NOT EXISTS idx_teachers_email ON teachers(email);
+CREATE INDEX IF NOT EXISTS idx_teachers_cedula ON teachers(cedula);
+CREATE INDEX IF NOT EXISTS idx_teachers_active ON teachers(is_active);
+CREATE INDEX IF NOT EXISTS idx_teachers_school ON teachers(school_name);
+
+
 -- Tabla de Materias del Sistema (básicas)
 CREATE TABLE IF NOT EXISTS subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -338,14 +374,19 @@ INSERT OR IGNORE INTO schools (id, name, address, phone, email)
 VALUES (1, 'Mi Escuela', 'Dirección de la Escuela', '0000-0000', 'contacto@miescuela.cr');
 
 -- ========================================
--- NOTAS IMPORTANTES
+-- TABLA DE ADMINISTRADOR ÚNICO
 -- ========================================
--- ✅ SISTEMA COMPLETAMENTE LIMPIO
--- ✅ Sin grados precargados
--- ✅ Sin materias precargadas  
--- ✅ Solo estructura de tablas optimizada
--- ✅ Usuario agrega sus propios datos
--- ✅ Soporte completo para evaluaciones con tipos
--- ✅ Índices optimizados para rendimiento
--- ✅ Constraints y relaciones apropiadas
--- ✅ ON DELETE CASCADE para integridad de datos
+
+CREATE TABLE IF NOT EXISTS admin_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    is_super_admin INTEGER DEFAULT 1,
+    last_login DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insertar administrador único
+INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
+VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);

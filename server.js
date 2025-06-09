@@ -158,6 +158,158 @@ app.delete('/api/students/:id', async (req, res) => {
     }
 });
 
+
+// ========================================
+// RUTAS API PARA PROFESORES
+// ========================================
+
+// Registrar nuevo profesor
+app.post('/api/teachers/register', async (req, res) => {
+    try {
+        const teacherData = req.body;
+        
+        // Validar campos obligatorios
+        const requiredFields = ['full_name', 'cedula', 'school_name', 'email', 'password'];
+        for (const field of requiredFields) {
+            if (!teacherData[field]) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Campo obligatorio faltante: ${field}`
+                });
+            }
+        }
+        
+        // Verificar si ya existe
+        const existingTeacher = await database.getTeacherByEmail(teacherData.email);
+        if (existingTeacher) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ya existe un profesor registrado con este email'
+            });
+        }
+        
+        const result = await database.createTeacher(teacherData);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Profesor registrado exitosamente. Pendiente de activación.'
+        });
+        
+    } catch (error) {
+        console.error('Error registrando profesor:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+});
+
+// Obtener todos los profesores (para admin)
+app.get('/api/teachers', async (req, res) => {
+    try {
+        const teachers = await database.getAllTeachers();
+        res.json({
+            success: true,
+            data: teachers,
+            count: teachers.length
+        });
+    } catch (error) {
+        console.error('Error obteniendo profesores:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo profesores',
+            error: error.message
+        });
+    }
+});
+
+// Activar/Desactivar profesor
+app.put('/api/teachers/:id/toggle-status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action } = req.body; // 'activate' or 'deactivate'
+        
+        const result = await database.toggleTeacherStatus(id, action);
+        res.json({
+            success: true,
+            data: result,
+            message: `Profesor ${action === 'activate' ? 'activado' : 'desactivado'} exitosamente`
+        });
+    } catch (error) {
+        console.error('Error cambiando estado del profesor:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error cambiando estado del profesor',
+            error: error.message
+        });
+    }
+});
+
+// Marcar pago
+app.put('/api/teachers/:id/payment', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_paid } = req.body;
+        
+        const result = await database.updateTeacherPayment(id, is_paid);
+        res.json({
+            success: true,
+            data: result,
+            message: `Estado de pago actualizado`
+        });
+    } catch (error) {
+        console.error('Error actualizando pago:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error actualizando estado de pago',
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// API PARA ESTADÍSTICAS DEL DASHBOARD
+// ========================================
+
+// Obtener estadísticas generales
+app.get('/api/dashboard/stats', async (req, res) => {
+    try {
+        const teachers = await database.getAllTeachers();
+        const students = await database.getAllStudents();
+        
+        const stats = {
+            professors: {
+                total: teachers.length,
+                active: teachers.filter(t => t.is_active === 1).length,
+                pending: teachers.filter(t => t.is_active === 0).length,
+                paid: teachers.filter(t => t.is_paid === 1).length
+            },
+            students: {
+                total: students.length
+            },
+            schools: {
+                total: [...new Set(teachers.map(t => t.school_name))].length
+            }
+        };
+        
+        res.json({
+            success: true,
+            data: stats
+        });
+        
+    } catch (error) {
+        console.error('Error obteniendo estadísticas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo estadísticas',
+            error: error.message
+        });
+    }
+});
+
+
+
 // ========================================
 // RUTAS API PARA GRADOS
 // ========================================
@@ -2450,6 +2602,65 @@ app.get('/api/sea/consolidated', async (req, res) => {
             error: error.message
         });
     }
+});
+
+
+
+// ========================================
+// APIs DE AUTENTICACIÓN ADMINISTRATIVA
+// ========================================
+
+// Login administrativo
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // Verificar credenciales específicas del administrador
+        if (email === 'Luiscraft' && password === 'Naturarte0603') {
+            // Actualizar último login
+            await database.updateAdminLastLogin();
+            
+            res.json({
+                success: true,
+                message: 'Acceso administrativo autorizado',
+                user: {
+                    email: email,
+                    role: 'super_admin',
+                    loginTime: new Date().toISOString()
+                }
+            });
+        } else {
+            res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas. Acceso denegado.'
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error en login administrativo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// Verificar sesión administrativa
+app.get('/api/admin/verify', (req, res) => {
+    // En una implementación real, aquí verificarías JWT o sesión
+    // Por simplicidad, solo confirmamos que el endpoint existe
+    res.json({
+        success: true,
+        message: 'Endpoint de verificación disponible'
+    });
+});
+
+// Logout administrativo
+app.post('/api/admin/logout', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Sesión administrativa cerrada'
+    });
 });
 
 

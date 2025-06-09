@@ -177,6 +177,26 @@
                 padding: 20px;
             }
         }
+
+
+        .admin-module {
+            border: 2px solid #fbbf24;
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+        }
+
+        .admin-module:hover {
+            background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+            transform: translateY(-8px);
+        }
+
+        .status-active {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -192,16 +212,16 @@
             <div class="stats-title">📊 Vista General del Sistema</div>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Escuelas Registradas</div>
+                    <div class="stat-number" id="professorsCount">⏳</div>
+                    <div class="stat-label">Profesores Activos</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">0</div>
+                    <div class="stat-number" id="studentsCount">⏳</div>
                     <div class="stat-label">Estudiantes Activos</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Materias Configuradas</div>
+                    <div class="stat-number" id="schoolsCount">⏳</div>
+                    <div class="stat-label">Escuelas Registradas</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">7</div>
@@ -275,6 +295,17 @@
                 <div class="module-status status-planned">Planificado</div>
             </div>
             
+            <!-- Módulo Administración -->
+            <div class="module-card admin-module" onclick="openModule('admin')">
+                <div class="module-icon">🔧</div>
+                <div class="module-title">Administración</div>
+                <div class="module-description">
+                    Panel de control para gestionar profesores, activaciones y pagos del sistema
+                </div>
+                <div class="module-status status-active">🔥 Activo</div>
+            </div>
+
+
             <!-- Módulo SEA --> 
             <div class="module-card" onclick="openModule('sea')">
                 <div class="module-icon">🎯</div>
@@ -289,8 +320,9 @@
         <!-- Footer -->
         <div class="footer">
             <p>
-                <a href="index.html">← Volver al Login</a> | 
-                © 2025 Sistema Educativo - Dashboard v1.0
+                <a href="login.html">← Volver al Login</a> | 
+                © 2025 Sistema Educativo - Dashboard v1.0 |
+                <a href="admin-login.html" style="color: #6b7280; font-size: 12px;">🔧 Admin</a>
             </p>
         </div>
     </div>
@@ -321,22 +353,120 @@
         }
     }
         
-        // Efecto de aparición progresiva
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.module-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    card.style.transition = 'opacity 0.5s, transform 0.5s';
-                    
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
-                }, index * 100);
-            });
-        });
+    // Cargar estadísticas al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardStats();
+    });
+
+    // Cargar estadísticas y verificar permisos al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        checkUserPermissions();
+        loadDashboardStats();
+    });
+
+    // Verificar permisos del usuario
+    function checkUserPermissions() {
+        const adminSession = sessionStorage.getItem('adminSession');
+        const adminUser = sessionStorage.getItem('adminUser');
+        
+        // Solo mostrar módulo administrativo si es el admin
+        if (adminSession === 'true' && adminUser === 'Luiscraft') {
+            showAdminModule();
+            addAdminIndicator();
+        } else {
+            hideAdminModule();
+        }
+    }
+
+    // Mostrar módulo administrativo
+    function showAdminModule() {
+        const adminModule = document.querySelector('.admin-module');
+        if (adminModule) {
+            adminModule.style.display = 'block';
+        } else {
+            // Crear el módulo si no existe
+            createAdminModule();
+        }
+    }
+
+    // Ocultar módulo administrativo
+    function hideAdminModule() {
+        const adminModule = document.querySelector('.admin-module');
+        if (adminModule) {
+            adminModule.style.display = 'none';
+        }
+    }
+
+    // Crear módulo administrativo dinámicamente
+    function createAdminModule() {
+        const modulesGrid = document.querySelector('.modules-grid');
+        
+        const adminModuleHTML = `
+            <div class="module-card admin-module" onclick="openModule('admin')">
+                <div class="module-icon">🔧</div>
+                <div class="module-title">Administración</div>
+                <div class="module-description">
+                    Panel de control para gestionar profesores, activaciones y pagos del sistema
+                </div>
+                <div class="module-status status-active">🔥 Activo</div>
+            </div>
+        `;
+        
+        modulesGrid.insertAdjacentHTML('beforeend', adminModuleHTML);
+    }
+
+    // Agregar indicador de administrador en el header
+    function addAdminIndicator() {
+        const header = document.querySelector('.header');
+        const adminIndicator = document.createElement('div');
+        adminIndicator.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: #dc2626;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        `;
+        adminIndicator.innerHTML = '👑 MODO ADMINISTRADOR';
+        header.style.position = 'relative';
+        header.appendChild(adminIndicator);
+    }
+
+    function openModule(moduleName) {
+        // Verificar permisos para módulo administrativo
+        if (moduleName === 'admin') {
+            const adminSession = sessionStorage.getItem('adminSession');
+            const adminUser = sessionStorage.getItem('adminUser');
+            
+            if (adminSession === 'true' && adminUser === 'Luiscraft') {
+                window.location.href = 'admin.html';
+            } else {
+                alert('🚫 Acceso denegado. Solo el administrador puede acceder a este módulo.');
+                window.location.href = 'admin-login.html';
+            }
+            return;
+        }
+        
+        // Resto de módulos...
+        if (moduleName === 'estudiantes') {
+            window.location.href = 'students.html';
+        } else if (moduleName === 'asistencia') {
+            window.location.href = 'attendance.html';
+        } else if (moduleName === 'cotidiano') {
+            window.location.href = 'cotidiano.html';
+        } else if (moduleName === 'tareas') {
+            alert('📝 Módulo de Evaluaciones - ¡Próximamente disponible!');
+        } else if (moduleName === 'materias') {
+            alert('📚 Módulo de Materias - ¡En desarrollo!');
+        } else if (moduleName === 'reportes') {
+            alert('📈 Módulo de Reportes - ¡Planificado para próxima versión!');
+        } else {
+            alert('🚧 Módulo en desarrollo - ¡Pronto estará disponible!');
+        }
+    }
     </script>
 </body>
 </html>
