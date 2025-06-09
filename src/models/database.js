@@ -2023,6 +2023,29 @@ async getAdminUser() {
 
 
 
+async updateTeacherLastLogin(teacherId) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                UPDATE teachers 
+                SET last_login = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `;
+            
+            this.db.run(query, [teacherId], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({
+                        id: teacherId,
+                        changes: this.changes
+                    });
+                }
+            });
+        });
+    }
+
 
     
 }

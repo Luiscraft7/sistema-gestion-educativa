@@ -178,7 +178,6 @@
             }
         }
 
-
         .admin-module {
             border: 2px solid #fbbf24;
             background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
@@ -251,9 +250,6 @@
                 </div>
                 <div class="module-status status-planned">Planificado</div>
             </div>
-            
-            
-            
 
             <!-- Módulo Asistencia -->
             <div class="module-card" onclick="openModule('asistencia')">
@@ -295,17 +291,6 @@
                 <div class="module-status status-planned">Planificado</div>
             </div>
             
-            <!-- Módulo Administración -->
-            <div class="module-card admin-module" onclick="openModule('admin')">
-                <div class="module-icon">🔧</div>
-                <div class="module-title">Administración</div>
-                <div class="module-description">
-                    Panel de control para gestionar profesores, activaciones y pagos del sistema
-                </div>
-                <div class="module-status status-active">🔥 Activo</div>
-            </div>
-
-
             <!-- Módulo SEA --> 
             <div class="module-card" onclick="openModule('sea')">
                 <div class="module-icon">🎯</div>
@@ -315,64 +300,135 @@
                 </div>
                 <div class="module-status status-ready">Disponible</div>
             </div>
-        </div>  <!-- ⬅️ AQUÍ SE CIERRA modules-grid -->
+        </div>
         
         <!-- Footer -->
         <div class="footer">
             <p>
                 <a href="login.html">← Volver al Login</a> | 
-                © 2025 Sistema Educativo - Dashboard v1.0 |
-                <a href="admin-login.html" style="color: #6b7280; font-size: 12px;">🔧 Admin</a>
+                © 2025 Sistema Educativo - Dashboard v1.0
             </p>
         </div>
     </div>
 
     <script>
-    function openModule(moduleName) {
-        if (moduleName === 'estudiantes') {
-            window.location.href = 'students.html';
-        } else if (moduleName === 'asistencia') {
-            window.location.href = 'attendance.html';
-        } else if (moduleName === 'materias') {
-            window.location.href = 'subjects.html';  // ← AGREGAR ESTA LÍNEA
-        } else if (moduleName === 'tareas') {
-            window.location.href = 'evaluations.html';  // ← Agregar esta línea
-        } else if (moduleName === 'cotidiano') {
-            window.location.href = 'cotidiano.html';
-        } else if (moduleName === 'sea') {
-             window.location.href = 'sea.html';            
-        } else {
-
-            
-            const messages = {
-                'tareas': '📝 Módulo Tareas - Próximamente disponible',
-                'examenes': '📋 Módulo Exámenes - En planificación',
-                'reportes': '📈 Módulo Reportes - En planificación'
-            };
-            alert(messages[moduleName] || 'Módulo no encontrado');
+    // Cargar y verificar sesión al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        const sessionInfo = checkUserSession(); // Nueva función unificada
+        if (sessionInfo) {
+            checkUserPermissions();
+            loadDashboardStats();
         }
-    }
+    });
+
+    // Verificar sesión (Admin O Profesor) - FUNCIÓN CORREGIDA
+    function checkUserSession() {
+        // Primero verificar si es admin
+        const adminSession = sessionStorage.getItem('adminSession');
+        const adminUser = sessionStorage.getItem('adminUser');
         
-    // Cargar estadísticas al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        loadDashboardStats();
-    });
+        if (adminSession === 'true' && adminUser === 'Luiscraft') {
+            // Es admin - configurar header para admin
+            updateHeaderWithAdmin(adminUser);
+            return { type: 'admin', user: adminUser };
+        }
+        
+        // Si no es admin, verificar profesor
+        const teacherSession = sessionStorage.getItem('teacherSession');
+        const teacherData = sessionStorage.getItem('teacherData');
+        
+        if (teacherSession === 'true' && teacherData) {
+            // Es profesor - configurar header para profesor
+            const teacher = JSON.parse(teacherData);
+            updateHeaderWithTeacher(teacher);
+            return { type: 'teacher', user: teacher };
+        }
+        
+        // No hay sesión válida
+        alert('🚫 Debes iniciar sesión para acceder al dashboard.');
+        window.location.href = 'login.html';
+        return false;
+    }
 
-    // Cargar estadísticas y verificar permisos al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        checkUserPermissions();
-        loadDashboardStats();
-    });
+    // Header para administrador - NUEVA FUNCIÓN
+    function updateHeaderWithAdmin(adminUser) {
+        const header = document.querySelector('.header');
+        
+        const adminInfo = document.createElement('div');
+        adminInfo.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: #dc2626;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        adminInfo.innerHTML = `
+            <span>👑 ADMINISTRADOR</span>
+            <button onclick="logoutUser()" style="
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 12px;
+            ">🚪 Salir</button>
+        `;
+        
+        header.style.position = 'relative';
+        header.appendChild(adminInfo);
+    }
 
-    // Verificar permisos del usuario
+    // Header para profesor - FUNCIÓN ACTUALIZADA
+    function updateHeaderWithTeacher(teacher) {
+        const header = document.querySelector('.header');
+        
+        const teacherInfo = document.createElement('div');
+        teacherInfo.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        teacherInfo.innerHTML = `
+            <span>👤 ${teacher.name}</span>
+            <button onclick="logoutUser()" style="
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 12px;
+            ">🚪 Salir</button>
+        `;
+        
+        header.style.position = 'relative';
+        header.appendChild(teacherInfo);
+    }
+
+    // Verificar permisos de usuario (para el módulo admin)
     function checkUserPermissions() {
         const adminSession = sessionStorage.getItem('adminSession');
         const adminUser = sessionStorage.getItem('adminUser');
         
-        // Solo mostrar módulo administrativo si es el admin
         if (adminSession === 'true' && adminUser === 'Luiscraft') {
             showAdminModule();
-            addAdminIndicator();
         } else {
             hideAdminModule();
         }
@@ -381,26 +437,14 @@
     // Mostrar módulo administrativo
     function showAdminModule() {
         const adminModule = document.querySelector('.admin-module');
-        if (adminModule) {
-            adminModule.style.display = 'block';
-        } else {
-            // Crear el módulo si no existe
+        if (!adminModule) {
             createAdminModule();
         }
     }
 
-    // Ocultar módulo administrativo
-    function hideAdminModule() {
-        const adminModule = document.querySelector('.admin-module');
-        if (adminModule) {
-            adminModule.style.display = 'none';
-        }
-    }
-
-    // Crear módulo administrativo dinámicamente
+    // Crear módulo administrativo
     function createAdminModule() {
         const modulesGrid = document.querySelector('.modules-grid');
-        
         const adminModuleHTML = `
             <div class="module-card admin-module" onclick="openModule('admin')">
                 <div class="module-icon">🔧</div>
@@ -411,56 +455,89 @@
                 <div class="module-status status-active">🔥 Activo</div>
             </div>
         `;
-        
         modulesGrid.insertAdjacentHTML('beforeend', adminModuleHTML);
     }
 
-    // Agregar indicador de administrador en el header
-    function addAdminIndicator() {
-        const header = document.querySelector('.header');
-        const adminIndicator = document.createElement('div');
-        adminIndicator.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            background: #dc2626;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-        `;
-        adminIndicator.innerHTML = '👑 MODO ADMINISTRADOR';
-        header.style.position = 'relative';
-        header.appendChild(adminIndicator);
+    // Ocultar módulo administrativo
+    function hideAdminModule() {
+        const adminModule = document.querySelector('.admin-module');
+        if (adminModule) {
+            adminModule.remove();
+        }
     }
 
+    // Cargar estadísticas
+    async function loadDashboardStats() {
+        try {
+            document.getElementById('professorsCount').textContent = '⏳';
+            document.getElementById('studentsCount').textContent = '⏳';
+            document.getElementById('schoolsCount').textContent = '⏳';
+            
+            const professorsResponse = await fetch('/api/teachers');
+            if (professorsResponse.ok) {
+                const professorsResult = await professorsResponse.json();
+                if (professorsResult.success) {
+                    const activeProfessors = professorsResult.data.filter(p => p.is_active === 1);
+                    document.getElementById('professorsCount').textContent = activeProfessors.length;
+                    
+                    const uniqueSchools = [...new Set(professorsResult.data.map(p => p.school_name))];
+                    document.getElementById('schoolsCount').textContent = uniqueSchools.length;
+                }
+            }
+            
+            const studentsResponse = await fetch('/api/students');
+            if (studentsResponse.ok) {
+                const studentsResult = await studentsResponse.json();
+                if (studentsResult.success) {
+                    document.getElementById('studentsCount').textContent = studentsResult.data.length;
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error cargando estadísticas:', error);
+            document.getElementById('professorsCount').textContent = '❌';
+            document.getElementById('studentsCount').textContent = '❌';
+            document.getElementById('schoolsCount').textContent = '❌';
+        }
+    }
+
+    // Logout unificado - NUEVA FUNCIÓN
+    function logoutUser() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            // Limpiar todas las sesiones
+            sessionStorage.removeItem('teacherSession');
+            sessionStorage.removeItem('teacherData');
+            sessionStorage.removeItem('adminSession');
+            sessionStorage.removeItem('adminUser');
+            
+            window.location.href = 'login.html';
+        }
+    }
+
+    // Navegación de módulos
     function openModule(moduleName) {
-        // Verificar permisos para módulo administrativo
         if (moduleName === 'admin') {
             const adminSession = sessionStorage.getItem('adminSession');
-            const adminUser = sessionStorage.getItem('adminUser');
-            
-            if (adminSession === 'true' && adminUser === 'Luiscraft') {
+            if (adminSession === 'true') {
                 window.location.href = 'admin.html';
             } else {
-                alert('🚫 Acceso denegado. Solo el administrador puede acceder a este módulo.');
-                window.location.href = 'admin-login.html';
+                alert('🚫 Solo el administrador puede acceder a este módulo.\n\nUsa las credenciales especiales en el login principal.');
             }
             return;
         }
         
-        // Resto de módulos...
         if (moduleName === 'estudiantes') {
             window.location.href = 'students.html';
         } else if (moduleName === 'asistencia') {
             window.location.href = 'attendance.html';
         } else if (moduleName === 'cotidiano') {
             window.location.href = 'cotidiano.html';
+        } else if (moduleName === 'sea') {
+            window.location.href = 'sea.html';
+        } else if (moduleName === 'materias') {
+            window.location.href = 'materias.html';
         } else if (moduleName === 'tareas') {
             alert('📝 Módulo de Evaluaciones - ¡Próximamente disponible!');
-        } else if (moduleName === 'materias') {
-            alert('📚 Módulo de Materias - ¡En desarrollo!');
         } else if (moduleName === 'reportes') {
             alert('📈 Módulo de Reportes - ¡Planificado para próxima versión!');
         } else {

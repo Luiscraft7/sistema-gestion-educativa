@@ -198,7 +198,8 @@
             z-index: 2;
         }
         
-        input[type="email"], input[type="password"] {
+        /* ✅ CORREGIDO: Cambiar de input[type="email"] a input[type="text"] */
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 1rem 1rem 1rem 3rem;
             border: 2px solid #e8f4f8;
@@ -209,7 +210,7 @@
             font-family: inherit;
         }
         
-        input[type="email"]:focus, input[type="password"]:focus {
+        input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
             border-color: #667eea;
             background: white;
@@ -217,7 +218,7 @@
             transform: translateY(-2px);
         }
         
-        input[type="email"]:focus + .input-icon,
+        input[type="text"]:focus + .input-icon,
         input[type="password"]:focus + .input-icon {
             color: #667eea;
         }
@@ -428,8 +429,8 @@
         <form id="loginForm">
             <div class="form-group">
                 <div class="input-container">
-                    <input type="email" id="email" name="email" placeholder="Correo electrónico" required>
-                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="text" id="email" name="email" placeholder="Usuario o Email" required>
+                    <i class="fas fa-user input-icon"></i>
                 </div>
             </div>
             
@@ -449,6 +450,11 @@
             </button>
         </form>
         
+        <!-- Indicador para admin -->
+        <div style="text-align: center; margin: 15px 0; color: #6b7280; font-size: 12px;">
+            👑 <em>Administradores: usar credenciales especiales</em>
+        </div>
+
         <!-- Divisor -->
         <div class="divider">
             <span>o explora la demo</span>
@@ -492,26 +498,110 @@
                 toggleIcon.className = 'fas fa-eye';
             }
         }
-        
-        // Manejo del formulario
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+
+        // Manejo del formulario INTEGRADO (Admin + Profesores)
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Agregar efecto de carga al botón
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Agregar efecto de carga
             const btn = document.querySelector('.login-btn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Iniciando sesión...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Verificando...';
             btn.disabled = true;
             
-            // Simular proceso de login
-            setTimeout(() => {
+            try {
+                // 🔐 VERIFICAR SI ES ADMINISTRADOR PRIMERO
+                if (email === 'Luiscraft' && password === 'Naturarte0603') {
+                    // Login de Administrador
+                    const adminResponse = await fetch('/api/admin/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const adminResult = await adminResponse.json();
+                    
+                    if (adminResult.success) {
+                        // Guardar sesión administrativa
+                        sessionStorage.setItem('adminSession', 'true');
+                        sessionStorage.setItem('adminUser', email);
+                        
+                        alert('👑 ¡Bienvenido Administrador!');
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+                }
+                
+                // 👨‍🏫 SI NO ES ADMIN, VERIFICAR COMO PROFESOR
+                const teacherResponse = await fetch('/api/teachers/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const teacherResult = await teacherResponse.json();
+                
+                if (teacherResult.success) {
+                    // Login exitoso de profesor
+                    sessionStorage.setItem('teacherSession', 'true');
+                    sessionStorage.setItem('teacherData', JSON.stringify(teacherResult.teacher));
+                    
+                    alert(`✅ ¡Bienvenido ${teacherResult.teacher.name}!`);
+                    window.location.href = 'dashboard.html';
+                    
+                } else {
+                    // Error en login de profesor
+                    if (teacherResult.status === 'pending_approval') {
+                        showPendingModal(teacherResult.message);
+                    } else {
+                        alert(`❌ ${teacherResult.message}`);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión. Intenta nuevamente.');
+            } finally {
+                // Restaurar botón
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                alert('¡Login funcionando! Próximo paso: conectar con el servidor');
-            }, 2000);
+            }
         });
-        
-        // Efectos de enfoque en inputs
+
+        // Modal personalizado para cuentas pendientes
+        function showPendingModal(message) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7); display: flex; align-items: center;
+                justify-content: center; z-index: 1000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white; padding: 40px; border-radius: 15px;
+                    text-align: center; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+                ">
+                    <div style="font-size: 60px; margin-bottom: 20px;">⏳</div>
+                    <h2 style="color: #333; margin-bottom: 15px;">Cuenta Pendiente de Aprobación</h2>
+                    <p style="color: #666; margin-bottom: 25px; line-height: 1.5;">
+                        ${message}<br><br>
+                        <strong>Te contactaremos en menos de 24 horas</strong> para activar tu cuenta.
+                    </p>
+                    <button onclick="this.parentElement.parentElement.remove()" style="
+                        background: #3b82f6; color: white; border: none; padding: 12px 24px;
+                        border-radius: 8px; cursor: pointer; font-weight: 600;
+                    ">Entendido</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Efectos y animaciones
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('focus', function() {
                 this.parentElement.style.transform = 'scale(1.02)';
@@ -521,15 +611,11 @@
                 this.parentElement.style.transform = 'scale(1)';
             });
         });
-        
-        // Animación de entrada suave
+
         window.addEventListener('load', function() {
             document.body.style.opacity = '0';
             document.body.style.transition = 'opacity 0.5s ease';
-            
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
+            setTimeout(() => { document.body.style.opacity = '1'; }, 100);
         });
     </script>
 </body>

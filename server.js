@@ -160,6 +160,68 @@ app.delete('/api/students/:id', async (req, res) => {
 
 
 // ========================================
+// API DE LOGIN PARA PROFESORES
+// ========================================
+
+// Login de profesores
+app.post('/api/teachers/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // Buscar profesor por email
+        const teacher = await database.getTeacherByEmail(email);
+        
+        if (!teacher) {
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales incorrectas'
+            });
+        }
+        
+        // Verificar contraseña
+        if (teacher.password !== password) {
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales incorrectas'
+            });
+        }
+        
+        // Verificar si está activo
+        if (teacher.is_active === 0) {
+            return res.status(403).json({
+                success: false,
+                message: 'Tu cuenta está pendiente de aprobación. Contacta al administrador.',
+                status: 'pending_approval'
+            });
+        }
+        
+        // Login exitoso
+        await database.updateTeacherLastLogin(teacher.id);
+        
+        res.json({
+            success: true,
+            message: 'Login exitoso',
+            teacher: {
+                id: teacher.id,
+                name: teacher.full_name,
+                email: teacher.email,
+                school: teacher.school_name,
+                teacher_type: teacher.teacher_type
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error en login de profesor:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+
+
+// ========================================
 // RUTAS API PARA PROFESORES
 // ========================================
 
