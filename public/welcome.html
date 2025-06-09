@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Educativo Moderno - Gestión Académica Inteligente</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff08" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+
+        .hero-content {
+            text-align: center;
+            color: white;
+            max-width: 800px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .logo-hero {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #ffffff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 3rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem 6rem;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            position: relative;
+        }
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(180deg, rgba(102,126,234,0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 6rem;
+            padding-top: 1rem;
+            position: relative;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102,126,234,0.1);
+            z-index: -1;
+            opacity: 0;
+        }
+
+        .section-title h2 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            padding: 1rem 0;
+            opacity: 0;
+        }
+
+        .section-title p {
+            font-size: 1.4rem;
+            color: #4a5568;
+            max-width: 750px;
+            margin: 0 auto;
+            line-height: 1.8;
+            padding: 0 2rem 2rem;
+            font-weight: 500;
+            opacity: 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(79, 172, 254, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        .feature-card p {
+            color: #718096;
+            line-height: 1.7;
+        }
+
+        /* Registration Info Section */
+        .registration-info {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .info-content h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .info-list {
+            list-style: none;
+        }
+
+        .info-list li {
+            padding: 0.8rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .info-list li i {
+            color: #4facfe;
+            font-size: 1.3rem;
+        }
+
+        .info-highlight {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-highlight h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #4facfe;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a202c;
+            color: white;
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInBackground {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .section-title.animate::before {
+            animation: slideInBackground 0.6s ease both;
+        }
+
+        .section-title.animate h2 {
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .section-title.animate p {
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+
+        /* Scroll Down Arrow */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scroll-indicator:hover {
+            color: white;
+            transform: translateX(-50%) translateY(-8px);
+        }
+
+        .scroll-arrow {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            animation: bounce 2s infinite;
+            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .scroll-indicator:hover .scroll-arrow {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+                opacity: 0.8;
+            }
+            40% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+            60% {
+                transform: translateY(-4px);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .features {
+                padding: 6rem 1rem 4rem;
+            }
+
+            .section-title {
+                margin-bottom: 4rem;
+                padding-top: 1rem;
+            }
+
+            .section-title::before {
+                max-width: 95%;
+                border-radius: 20px;
+            }
+
+            .section-title h2 {
+                font-size: 2.4rem;
+                margin-bottom: 2rem;
+                padding: 0.5rem 0;
+            }
+
+            .section-title p {
+                font-size: 1.2rem;
+                padding: 0 1rem 1.5rem;
+                max-width: 90%;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                margin-top: 2rem;
+            }
+
+            .scroll-indicator {
+                bottom: 2rem;
+                font-size: 1rem;
+                gap: 0.6rem;
+            }
+
+            .scroll-arrow {
+                width: 40px;
+                height: 40px;
+                font-size: 1.4rem;
+                border-width: 2px;
+            }
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 60px;
+            height: 60px;
+            top: 20%;
+            left: 10%;
+            animation-delay: -1s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 40px;
+            height: 40px;
+            top: 60%;
+            left: 80%;
+            animation-delay: -3s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            top: 80%;
+            left: 20%;
+            animation-delay: -2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(10deg); }
+            66% { transform: translateY(10px) rotate(-5deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="floating-elements">
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+        </div>
+        
+        <div class="hero-content">
+            <div class="logo-hero">🎓</div>
+            <h1>Sistema Educativo Moderno</h1>
+            <p>Transforma la gestión académica de tu institución con una plataforma inteligente, moderna e intuitiva. Adiós al Excel, hola al futuro de la educación.</p>
+            
+            <div class="cta-buttons">
+                <a href="login.html" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </a>
+                <a href="register.html" class="btn btn-secondary">
+                    <i class="fas fa-user-plus"></i>
+                    Registrarse
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator" onclick="document.querySelector('.features').scrollIntoView({behavior: 'smooth'});">
+            <span>Descubre más</span>
+            <div class="scroll-arrow">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>¿Por qué elegir nuestro sistema?</h2>
+                <p>Creado por un profesor para profesores. Conocemos de primera mano las necesidades reales del aula y hemos diseñado cada función para facilitar al máximo tu trabajo diario, ahorrándote tiempo y eliminando las frustraciones del papeleo tradicional.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Reportes Automáticos</h3>
+                    <p>Genera reportes detallados y estadísticas en tiempo real. Visualiza el progreso académico con gráficos interactivos y análisis profundos.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Acceso Multiplataforma</h3>
+                    <p>Funciona perfectamente en computadoras, tablets y móviles. Accede desde cualquier lugar y en cualquier momento.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Seguridad Garantizada</h3>
+                    <p>Tus datos están protegidos con encriptación de nivel bancario. Backups automáticos y total confidencialidad.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Períodos Flexibles</h3>
+                    <p>Maneja semestres, trimestres o bimestres. Migración inteligente de datos entre períodos académicos.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Gestión Integral</h3>
+                    <p>Estudiantes, profesores, materias y evaluaciones en un solo lugar. Todo organizado y al alcance de un clic.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Ahorro de Tiempo</h3>
+                    <p>Automatiza tareas repetitivas y reduce el tiempo de gestión académica en un 70%. Más tiempo para lo que realmente importa: enseñar.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Info Section -->
+    <section class="registration-info">
+        <div class="container">
+            <div class="info-grid">
+                <div class="info-content">
+                    <h2>Registro Rápido y Sencillo</h2>
+                    
+                    <ul class="info-list">
+                        <li><i class="fas fa-check-circle"></i> <strong>Datos Obligatorios:</strong> Nombre completo, cédula y nombre de la escuela</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Datos Opcionales:</strong> Tipo de profesor, códigos de escuela y circuito</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Proceso de Aprobación:</strong> Revisión personalizada para garantizar calidad</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Activación Rápida:</strong> Te contactaremos en menos de 24 horas</li>
+                    </ul>
+
+                    <div class="info-highlight">
+                        <h3><i class="fas fa-info-circle"></i> Información Importante</h3>
+                        <p>Los datos opcionales nos permiten generar reportes más completos y detallados para futuros análisis regionales y estadísticas del MEP.</p>
+                    </div>
+                </div>
+
+                <div class="info-visual">
+                    <div style="background: rgba(255,255,255,0.1); padding: 3rem; border-radius: 20px; text-align: center; backdrop-filter: blur(10px);">
+                        <div style="font-size: 4rem; margin-bottom: 2rem;">📋</div>
+                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem;">¿Listo para comenzar?</h3>
+                        <p style="font-size: 1.1rem; margin-bottom: 2rem; opacity: 0.9;">Únete a los educadores que ya están transformando su manera de gestionar la educación</p>
+                        <a href="register.html" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i>
+                            Crear Mi Cuenta
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p><i class="fas fa-heart" style="color: #4facfe;"></i> Desarrollado con pasión para transformar la educación</p>
+            <p style="margin-top: 1rem; opacity: 0.7;">© 2025 Sistema Educativo Moderno - Todos los derechos reservados</p>
+        </div>
+    </footer>
+
+    <script>
+        // Animación de scroll suave
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Animación de elementos cuando entran en viewport
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -300px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Dar más tiempo para leer el título antes de mostrar las tarjetas
+                    if (entry.target.classList.contains('section-title')) {
+                        entry.target.style.animation = 'fadeInUp 0.8s ease forwards';
+                    } else {
+                        // Delay más largo para las tarjetas después de que aparezca el título
+                        setTimeout(() => {
+                            entry.target.style.animation = 'fadeInUp 0.8s ease forwards';
+                        }, 3000);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Animación especial para el título con fondo
+        const titleObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                }
+            });
+        }, {
+            threshold: 0.2,
+            rootMargin: '0px 0px -200px 0px'
+        });
+
+        document.querySelectorAll('.section-title').forEach(el => {
+            titleObserver.observe(el);
+        });
+
+        // Observar tarjetas con animación inmediata
+        document.querySelectorAll('.feature-card').forEach((el, index) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, index * 150); // Solo delay escalonado corto entre tarjetas
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            cardObserver.observe(el);
+        });
+
+        document.querySelectorAll('.info-content').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Efecto parallax sutil en hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero');
+            const speed = scrolled * 0.5;
+            
+            if (parallax) {
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+    </script>
+</body>
+</html>

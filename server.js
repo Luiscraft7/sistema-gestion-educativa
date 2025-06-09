@@ -44,7 +44,7 @@ async function initializeDatabase() {
 // RUTA PRINCIPAL
 // ========================================
 app.get('/', (req, res) => {
-    res.redirect('/index.html');
+    res.redirect('/welcome.html');
 });
 
 // ========================================
