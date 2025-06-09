@@ -2077,144 +2077,69 @@ app.get('/api/cotidiano/history', async (req, res) => {
 // Endpoint para obtener lista de grados y materias disponibles para SEA
 app.get('/api/sea/grade-subjects', async (req, res) => {
     try {
-        console.log('🎯 GET /api/sea/grade-subjects');
+        console.log('🎯 GET /api/sea/grade-subjects - Obteniendo combinaciones para SEA');
         
-        database.ensureConnection();
+        // Obtener asignaciones usando la función existente
+        const gradesWithSubjects = await database.getAllGradesWithSubjects();
+        console.log(`📚 Grados con materias encontrados: ${gradesWithSubjects.length}`);
         
-        // Consultar desde múltiples fuentes
-        const sources = [
-            {
-                name: 'assignments',
-                query: 'SELECT DISTINCT grade_level, subject_area FROM assignments WHERE is_active = 1'
-            },
-            {
-                name: 'daily_evaluations', 
-                query: 'SELECT DISTINCT grade_level, subject_area FROM daily_evaluations'
-            },
-            {
-                name: 'attendance',
-                query: 'SELECT DISTINCT grade_level, subject_area FROM attendance WHERE subject_area IS NOT NULL AND subject_area != "general"'
-            },
-            {
-                name: 'students',
-                query: 'SELECT DISTINCT grade_level, subject_area FROM students WHERE subject_area IS NOT NULL AND subject_area != "" AND status = "active"'
-            },
-            {
-                name: 'subjects_table',
-                query: 'SELECT DISTINCT name as subject_area FROM subjects ORDER BY name'
-            },
-            {
-                name: 'grades_table', 
-                query: 'SELECT DISTINCT name as grade_level FROM grades ORDER BY name'
-            }
-        ];
+        // Crear array de combinaciones
+        const seaGradeSubjects = [];
         
-        const allCombinations = new Set();
-        const foundGrades = new Set();
-        const foundSubjects = new Set();
-        
-        for (const source of sources) {
-            const results = await new Promise((resolve, reject) => {
-                database.db.all(source.query, [], (err, rows) => {
-                    if (err) {
-                        console.error(`❌ Error en ${source.name}:`, err);
-                        resolve([]);
-                    } else {
-                        console.log(`📊 ${source.name}: ${rows?.length || 0} resultados`);
-                        if (rows && rows.length > 0) {
-                            console.log(`   Muestra: ${JSON.stringify(rows.slice(0, 3))}`);
-                        }
-                        resolve(rows || []);
-                    }
-                });
-            });
+        gradesWithSubjects.forEach(gradeData => {
+            console.log(`🔍 Procesando grado: ${gradeData.gradeName}, materias: ${gradeData.subjects?.length || 0}`);
             
-            if (source.name === 'subjects_table') {
-                // Solo agregar materias encontradas
-                results.forEach(row => {
-                    if (row.subject_area) foundSubjects.add(row.subject_area);
-                });
-            } else if (source.name === 'grades_table') {
-                // Solo agregar grados encontrados  
-                results.forEach(row => {
-                    if (row.grade_level) foundGrades.add(row.grade_level);
+            if (gradeData.subjects && gradeData.subjects.length > 0) {
+                // ✅ CORRECCIÓN: subjects es un array de strings, no objetos
+                gradeData.subjects.forEach(subject => {
+                    // subject ya es un string, no un objeto
+                    seaGradeSubjects.push({
+                        grade_level: gradeData.gradeName,  // ✅ CORRECCIÓN: usar gradeName
+                        subject_area: subject              // ✅ CORRECCIÓN: subject ya es string
+                    });
+                    console.log(`   📖 ${gradeData.gradeName} - ${subject}`);
                 });
             } else {
-                // Agregar combinaciones grado-materia
-                results.forEach(row => {
-                    if (row.grade_level && row.subject_area) {
-                        allCombinations.add(`${row.grade_level}|${row.subject_area}`);
-                        foundGrades.add(row.grade_level);
-                        foundSubjects.add(row.subject_area);
-                    }
-                });
+                console.log(`   ⚠️ ${gradeData.gradeName}: Sin materias asignadas`);
             }
-        }
-        
-        console.log(`🎓 Grados encontrados: ${Array.from(foundGrades).join(', ')}`);
-        console.log(`📚 Materias encontradas: ${Array.from(foundSubjects).join(', ')}`);
-        
-        // Debug adicional: verificar que más materias existen
-        const allSubjectsQuery = `
-            SELECT name FROM subjects WHERE name IS NOT NULL AND name != '' 
-            UNION 
-            SELECT name FROM custom_subjects WHERE name IS NOT NULL AND name != ''
-            ORDER BY name
-        `;
-        
-        const allSubjectsResult = await new Promise((resolve, reject) => {
-            database.db.all(allSubjectsQuery, [], (err, rows) => {
-                if (err) {
-                    console.error('❌ Error obteniendo todas las materias:', err);
-                    resolve([]);
-                } else {
-                    resolve(rows || []);
-                }
-            });
-        });
-        
-        console.log(`🔍 Todas las materias en sistema: ${allSubjectsResult.map(r => r.name).join(', ')}`);
-        
-        // Si no hay suficientes combinaciones, crear cruzadas básicas
-        if (allCombinations.size < 3 && foundGrades.size > 0 && (foundSubjects.size > 0 || allSubjectsResult.length > 0)) {
-            console.log('🔧 Creando combinaciones básicas...');
-            const subjectsToUse = foundSubjects.size > 0 ? foundSubjects : new Set(allSubjectsResult.map(r => r.name));
-            
-            foundGrades.forEach(grade => {
-                subjectsToUse.forEach(subject => {
-                    allCombinations.add(`${grade}|${subject}`);
-                    console.log(`   ➕ Agregando: ${grade}-${subject}`);
-                });
-            });
-        }
-        
-        // Convertir de vuelta a array de objetos
-        const gradeSubjects = Array.from(allCombinations).map(combo => {
-            const [grade_level, subject_area] = combo.split('|');
-            return { grade_level, subject_area };
-        }).sort((a, b) => {
-            if (a.grade_level !== b.grade_level) {
-                return a.grade_level.localeCompare(b.grade_level);
-            }
-            return a.subject_area.localeCompare(b.subject_area);
         });
 
-        console.log(`📚 Total combinaciones únicas encontradas: ${gradeSubjects.length}`);
-        gradeSubjects.forEach(gs => {
-            console.log(`   📖 ${gs.grade_level} - ${gs.subject_area}`);
-        });
+        console.log(`✅ SEA: ${seaGradeSubjects.length} combinaciones finales`);
+
+        // Si no hay combinaciones, ofrecer información de debug
+        if (seaGradeSubjects.length === 0) {
+            console.log('⚠️ No se encontraron combinaciones grado-materia para SEA');
+            
+            // Verificar si al menos hay grados
+            const grades = await database.getAllGrades();
+            console.log(`📚 Grados en sistema: ${grades?.length || 0}`);
+            
+            res.json({
+                success: true,
+                data: [],
+                debug: {
+                    grades_found: grades?.length || 0,
+                    assignments_found: gradesWithSubjects.length,
+                    available_grades: grades?.map(g => g.name) || []
+                },
+                message: grades?.length > 0 
+                    ? 'Se encontraron grados pero no hay asignaciones de materias. Vaya al módulo de Estudiantes para asignar materias a los grados.'
+                    : 'No hay grados en el sistema. Agregue grados primero.'
+            });
+            return;
+        }
 
         res.json({
             success: true,
-            data: gradeSubjects,
-            message: `${gradeSubjects.length} combinaciones grado-materia encontradas`
+            data: seaGradeSubjects,
+            message: `${seaGradeSubjects.length} combinaciones grado-materia encontradas`
         });
         
     } catch (error) {
         console.error('❌ Error en /api/sea/grade-subjects:', error);
         res.status(500).json({
             success: false,
-            message: 'Error obteniendo datos',
+            message: 'Error obteniendo datos para SEA',
             error: error.message
         });
     }
@@ -2330,83 +2255,104 @@ app.get('/api/sea/consolidated', async (req, res) => {
                     }
                 }
 
-                // 3.2 Nota de cotidiano total (calcular desde scores si final_grade es 0)
+                // 3.2 Nota de cotidiano total (calcular de TODAS las fechas)
                 const cotidianoResult = await new Promise((resolve, reject) => {
-                    // Primero intentar con la materia exacta (más reciente)
-                    const cotidianoQuery1 = `
-                        SELECT final_grade as cotidiano_total, evaluation_date
-                        FROM daily_evaluations 
-                        WHERE student_id = ? AND grade_level = ? AND subject_area = ?
-                        ORDER BY evaluation_date DESC
-                        LIMIT 1
+                    // Query para obtener TODAS las evaluaciones de cotidiano del estudiante
+                    const cotidianoQuery = `
+                        SELECT 
+                            de.evaluation_date,
+                            COUNT(dis.score) as total_scores,
+                            SUM(dis.score) as suma_scores,
+                            AVG(dis.score) as avg_score_date
+                        FROM daily_evaluations de
+                        LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
+                        WHERE de.student_id = ? AND de.grade_level = ? AND de.subject_area = ?
+                        GROUP BY de.evaluation_date
+                        ORDER BY de.evaluation_date DESC
                     `;
                     
-                    database.db.get(cotidianoQuery1, [student.id, grade, subject], (err1, row1) => {
+                    database.db.all(cotidianoQuery, [student.id, grade, subject], (err1, rows) => {
                         if (err1) {
                             console.error(`❌ Error obteniendo cotidiano estudiante ${student.id}:`, err1);
                             resolve(null);
                             return;
                         }
                         
-                        if (row1) {
-                            // Si final_grade es 0 o muy bajo, calcular desde scores
-                            if (row1.cotidiano_total <= 5) {
-                                console.log(`🔍 ${student.first_surname}: final_grade=${row1.cotidiano_total}, calculando desde scores...`);
+                        if (rows && rows.length > 0) {
+                            console.log(`🔍 ${student.first_surname}: ${rows.length} fechas de cotidiano encontradas`);
+                            
+                            let sumaPromedios = 0;
+                            let totalFechas = 0;
+                            const porcentajeTotal = 65; // Valor por defecto, podrías hacerlo configurable
+                            
+                            // Calcular promedio de todas las fechas (igual que en el frontend)
+                            rows.forEach(row => {
+                                if (row.total_scores > 0) {
+                                    // Máximo posible para esta fecha
+                                    const maxPosibleFecha = row.total_scores * 3;
+                                    
+                                    // Porcentaje de esta fecha
+                                    const porcentajeFecha = (row.suma_scores / maxPosibleFecha) * 100;
+                                    sumaPromedios += porcentajeFecha;
+                                    totalFechas++;
+                                    
+                                    console.log(`   📅 ${row.evaluation_date}: ${row.suma_scores}/${maxPosibleFecha} = ${porcentajeFecha.toFixed(1)}%`);
+                                }
+                            });
+                            
+                            if (totalFechas > 0) {
+                                // Calcular cotidiano total (igual que en el frontend)
+                                const promedioGeneral = sumaPromedios / totalFechas;
+                                const cotidianoTotal = Math.round((promedioGeneral * porcentajeTotal) / 100);
                                 
-                                const scoresQuery = `
-                                    SELECT AVG(CAST(dis.score AS REAL)) as avg_score, COUNT(dis.score) as total_scores
-                                    FROM daily_evaluations de
-                                    JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
-                                    WHERE de.student_id = ? AND de.grade_level = ? AND de.subject_area = ?
-                                `;
-                                
-                                database.db.get(scoresQuery, [student.id, grade, subject], (scoresErr, scoresRow) => {
-                                    if (!scoresErr && scoresRow && scoresRow.avg_score) {
-                                        // Calcular nota: (promedio_score / 3) * 100
-                                        const calculatedGrade = (scoresRow.avg_score / 3) * 100;
-                                        console.log(`📊 Cotidiano ${student.first_surname} calculado: ${calculatedGrade.toFixed(1)} (scores: ${scoresRow.total_scores}, avg: ${scoresRow.avg_score})`);
-                                        resolve({ cotidiano_total: calculatedGrade, evaluation_date: row1.evaluation_date });
-                                    } else {
-                                        console.log(`📊 Cotidiano estudiante ${student.first_surname} (${grade}-${subject}): ${row1.cotidiano_total} (original)`);
-                                        resolve(row1);
-                                    }
-                                });
+                                console.log(`📊 Cotidiano ${student.first_surname} calculado: ${cotidianoTotal} (${totalFechas} fechas, promedio: ${promedioGeneral.toFixed(1)}%)`);
+                                resolve({ cotidiano_total: cotidianoTotal, evaluation_date: rows[0].evaluation_date });
                             } else {
-                                console.log(`📊 Cotidiano estudiante ${student.first_surname} (${grade}-${subject}): ${row1.cotidiano_total}`);
-                                resolve(row1);
+                                console.log(`📊 ${student.first_surname}: Sin datos válidos para cotidiano`);
+                                resolve(null);
                             }
                             return;
                         }
                         
-                        // Si no encuentra con materia exacta, buscar con cualquier materia del mismo grado
+                        // Si no encuentra con materia exacta, buscar en cualquier materia del grado
                         console.log(`🔍 Buscando cotidiano ${student.first_surname} en cualquier materia de ${grade}...`);
                         const cotidianoQuery2 = `
-                            SELECT de.final_grade as cotidiano_total, de.evaluation_date, de.subject_area,
-                                   AVG(CAST(dis.score AS REAL)) as avg_score, COUNT(dis.score) as total_scores
+                            SELECT 
+                                de.evaluation_date,
+                                de.subject_area,
+                                COUNT(dis.score) as total_scores,
+                                SUM(dis.score) as suma_scores
                             FROM daily_evaluations de
                             LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                             WHERE de.student_id = ? AND de.grade_level = ?
-                            GROUP BY de.id
+                            GROUP BY de.evaluation_date, de.subject_area
                             ORDER BY de.evaluation_date DESC
-                            LIMIT 1
                         `;
                         
-                        database.db.get(cotidianoQuery2, [student.id, grade], (err2, row2) => {
+                        database.db.all(cotidianoQuery2, [student.id, grade], (err2, rows2) => {
                             if (err2) {
                                 console.error(`❌ Error en búsqueda general cotidiano:`, err2);
                                 resolve(null);
-                            } else if (row2) {
-                                // Si final_grade es 0, usar cálculo desde scores
-                                if (row2.cotidiano_total <= 5 && row2.avg_score) {
-                                    const calculatedGrade = (row2.avg_score / 3) * 100;
-                                    console.log(`📊 Cotidiano ${student.first_surname} (${grade}-${row2.subject_area}): ${calculatedGrade.toFixed(1)} (calculado de scores)`);
-                                    resolve({ cotidiano_total: calculatedGrade, evaluation_date: row2.evaluation_date });
+                            } else if (rows2 && rows2.length > 0) {
+                                console.log(`🔍 ${student.first_surname}: ${rows2.length} registros en otras materias`);
+                                
+                                // Tomar la materia con más datos o la más reciente
+                                const materiaConMasDatos = rows2.reduce((prev, current) => {
+                                    return (current.total_scores > prev.total_scores) ? current : prev;
+                                });
+                                
+                                console.log(`📊 Cotidiano ${student.first_surname} (${grade}-${materiaConMasDatos.subject_area}): Usando datos de otra materia`);
+                                
+                                // Para simplificar, tomar solo la evaluación más reciente de la otra materia
+                                if (materiaConMasDatos.total_scores > 0) {
+                                    const porcentaje = (materiaConMasDatos.suma_scores / (materiaConMasDatos.total_scores * 3)) * 100;
+                                    const cotidianoTotal = Math.round((porcentaje * 65) / 100);
+                                    resolve({ cotidiano_total: cotidianoTotal, evaluation_date: materiaConMasDatos.evaluation_date });
                                 } else {
-                                    console.log(`📊 Cotidiano estudiante ${student.first_surname} (${grade}-${row2.subject_area}): ${row2.cotidiano_total}`);
-                                    resolve(row2);
+                                    resolve(null);
                                 }
                             } else {
-                                console.log(`📊 ${student.first_surname}: Sin registros en daily_evaluations`);
+                                console.log(`📊 ${student.first_surname}: Sin registros de cotidiano en ${grade}`);
                                 resolve(null);
                             }
                         });
