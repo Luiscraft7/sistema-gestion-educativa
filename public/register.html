@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Sistema Educativo Moderno</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #667eea;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Main Container */
+        .container {
+            padding-top: 120px;
+            padding-bottom: 3rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .register-wrapper {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            margin: 2rem;
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff08" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+
+        .register-header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .register-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .register-header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .register-form {
+            padding: 3rem 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section-icon {
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Animación para campo especializado */
+        #specialized_type_group {
+            transition: all 0.3s ease;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        #specialized_type_group.show {
+            opacity: 1;
+            max-height: 100px;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .required::after {
+            content: '*';
+            color: #e53e3e;
+            margin-left: 0.25rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-box p {
+            color: #718096;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .submit-section {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 250px;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(79, 172, 254, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-link {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Success Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            color: #48bb78;
+            margin-bottom: 1rem;
+        }
+
+        .modal h2 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .modal p {
+            color: #718096;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .modal-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                gap: 0.5rem;
+            }
+
+            .nav-link {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .container {
+                padding-top: 100px;
+            }
+
+            .register-wrapper {
+                margin: 1rem;
+            }
+
+            .register-header {
+                padding: 2rem 1rem;
+            }
+
+            .register-header h1 {
+                font-size: 2rem;
+            }
+
+            .register-header p {
+                font-size: 1rem;
+            }
+
+            .register-form {
+                padding: 2rem 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .submit-btn {
+                min-width: 200px;
+                padding: 1rem 2rem;
+            }
+
+            .modal-content {
+                padding: 2rem;
+                margin: 1rem;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            margin-left: 0.5rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff33;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="welcome.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                Sistema Educativo
+            </a>
+            <nav class="nav-links">
+                <a href="welcome.html" class="nav-link">
+                    <i class="fas fa-home"></i> Inicio
+                </a>
+                <a href="login.html" class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="register-wrapper">
+            <!-- Header Section -->
+            <div class="register-header">
+                <div class="register-header-content">
+                    <h1><i class="fas fa-user-plus"></i> Crear Cuenta</h1>
+                    <p>Únete a la nueva generación de educadores que gestionan de manera inteligente</p>
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <div class="register-form">
+                <form id="registerForm">
+                    <!-- Información del Sistema -->
+                    <div class="info-box">
+                        <h3><i class="fas fa-info-circle"></i> Proceso de Registro</h3>
+                        <p>Tu registro será revisado por nuestro equipo para garantizar la calidad del servicio. Te contactaremos en menos de 24 horas para activar tu cuenta. Los datos opcionales nos ayudan a generar reportes más completos para análisis regionales.</p>
+                    </div>
+
+                    <!-- Datos Obligatorios -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-user section-icon"></i>
+                            Datos Personales (Obligatorios)
+                        </h2>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="full_name" class="required">Nombre Completo</label>
+                                <input type="text" id="full_name" name="full_name" required 
+                                       placeholder="Ej: María José Rodríguez González">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cedula" class="required">Cédula</label>
+                                <input type="text" id="cedula" name="cedula" required 
+                                       placeholder="Ej: 1-1234-5678">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="school_name" class="required">Nombre de la Escuela</label>
+                                <input type="text" id="school_name" name="school_name" required 
+                                       placeholder="Ej: Escuela República de Costa Rica">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos de Acceso -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-lock section-icon"></i>
+                            Datos de Acceso
+                        </h2>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="email" class="required">Correo Electrónico</label>
+                                <input type="email" id="email" name="email" required 
+                                       placeholder="tu.email@ejemplo.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password" class="required">Contraseña</label>
+                                <input type="password" id="password" name="password" required 
+                                       placeholder="Mínimo 8 caracteres">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos Opcionales -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-chart-bar section-icon"></i>
+                            Información Adicional (Opcional - Para reportes futuros)
+                        </h2>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="teacher_type">Tipo de Profesor</label>
+                                <select id="teacher_type" name="teacher_type" onchange="toggleSpecializedField()">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="maestro">Maestro</option>
+                                    <option value="especializado">Especializado</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="specialized_type_group" style="display: none;">
+                                <label for="specialized_type">Tipo de Profesor Especializado</label>
+                                <input type="text" id="specialized_type" name="specialized_type" 
+                                       placeholder="Ej: Educación Física, Inglés, Música, etc.">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="school_code">Código de la Escuela</label>
+                                <input type="text" id="school_code" name="school_code" 
+                                       placeholder="Ej: 12345">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="circuit_code">Código del Circuito</label>
+                                <input type="text" id="circuit_code" name="circuit_code" 
+                                       placeholder="Ej: 01-02">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regional">Regional Educativa</label>
+                                <input type="text" id="regional" name="regional" 
+                                       placeholder="Ej: San José Norte, Alajuela, Cartago, Heredia, etc.">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Section -->
+                    <div class="submit-section">
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <i class="fas fa-rocket"></i>
+                            Crear Mi Cuenta
+                            <div class="loading" id="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </button>
+
+                        <div class="login-link">
+                            <p>¿Ya tienes una cuenta? <a href="login.html">Iniciar Sesión</a></p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>¡Registro Exitoso!</h2>
+            <p>Tu solicitud ha sido enviada correctamente. Nuestro equipo revisará tu información y te contactaremos en menos de 24 horas para activar tu cuenta.</p>
+            <p><strong>Revisa tu correo electrónico</strong> para más detalles.</p>
+            <button class="modal-btn" onclick="goToLogin()">
+                <i class="fas fa-sign-in-alt"></i> Ir a Iniciar Sesión
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar/ocultar campo de profesor especializado
+        function toggleSpecializedField() {
+            const teacherType = document.getElementById('teacher_type').value;
+            const specializedGroup = document.getElementById('specialized_type_group');
+            const specializedInput = document.getElementById('specialized_type');
+            
+            if (teacherType === 'especializado') {
+                specializedGroup.style.display = 'block';
+                setTimeout(() => {
+                    specializedGroup.classList.add('show');
+                    specializedInput.focus();
+                }, 10);
+            } else {
+                specializedGroup.classList.remove('show');
+                setTimeout(() => {
+                    specializedGroup.style.display = 'none';
+                    specializedInput.value = '';
+                }, 300);
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validar campos obligatorios
+            const requiredFields = ['full_name', 'cedula', 'school_name', 'email', 'password'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#e53e3e';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            // Validar campo especializado si es necesario
+            const teacherType = document.getElementById('teacher_type').value;
+            const specializedType = document.getElementById('specialized_type');
+            if (teacherType === 'especializado' && !specializedType.value.trim()) {
+                specializedType.style.borderColor = '#e53e3e';
+                isValid = false;
+                alert('Por favor especifica el tipo de profesor especializado.');
+                return;
+            }
+
+            // Validar formato de email
+            const email = document.getElementById('email').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById('email').style.borderColor = '#e53e3e';
+                isValid = false;
+            }
+
+            // Validar longitud de contraseña
+            const password = document.getElementById('password').value;
+            if (password.length < 8) {
+                document.getElementById('password').style.borderColor = '#e53e3e';
+                isValid = false;
+            }
+
+            if (!isValid) {
+                alert('Por favor completa todos los campos obligatorios correctamente.');
+                return;
+            }
+
+            // Mostrar loading
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+
+            // Simular envío (aquí conectarías con tu backend)
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+                
+                // Mostrar modal de éxito
+                document.getElementById('successModal').style.display = 'flex';
+            }, 2000);
+        });
+
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        // Mejorar UX: limpiar errores al escribir
+        document.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('input', function() {
+                this.style.borderColor = '#e2e8f0';
+            });
+        });
+    </script>
+</body>
+</html>

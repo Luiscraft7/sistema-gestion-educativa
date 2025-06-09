@@ -266,16 +266,42 @@
         }
 
         .info-list li {
-            padding: 0.8rem 0;
+            padding: 1rem 0;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 1rem;
             font-size: 1.1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-list li:last-child {
+            border-bottom: none;
         }
 
         .info-list li i {
             color: #4facfe;
             font-size: 1.3rem;
+            margin-top: 0.1rem;
+            flex-shrink: 0;
+        }
+
+        .info-item-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            flex: 1;
+        }
+
+        .info-item-title {
+            font-weight: 600;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .info-item-description {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.5;
         }
 
         .info-highlight {
@@ -460,6 +486,19 @@
                 margin-top: 2rem;
             }
 
+            .info-list li {
+                padding: 0.8rem 0;
+                gap: 0.8rem;
+            }
+
+            .info-item-title {
+                font-size: 1rem;
+            }
+
+            .info-item-description {
+                font-size: 0.9rem;
+            }
+
             .scroll-indicator {
                 bottom: 2rem;
                 font-size: 1rem;
@@ -626,10 +665,34 @@
                     <h2>Registro Rápido y Sencillo</h2>
                     
                     <ul class="info-list">
-                        <li><i class="fas fa-check-circle"></i> <strong>Datos Obligatorios:</strong> Nombre completo, cédula y nombre de la escuela</li>
-                        <li><i class="fas fa-check-circle"></i> <strong>Datos Opcionales:</strong> Tipo de profesor, códigos de escuela y circuito</li>
-                        <li><i class="fas fa-check-circle"></i> <strong>Proceso de Aprobación:</strong> Revisión personalizada para garantizar calidad</li>
-                        <li><i class="fas fa-check-circle"></i> <strong>Activación Rápida:</strong> Te contactaremos en menos de 24 horas</li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-title">Datos Obligatorios:</div>
+                                <div class="info-item-description">Nombre completo, cédula y nombre de la escuela</div>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-title">Datos Opcionales:</div>
+                                <div class="info-item-description">Tipo de profesor, códigos de escuela y circuito</div>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-title">Proceso de Aprobación:</div>
+                                <div class="info-item-description">Revisión personalizada para garantizar calidad</div>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-title">Activación Rápida:</div>
+                                <div class="info-item-description">Te contactaremos en menos de 24 horas</div>
+                            </div>
+                        </li>
                     </ul>
 
                     <div class="info-highlight">
