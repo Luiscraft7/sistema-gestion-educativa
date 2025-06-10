@@ -2923,6 +2923,385 @@ app.post('/api/teachers/logout', async (req, res) => {
 });
 
 
+
+// ========================================
+// RUTAS API PARA PERÍODOS ACADÉMICOS
+// ========================================
+
+// Obtener todos los períodos académicos
+app.get('/api/academic-periods', async (req, res) => {
+    try {
+        const { year, active_only } = req.query;
+        
+        let query = 'SELECT * FROM academic_periods';
+        let params = [];
+        
+        if (year) {
+            query += ' WHERE year = ?';
+            params.push(year);
+        }
+        
+        if (active_only === 'true') {
+            query += (year ? ' AND' : ' WHERE') + ' is_active = 1';
+        }
+        
+        query += ' ORDER BY year DESC, period_number ASC';
+        
+        database.db.all(query, params, (err, rows) => {
+            if (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error obteniendo períodos académicos',
+                    error: err.message
+                });
+            } else {
+                res.json({
+                    success: true,
+                    data: rows,
+                    message: `${rows.length} períodos encontrados`
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error obteniendo períodos académicos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo períodos académicos',
+            error: error.message
+        });
+    }
+});
+
+// Obtener período académico actual
+app.get('/api/academic-periods/current', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM academic_periods WHERE is_current = 1 LIMIT 1';
+        
+        database.db.get(query, [], (err, row) => {
+            if (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error obteniendo período actual',
+                    error: err.message
+                });
+            } else if (row) {
+                res.json({
+                    success: true,
+                    data: row
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: 'No hay período académico activo'
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error obteniendo período actual:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo período actual',
+            error: error.message
+        });
+    }
+});
+
+// Crear nuevo período académico
+app.post('/api/academic-periods', async (req, res) => {
+    try {
+        console.log('📅 POST /api/academic-periods:', req.body);
+        
+        const { year, period_type, period_number, name, start_date, end_date } = req.body;
+        
+        if (!year || !period_type || !period_number || !name) {
+            return res.status(400).json({
+                success: false,
+                message: 'Año, tipo de período, número y nombre son requeridos'
+            });
+        }
+        
+        const query = `
+            INSERT INTO academic_periods (year, period_type, period_number, name, start_date, end_date, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
+        `;
+        
+        database.db.run(query, [year, period_type, period_number, name, start_date, end_date], function(err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed')) {
+                    res.status(400).json({
+                        success: false,
+                        message: 'Ya existe un período con ese año, tipo y número'
+                    });
+                } else {
+                    res.status(500).json({
+                        success: false,
+                        message: 'Error creando período académico',
+                        error: err.message
+                    });
+                }
+            } else {
+                res.json({
+                    success: true,
+                    data: {
+                        id: this.lastID,
+                        year,
+                        period_type,
+                        period_number,
+                        name
+                    },
+                    message: 'Período académico creado exitosamente'
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error creando período académico:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creando período académico',
+            error: error.message
+        });
+    }
+});
+
+// Activar período académico (marca como actual)
+app.put('/api/academic-periods/:id/activate', async (req, res) => {
+    try {
+        const periodId = req.params.id;
+        console.log(`📅 PUT /api/academic-periods/${periodId}/activate`);
+        
+        // Primero desactivar todos los períodos actuales
+        const deactivateQuery = 'UPDATE academic_periods SET is_current = 0';
+        
+        database.db.run(deactivateQuery, [], (err) => {
+            if (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error desactivando períodos anteriores',
+                    error: err.message
+                });
+                return;
+            }
+            
+            // Activar el período seleccionado
+            const activateQuery = 'UPDATE academic_periods SET is_current = 1 WHERE id = ?';
+            
+            database.db.run(activateQuery, [periodId], function(err) {
+                if (err) {
+                    res.status(500).json({
+                        success: false,
+                        message: 'Error activando período',
+                        error: err.message
+                    });
+                } else if (this.changes === 0) {
+                    res.status(404).json({
+                        success: false,
+                        message: 'Período no encontrado'
+                    });
+                } else {
+                    res.json({
+                        success: true,
+                        message: 'Período académico activado',
+                        data: { id: periodId }
+                    });
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error activando período académico:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error activando período académico',
+            error: error.message
+        });
+    }
+});
+
+// Obtener escuelas disponibles
+app.get('/api/schools', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM schools ORDER BY name ASC';
+        
+        database.db.all(query, [], (err, rows) => {
+            if (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error obteniendo escuelas',
+                    error: err.message
+                });
+            } else {
+                res.json({
+                    success: true,
+                    data: rows,
+                    message: `${rows.length} escuelas encontradas`
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error obteniendo escuelas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo escuelas',
+            error: error.message
+        });
+    }
+});
+
+// Crear nueva escuela
+app.post('/api/schools', async (req, res) => {
+    try {
+        console.log('🏫 POST /api/schools:', req.body);
+        
+        const { name, address, phone, email } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                message: 'El nombre de la escuela es requerido'
+            });
+        }
+        
+        const query = `
+            INSERT INTO schools (name, address, phone, email)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        database.db.run(query, [name, address, phone, email], function(err) {
+            if (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error creando escuela',
+                    error: err.message
+                });
+            } else {
+                res.json({
+                    success: true,
+                    data: {
+                        id: this.lastID,
+                        name,
+                        address,
+                        phone,
+                        email
+                    },
+                    message: 'Escuela creada exitosamente'
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error creando escuela:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creando escuela',
+            error: error.message
+        });
+    }
+});
+
+// API para cambiar período globalmente (para el frontend)
+app.post('/api/academic-periods/set-current', async (req, res) => {
+    try {
+        const { year, period_type, period_number } = req.body;
+        console.log('📅 POST /api/academic-periods/set-current:', req.body);
+        
+        if (!year || !period_type || !period_number) {
+            return res.status(400).json({
+                success: false,
+                message: 'Año, tipo de período y número son requeridos'
+            });
+        }
+        
+        // Buscar si existe el período
+        const findQuery = `
+            SELECT id FROM academic_periods 
+            WHERE year = ? AND period_type = ? AND period_number = ?
+        `;
+        
+        database.db.get(findQuery, [year, period_type, period_number], (err, row) => {
+            if (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error buscando período',
+                    error: err.message
+                });
+                return;
+            }
+            
+            if (!row) {
+                // Crear período si no existe
+                const periodName = `${year} - ${period_number === 1 ? 'Primer' : period_number === 2 ? 'Segundo' : 'Tercer'} ${period_type === 'semester' ? 'Semestre' : 'Trimestre'}`;
+                
+                const createQuery = `
+                    INSERT INTO academic_periods (year, period_type, period_number, name, is_active, is_current)
+                    VALUES (?, ?, ?, ?, 1, 0)
+                `;
+                
+                database.db.run(createQuery, [year, period_type, period_number, periodName], function(createErr) {
+                    if (createErr) {
+                        res.status(500).json({
+                            success: false,
+                            message: 'Error creando período',
+                            error: createErr.message
+                        });
+                        return;
+                    }
+                    
+                    // Activar el período recién creado
+                    activatePeriod(this.lastID);
+                });
+            } else {
+                // Activar período existente
+                activatePeriod(row.id);
+            }
+        });
+        
+        function activatePeriod(periodId) {
+            // Desactivar todos los períodos
+            const deactivateQuery = 'UPDATE academic_periods SET is_current = 0';
+            
+            database.db.run(deactivateQuery, [], (deactivateErr) => {
+                if (deactivateErr) {
+                    res.status(500).json({
+                        success: false,
+                        message: 'Error desactivando períodos',
+                        error: deactivateErr.message
+                    });
+                    return;
+                }
+                
+                // Activar el período seleccionado
+                const activateQuery = 'UPDATE academic_periods SET is_current = 1 WHERE id = ?';
+                
+                database.db.run(activateQuery, [periodId], function(activateErr) {
+                    if (activateErr) {
+                        res.status(500).json({
+                            success: false,
+                            message: 'Error activando período',
+                            error: activateErr.message
+                        });
+                    } else {
+                        res.json({
+                            success: true,
+                            message: 'Período académico establecido como actual',
+                            data: { 
+                                periodId,
+                                year,
+                                period_type,
+                                period_number
+                            }
+                        });
+                    }
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Error estableciendo período actual:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error estableciendo período actual',
+            error: error.message
+        });
+    }
+});
+
 // Iniciar todo
 startServer();
 

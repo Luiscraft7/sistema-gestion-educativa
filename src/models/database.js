@@ -2143,6 +2143,13 @@ async createActiveSession(teacherId, sessionToken, ipAddress, userAgent) {
     });
 }
 
+
+
+
+
+
+
+
 async updateSessionActivity(sessionToken) {
     this.ensureConnection();
     
@@ -2266,6 +2273,10 @@ async clearUserPreviousSessions(teacherId) {
         });
     }
 
+
+
+
+    
     
 }
 
