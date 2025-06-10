@@ -889,11 +889,8 @@
             // Verificar si necesita reset automático
             checkAutoResetNeeded();
             
-            // Actualizar cada 30 segundos
-            setInterval(() => {
-                loadSessions();
-                updateStats();
-            }, 30000);
+            // REMOVED: Actualización automática cada 30 segundos
+            // Solo actualizar cuando se haga clic en "Actualizar Estado"
         }
 
         function checkAutoResetNeeded() {
@@ -1657,7 +1654,21 @@
 
         function refreshSessions() {
             loadSessions();
-            addActivityLog('refresh', 'Actualización', 'Estado de sesiones actualizado');
+            updateStats(); // Actualizar estadísticas también
+            addActivityLog('refresh', 'Actualización Manual', 'Estado de sesiones actualizado manualmente');
+            
+            // Mostrar feedback visual
+            const button = document.querySelector('button[onclick="refreshSessions()"]');
+            if (button) {
+                const originalText = button.innerHTML;
+                button.innerHTML = '🔄 Actualizando...';
+                button.disabled = true;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 1000);
+            }
         }
 
         // ========================================

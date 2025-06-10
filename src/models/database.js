@@ -2082,7 +2082,105 @@ async updateTeacherLastLogin(teacherId) {
 }
 
 
+// ========================================
+// FUNCIONES DE GESTIÓN DE SESIONES ACTIVAS
+// ========================================
+async getActiveSessions() {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                s.id,
+                s.teacher_id,
+                s.session_token,
+                s.ip_address as ip,
+                s.last_activity,
+                s.created_at,
+                t.full_name as teacher_name,
+                t.email,
+                CASE 
+                    WHEN datetime(s.last_activity) > datetime('now', '-30 minutes') 
+                    THEN 'active' 
+                    ELSE 'inactive' 
+                END as status
+            FROM active_sessions s
+            INNER JOIN teachers t ON s.teacher_id = t.id
+            WHERE datetime(s.last_activity) > datetime('now', '-24 hours')
+            ORDER BY s.last_activity DESC
+        `;
+        
+        this.db.all(query, [], (err, rows) => {
+            if (err) {
+                console.error('❌ Error obteniendo sesiones activas:', err);
+                reject(err);
+            } else {
+                console.log(`✅ Sesiones activas encontradas: ${rows.length}`);
+                resolve(rows || []);
+            }
+        });
+    });
+}
 
+async createActiveSession(teacherId, sessionToken, ipAddress, userAgent) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO active_sessions (teacher_id, session_token, ip_address, user_agent)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        this.db.run(query, [teacherId, sessionToken, ipAddress, userAgent], function(err) {
+            if (err) {
+                console.error('❌ Error creando sesión activa:', err);
+                reject(err);
+            } else {
+                console.log('✅ Sesión activa creada con ID:', this.lastID);
+                resolve({ id: this.lastID, teacher_id: teacherId });
+            }
+        });
+    });
+}
+
+async updateSessionActivity(sessionToken) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            UPDATE active_sessions 
+            SET last_activity = CURRENT_TIMESTAMP 
+            WHERE session_token = ?
+        `;
+        
+        this.db.run(query, [sessionToken], function(err) {
+            if (err) {
+                console.error('❌ Error actualizando actividad de sesión:', err);
+                reject(err);
+            } else {
+                resolve({ changes: this.changes });
+            }
+        });
+    });
+}
+
+async deleteActiveSession(sessionToken) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `DELETE FROM active_sessions WHERE session_token = ?`;
+        
+        this.db.run(query, [sessionToken], function(err) {
+            if (err) {
+                console.error('❌ Error eliminando sesión activa:', err);
+                reject(err);
+            } else {
+                console.log('✅ Sesión eliminada, cambios:', this.changes);
+                resolve({ changes: this.changes });
+            }
+        });
+    });
+}
     
 
     

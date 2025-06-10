@@ -13,6 +13,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+
+
+// Función para generar tokens únicos de sesión
+function generateSessionToken() {
+    return 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
 // ========================================
 // INICIALIZACIÓN DE BASE DE DATOS
 // ========================================
@@ -195,12 +202,26 @@ app.post('/api/teachers/login', async (req, res) => {
             });
         }
         
-        // Login exitoso
+        // Login exitoso - REEMPLAZAR esta sección completa
         await database.updateTeacherLastLogin(teacher.id);
-        
+
+        // NUEVO: Crear sesión activa en base de datos
+        const sessionToken = generateSessionToken();
+        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+        const userAgent = req.get('User-Agent') || 'unknown';
+
+        try {
+            await database.createActiveSession(teacher.id, sessionToken, ipAddress, userAgent);
+            console.log(`✅ Sesión activa creada para profesor: ${teacher.full_name}`);
+        } catch (sessionError) {
+            console.error('⚠️ Error creando sesión activa:', sessionError);
+            // Continuar aunque falle la sesión (no es crítico)
+        }
+
         res.json({
             success: true,
             message: 'Login exitoso',
+            sessionToken: sessionToken, // Enviar token al frontend
             teacher: {
                 id: teacher.id,
                 name: teacher.full_name,
@@ -2789,6 +2810,29 @@ app.get('/api/sessions/active', async (req, res) => {
             success: false,
             message: 'Error obteniendo sesiones activas',
             error: error.message
+        });
+    }
+});
+
+// Logout de profesor con limpieza de sesión
+app.post('/api/teachers/logout', async (req, res) => {
+    try {
+        const { sessionToken } = req.body;
+        
+        if (sessionToken) {
+            await database.deleteActiveSession(sessionToken);
+            console.log('✅ Sesión cerrada correctamente');
+        }
+        
+        res.json({
+            success: true,
+            message: 'Sesión cerrada'
+        });
+    } catch (error) {
+        console.error('Error en logout:', error);
+        res.json({
+            success: true,
+            message: 'Sesión cerrada (con errores menores)'
         });
     }
 });
