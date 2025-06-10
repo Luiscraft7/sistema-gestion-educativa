@@ -910,7 +910,7 @@
                         <div class="period-row">
                             <div class="period-field">
                                 <label><i class="fas fa-school"></i> Escuela</label>
-                                <select id="schoolSelector" class="period-input">
+                                <select id="schoolSelector" class="period-select">
                                     <option value="1">Mi Escuela Principal</option>
                                     <option value="2" disabled>+ Agregar Segunda Escuela</option>
                                     <option value="3" disabled>+ Agregar Tercera Escuela</option>
@@ -1282,7 +1282,18 @@
             document.getElementById('teacherProfileName').textContent = teacher.name || 'Sin nombre';
             document.getElementById('teacherProfileSchool').textContent = teacher.school || teacher.school_name || 'Sin escuela';
             
-            // Información en las tarjetas
+            // NUEVO: Actualizar selector de escuelas con la escuela del profesor
+            const schoolSelector = document.getElementById('schoolSelector');
+            if (schoolSelector) {
+                const schoolName = teacher.school || teacher.school_name || 'Mi Escuela';
+                schoolSelector.innerHTML = `
+                    <option value="teacher_school" selected>${schoolName}</option>
+                    <option value="add_2" disabled>+ Agregar Segunda Escuela</option>
+                    <option value="add_3" disabled>+ Agregar Tercera Escuela</option>
+                `;
+            }
+            
+            // Información en las tarjetas (código existente...)
             document.getElementById('teacherCedula').textContent = teacher.cedula || 'No especificado';
             document.getElementById('teacherEmail').textContent = teacher.email || 'No especificado';
             document.getElementById('teacherType').textContent = teacher.teacher_type || 'No especificado';
@@ -1721,4 +1732,5 @@
 
     </script>
 </body>
+<script src="js/global-period-selector.js"></script>
 </html>

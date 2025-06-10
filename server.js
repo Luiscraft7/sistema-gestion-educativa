@@ -61,14 +61,68 @@ app.get('/', (req, res) => {
 // Obtener todos los estudiantes
 app.get('/api/students', async (req, res) => {
     try {
-        const students = await database.getAllStudents();
-        res.json({
-            success: true,
-            data: students,
-            message: `${students.length} estudiantes encontrados`
+        const { year, period_type, period_number } = req.query;
+        
+        let query = 'SELECT * FROM students WHERE status = ?';
+        let params = ['active'];
+        
+        // Si se especifican parámetros de período, filtrar por período académico
+        if (year && period_type && period_number) {
+            console.log(`📅 Filtrando estudiantes por período: ${year} - ${period_type} ${period_number}`);
+            
+            // Buscar el período académico
+            const periodQuery = `
+                SELECT id FROM academic_periods 
+                WHERE year = ? AND period_type = ? AND period_number = ?
+                LIMIT 1
+            `;
+            
+            const periodRow = await new Promise((resolve, reject) => {
+                database.db.get(periodQuery, [year, period_type, period_number], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            });
+            
+            if (periodRow) {
+                query += ' AND academic_period_id = ?';
+                params.push(periodRow.id);
+                console.log(`📚 Usando período académico ID: ${periodRow.id}`);
+            } else {
+                console.log(`⚠️ Período académico no encontrado: ${year}-${period_type}-${period_number}, mostrando todos los estudiantes`);
+            }
+        } else {
+            console.log('📚 Sin filtro de período, mostrando todos los estudiantes activos');
+        }
+        
+        query += ' ORDER BY first_surname, second_surname, first_name';
+        
+        database.db.all(query, params, (err, rows) => {
+            if (err) {
+                console.error('❌ Error obteniendo estudiantes:', err);
+                res.status(500).json({
+                    success: false,
+                    message: 'Error obteniendo estudiantes',
+                    error: err.message
+                });
+            } else {
+                console.log(`✅ Estudiantes encontrados: ${rows.length}`);
+                res.json({
+                    success: true,
+                    data: rows,
+                    message: `${rows.length} estudiantes encontrados`,
+                    filter_applied: !!(year && period_type && period_number),
+                    period_info: year && period_type && period_number ? {
+                        year: year,
+                        period_type: period_type,
+                        period_number: period_number
+                    } : null
+                });
+            }
         });
+        
     } catch (error) {
-        console.error('Error obteniendo estudiantes:', error);
+        console.error('❌ Error en API de estudiantes:', error);
         res.status(500).json({
             success: false,
             message: 'Error obteniendo estudiantes',
@@ -105,25 +159,63 @@ app.get('/api/students/:id', async (req, res) => {
 // Agregar nuevo estudiante
 app.post('/api/students', async (req, res) => {
     try {
-        // ✅ Generar ID automático si no viene especificado
+        // Generar ID automático si no viene especificado
         if (!req.body.student_id) {
             req.body.student_id = await database.getNextStudentId();
-            console.log(`🔢 ID generado automáticamente: ${req.body.student_id}`);
+            console.log('📝 ID generado automáticamente:', req.body.student_id);
         }
 
+        // Asignar período académico actual si no se especifica
+        if (!req.body.academic_period_id) {
+            // Buscar el período marcado como actual
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            });
+            
+            if (currentPeriod) {
+                req.body.academic_period_id = currentPeriod.id;
+                console.log('📅 Asignando período académico actual:', currentPeriod.id);
+            } else {
+                // Fallback al período por defecto
+                req.body.academic_period_id = 1;
+                console.log('📅 Asignando período académico por defecto: 1');
+            }
+        }
+
+        console.log('👤 POST /api/students:', {
+            name: req.body.first_name + ' ' + req.body.first_surname,
+            academic_period_id: req.body.academic_period_id,
+            grade_level: req.body.grade_level
+        });
+        
         const result = await database.addStudent(req.body);
         res.json({
             success: true,
             data: result,
-            message: 'Estudiante agregado correctamente'
+            message: 'Estudiante agregado exitosamente'
         });
     } catch (error) {
-        console.error('Error agregando estudiante:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error agregando estudiante',
-            error: error.message
-        });
+        console.error('❌ Error agregando estudiante:', error);
+        
+        if (error.message.includes('UNIQUE constraint failed')) {
+            const field = error.message.includes('cedula') ? 'cédula' : 'ID de estudiante';
+            res.status(400).json({
+                success: false,
+                message: `Ya existe un estudiante con esa ${field}`,
+                error: error.message
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Error agregando estudiante',
+                error: error.message
+            });
+        }
     }
 });
 
@@ -3301,6 +3393,34 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
         });
     }
 });
+
+
+// API para obtener datos del profesor logueado (simulado por ahora)
+app.get('/api/teachers/current', async (req, res) => {
+    try {
+        // Por ahora simulamos un profesor logueado
+        const mockTeacher = {
+            id: 1,
+            full_name: 'Profesor Demo',
+            school_name: 'Escuela Las Flores',
+            email: 'profesor@demo.com',
+            cedula: '123456789'
+        };
+        
+        res.json({
+            success: true,
+            data: mockTeacher
+        });
+    } catch (error) {
+        console.error('Error obteniendo profesor actual:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo datos del profesor',
+            error: error.message
+        });
+    }
+});
+
 
 // Iniciar todo
 startServer();
