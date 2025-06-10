@@ -2201,6 +2201,71 @@ async clearUserPreviousSessions(teacherId) {
 }
     
 
+// NUEVA FUNCIÓN: Actualizar perfil del profesor
+    async updateTeacherProfile(teacherId, profileData) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                UPDATE teachers 
+                SET full_name = ?, school_name = ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            `;
+            
+            const values = [
+                profileData.full_name,
+                profileData.school_name,
+                teacherId
+            ];
+            
+            this.db.run(query, values, function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ 
+                        id: teacherId, 
+                        changes: this.changes,
+                        full_name: profileData.full_name,
+                        school_name: profileData.school_name
+                    });
+                }
+            });
+        });
+    }
+
+
+// NUEVA FUNCIÓN: Actualizar perfil del profesor
+    async updateTeacherProfile(teacherId, profileData) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                UPDATE teachers 
+                SET full_name = ?, school_name = ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            `;
+            
+            const values = [
+                profileData.full_name,
+                profileData.school_name,
+                teacherId
+            ];
+            
+            this.db.run(query, values, function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ 
+                        id: teacherId, 
+                        changes: this.changes,
+                        full_name: profileData.full_name,
+                        school_name: profileData.school_name
+                    });
+                }
+            });
+        });
+    }
+
     
 }
 

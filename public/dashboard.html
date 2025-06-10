@@ -3,310 +3,796 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎓 Dashboard - Sistema Educativo</title>
+    <title>Dashboard - Sistema Educativo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
             color: #333;
-            font-size: 32px;
-            margin-bottom: 10px;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
-        
-        .header p {
-            color: #666;
-            font-size: 16px;
-        }
-        
-        .dashboard-container {
-            max-width: 1200px;
+
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
         }
-        
+
+        /* HEADER PRINCIPAL */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 25px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.08);
+            text-align: center;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+            border-radius: 25px;
+            pointer-events: none;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.3rem;
+            font-weight: 500;
+            position: relative;
+            opacity: 0.9;
+        }
+
+        .header .emoji-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: pulse 3s infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        /* ESTADÍSTICAS ADMIN - Grandes y prominentes */
+        .admin-stats {
+            margin-bottom: 35px;
+        }
+
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .admin-stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.15);
+        }
+
+        .admin-stat-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+            opacity: 0.8;
+        }
+
+        .admin-stat-number {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .admin-stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* ESTADÍSTICAS PROFESOR - Pequeñas y discretas */
+        .teacher-stats {
+            margin-bottom: 25px;
+        }
+
+        .teacher-stats-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 15px 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .teacher-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        .teacher-stat-item:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .teacher-stat-icon {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .teacher-stat-number {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* PERFIL DEL PROFESOR */
+        .profile-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 25px;
+            padding: 35px;
+            margin: 30px 0;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, #10b981, #059669, #34d399);
+            border-radius: 25px 25px 0 0;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .profile-header h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-field {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .profile-field label {
+            font-weight: 700;
+            color: #374151;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .display-value {
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.9));
+            border-radius: 15px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            color: #1f2937;
+            min-height: 28px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .edit-input {
+            padding: 18px;
+            border: 2px solid #3b82f6;
+            border-radius: 15px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .edit-btn, .save-btn, .cancel-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            margin-right: 15px;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .cancel-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .edit-btn:hover, .save-btn:hover, .cancel-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-actions {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 2px solid rgba(226, 232, 240, 0.3);
+        }
+
+        /* MÓDULOS */
+        .modules-section h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 35px;
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            letter-spacing: -0.5px;
+        }
+
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
             margin-bottom: 30px;
         }
-        
+
         .module-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 25px;
+            padding: 35px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.08);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
-            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            border-radius: 25px 25px 0 0;
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .module-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transition: all 0.4s ease;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .module-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .module-card:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
         .module-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 25px 60px rgba(102, 126, 234, 0.2);
         }
-        
+
         .module-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 4.5rem;
+            margin-bottom: 25px;
+            display: block;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 2;
         }
-        
+
+        .module-card:hover .module-icon {
+            transform: scale(1.15) rotate(8deg);
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
+        }
+
         .module-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 2;
         }
-        
+
         .module-description {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        
-        .module-status {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
+            color: #718096;
+            line-height: 1.7;
+            margin-bottom: 25px;
             font-weight: 500;
+            font-size: 1rem;
+            position: relative;
+            z-index: 2;
         }
-        
-        .status-ready {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-development {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-planned {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .quick-stats {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        
-        .stats-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .stat-number {
-            font-size: 32px;
+
+        .module-status {
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.85rem;
             font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
-        .stat-label {
-            color: #666;
-            font-size: 14px;
+
+        .status-ready { 
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
         }
-        
+
+        .status-development { 
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+        }
+
+        .status-planned { 
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            color: #374151;
+        }
+
+        .status-admin {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            color: #be185d;
+        }
+
+        /* FOOTER */
         .footer {
             text-align: center;
             color: white;
-            margin-top: 30px;
+            margin-top: 60px;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
-        
+
         .footer a {
             color: white;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
+
         .footer a:hover {
-            text-decoration: underline;
+            color: #f0f8ff;
+            transform: translateY(-2px);
         }
-        
+
+        /* ANIMACIONES */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) rotate(180deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .modules-grid {
-                grid-template-columns: 1fr;
+            .container {
+                padding: 15px;
             }
             
             .header h1 {
-                font-size: 24px;
+                font-size: 2.2rem;
             }
             
-            .module-card {
-                padding: 20px;
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .admin-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .teacher-stats-container {
+                flex-direction: column;
+                gap: 15px;
             }
         }
 
-        .admin-module {
-            border: 2px solid #fbbf24;
-            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+        /* CLASES DE UTILIDAD */
+        .admin-only {
+            display: none;
         }
 
-        .admin-module:hover {
-            background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-            transform: translateY(-8px);
+        .teacher-only {
+            display: none;
         }
 
-        .status-active {
-            background: #10b981;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+        /* EFECTOS ADICIONALES */
+        .module-card:nth-child(odd) {
+            animation-delay: 0.1s;
+        }
+
+        .module-card:nth-child(even) {
+            animation-delay: 0.2s;
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>🎓 Dashboard - Sistema Educativo</h1>
-            <p>Centro de control para la gestión académica moderna</p>
+    <div class="container">
+        <!-- Header Principal -->
+        <div class="header fade-in">
+            <div class="emoji-icon">📚</div>
+            <h1>Sistema Educativo Moderno</h1>
+            <p>Panel de Control - Gestión Académica Inteligente</p>
         </div>
-        
-        <!-- Quick Stats -->
-        <div class="quick-stats">
-            <div class="stats-title">📊 Vista General del Sistema</div>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number" id="professorsCount">⏳</div>
-                    <div class="stat-label">Profesores Activos</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="studentsCount">⏳</div>
-                    <div class="stat-label">Estudiantes Activos</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="schoolsCount">⏳</div>
-                    <div class="stat-label">Escuelas Registradas</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">7</div>
-                    <div class="stat-label">Módulos Disponibles</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Modules Grid -->
-        <div class="modules-grid">
-            <!-- Módulo Cotidiano -->
-            <div class="module-card" onclick="openModule('cotidiano')">
-                <div class="module-icon">📊</div>
-                <div class="module-title">Cotidiano</div>
-                <div class="module-description">
-                    Registro diario de calificaciones, participación y comportamiento de estudiantes
-                </div>
-                <div class="module-status status-development">En Desarrollo</div>
-            </div>
-            
-            <!-- Módulo Tareas -->
-            <div class="module-card" onclick="openModule('tareas')">
-                <div class="module-icon">📝</div>
-                <div class="module-title">Evaluaciones</div>
-                <div class="module-description">
-                    Asignación, seguimiento y calificación de tareas y examenes por materia y período
-                </div>
-                <div class="module-status status-planned">Planificado</div>
-            </div>
 
-            <!-- Módulo Asistencia -->
-            <div class="module-card" onclick="openModule('asistencia')">
-                <div class="module-icon">📅</div>
-                <div class="module-title">Asistencia</div>
-                <div class="module-description">
-                    Control diario de asistencia, tardanzas y reportes según normativas MEP
+        <!-- Estadísticas Admin - Grandes y prominentes -->
+        <div class="admin-stats admin-only" id="adminStatsSection">
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card fade-in">
+                    <div class="admin-stat-icon">👨‍🏫</div>
+                    <div class="admin-stat-number" id="professorsCount">-</div>
+                    <div class="admin-stat-label">Profesores Activos</div>
                 </div>
-                <div class="module-status status-ready">Disponible</div>
+                
+                <div class="admin-stat-card fade-in">
+                    <div class="admin-stat-icon">👨‍🎓</div>
+                    <div class="admin-stat-number" id="studentsCount">-</div>
+                    <div class="admin-stat-label">Estudiantes</div>
+                </div>
+                
+                <div class="admin-stat-card fade-in">
+                    <div class="admin-stat-icon">🏫</div>
+                    <div class="admin-stat-number" id="schoolsCount">-</div>
+                    <div class="admin-stat-label">Escuelas</div>
+                </div>
             </div>
-                        
-            <!-- Módulo Estudiantes -->
-            <div class="module-card" onclick="openModule('estudiantes')">
-                <div class="module-icon">👨‍🎓</div>
-                <div class="module-title">Estudiantes</div>
-                <div class="module-description">
-                    Gestión de información personal, matrícula y historial académico
+        </div>
+
+        <!-- Estadísticas Profesor - Pequeñas y discretas -->
+        <div class="teacher-stats teacher-only" id="teacherStatsSection">
+            <div class="teacher-stats-container fade-in">
+                <div class="teacher-stat-item">
+                    <div class="teacher-stat-icon">👨‍🎓</div>
+                    <span>Estudiantes: <span class="teacher-stat-number" id="teacherStudentsCount">-</span></span>
                 </div>
-                <div class="module-status status-development">En desarrollo</div>
+                <div class="teacher-stat-item">
+                    <div class="teacher-stat-icon">📚</div>
+                    <span>Mi Escuela: <span class="teacher-stat-number" id="teacherSchoolName">-</span></span>
+                </div>
+                <div class="teacher-stat-item">
+                    <div class="teacher-stat-icon">📅</div>
+                    <span>Activo desde: <span class="teacher-stat-number" id="teacherSince">-</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PERFIL DEL PROFESOR - Solo para profesores -->
+        <div class="profile-section fade-in teacher-only" id="profileSection" style="display: none;">
+            <div class="profile-header">
+                <h2><i class="fas fa-user-circle"></i> Mi Perfil de Profesor</h2>
+                <button onclick="toggleEditMode()" id="editBtn" class="edit-btn">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
             </div>
             
-            <!-- Módulo Materias -->
-            <div class="module-card" onclick="openModule('materias')">
-                <div class="module-icon">📚</div>
-                <div class="module-title">Materias</div>
-                <div class="module-description">
-                    Gestión de materias académicas y asignación por grados
+            <div class="profile-content">
+                <div class="profile-grid">
+                    <div class="profile-field">
+                        <label><i class="fas fa-user"></i> Nombre Completo:</label>
+                        <span id="display-name" class="display-value"></span>
+                        <input type="text" id="edit-name" class="edit-input" style="display: none;">
+                    </div>
+                    
+                    <div class="profile-field">
+                        <label><i class="fas fa-school"></i> Nombre de la Escuela:</label>
+                        <span id="display-school" class="display-value"></span>
+                        <input type="text" id="edit-school" class="edit-input" style="display: none;">
+                    </div>
+                    
+                    <div class="profile-field">
+                        <label><i class="fas fa-envelope"></i> Email:</label>
+                        <span id="display-email" class="display-value"></span>
+                    </div>
+                    
+                    <div class="profile-field">
+                        <label><i class="fas fa-chalkboard-teacher"></i> Tipo de Profesor:</label>
+                        <span id="display-type" class="display-value"></span>
+                    </div>
+
+                    <div class="profile-field">
+                        <label><i class="fas fa-id-card"></i> Cédula:</label>
+                        <span id="display-cedula" class="display-value"></span>
+                    </div>
+
+                    <div class="profile-field">
+                        <label><i class="fas fa-map-marker-alt"></i> Regional:</label>
+                        <span id="display-regional" class="display-value"></span>
+                    </div>
                 </div>
-                <div class="module-status status-ready">Disponible</div>
+                
+                <div class="profile-actions" id="editActions" style="display: none;">
+                    <button onclick="saveProfile()" class="save-btn">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <button onclick="cancelEdit()" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <!-- Módulos del Sistema -->
+        <div class="modules-section">
+            <h2><i class="fas fa-th-large"></i> Módulos del Sistema</h2>
             
-            <!-- Módulo Reportes -->
-            <div class="module-card" onclick="openModule('reportes')">
-                <div class="module-icon">📈</div>
-                <div class="module-title">Reportes</div>
-                <div class="module-description">
-                    Análisis, estadísticas y reportes académicos personalizables
+            <div class="modules-grid" id="modulesGrid">
+                <!-- Módulo Admin (solo visible para admin) -->
+                <div class="module-card fade-in admin-only" id="adminModule" onclick="openModule('admin')">
+                    <div class="module-icon">👑</div>
+                    <div class="module-title">Administración</div>
+                    <div class="module-description">
+                        Panel de control administrativo - Gestión de profesores y sistema
+                    </div>
+                    <div class="module-status status-admin">Solo Admin</div>
                 </div>
-                <div class="module-status status-planned">Planificado</div>
-            </div>
-            
-            <!-- Módulo SEA --> 
-            <div class="module-card" onclick="openModule('sea')">
-                <div class="module-icon">🎯</div>
-                <div class="module-title">SEA</div>
-                <div class="module-description">
-                    Sistema de Evaluación Académica - Vista consolidada con ponderaciones reales
+
+                <!-- ORDEN SOLICITADO: Estudiantes, Asistencia, Cotidiano, Evaluaciones, Materias, Reportes, SEA -->
+                
+                <!-- 1. Módulo Estudiantes -->
+                <div class="module-card fade-in" onclick="openModule('estudiantes')">
+                    <div class="module-icon">👨‍🎓</div>
+                    <div class="module-title">Estudiantes</div>
+                    <div class="module-description">
+                        Gestión completa de estudiantes - Registro, edición y consulta de información académica
+                    </div>
+                    <div class="module-status status-ready">Disponible</div>
                 </div>
-                <div class="module-status status-ready">Disponible</div>
+                
+                <!-- 2. Módulo Asistencia -->
+                <div class="module-card fade-in" onclick="openModule('asistencia')">
+                    <div class="module-icon">📅</div>
+                    <div class="module-title">Asistencia</div>
+                    <div class="module-description">
+                        Control diario de asistencia, tardanzas y reportes según normativas MEP
+                    </div>
+                    <div class="module-status status-ready">Disponible</div>
+                </div>
+                
+                <!-- 3. Módulo Cotidiano -->
+                <div class="module-card fade-in" onclick="openModule('cotidiano')">
+                    <div class="module-icon">📊</div>
+                    <div class="module-title">Cotidiano</div>
+                    <div class="module-description">
+                        Registro diario de calificaciones, participación y comportamiento de estudiantes
+                    </div>
+                    <div class="module-status status-ready">Disponible</div>
+                </div>
+                
+                <!-- 4. Módulo Evaluaciones -->
+                <div class="module-card fade-in" onclick="openModule('evaluaciones')">
+                    <div class="module-icon">📝</div>
+                    <div class="module-title">Evaluaciones</div>
+                    <div class="module-description">
+                        Creación, gestión y calificación de tareas, exámenes y proyectos académicos
+                    </div>
+                    <div class="module-status status-ready">Disponible</div>
+                </div>
+                
+                <!-- 5. Módulo Materias -->
+                <div class="module-card fade-in" onclick="openModule('materias')">
+                    <div class="module-icon">📚</div>
+                    <div class="module-title">Materias</div>
+                    <div class="module-description">
+                        Gestión de materias académicas, asignación por grados y configuración
+                    </div>
+                    <div class="module-status status-ready">Disponible</div>
+                </div>
+                
+                <!-- 6. Módulo Reportes -->
+                <div class="module-card fade-in" onclick="openModule('reportes')">
+                    <div class="module-icon">📈</div>
+                    <div class="module-title">Reportes</div>
+                    <div class="module-description">
+                        Generación de reportes académicos, estadísticas y análisis de rendimiento
+                    </div>
+                    <div class="module-status status-planned">Planificado</div>
+                </div>
+                
+                <!-- 7. Módulo SEA --> 
+                <div class="module-card fade-in" onclick="openModule('sea')">
+                    <div class="module-icon">🎯</div>
+                    <div class="module-title">SEA</div>
+                    <div class="module-description">
+                        Sistema de Evaluación Académica - Vista consolidada con ponderaciones reales
+                    </div>
+                    <div class="module-status status-ready">Disponible</div>
+                </div>
             </div>
         </div>
         
         <!-- Footer -->
-        <div class="footer">
+        <div class="footer fade-in">
             <p>
-                <a href="login.html">← Volver al Login</a> | 
-                © 2025 Sistema Educativo - Dashboard v1.0
+                <a href="login.html"><i class="fas fa-arrow-left"></i> Volver al Login</a> | 
+                © 2025 Sistema Educativo Moderno - Dashboard v2.0
             </p>
         </div>
     </div>
@@ -314,21 +800,45 @@
     <script>
     // Cargar y verificar sesión al cargar la página
     document.addEventListener('DOMContentLoaded', function() {
-        const sessionInfo = checkUserSession(); // Nueva función unificada
+        // Aplicar animaciones con delay
+        const fadeElements = document.querySelectorAll('.fade-in');
+        fadeElements.forEach((element, index) => {
+            element.style.animationDelay = `${index * 0.15}s`;
+        });
+
+        const sessionInfo = checkUserSession();
         if (sessionInfo) {
-            checkUserPermissions();
-            loadDashboardStats();
+            setupUserInterface(sessionInfo.type);
+            if (sessionInfo.type === 'admin') {
+                loadAdminStats();
+            } else if (sessionInfo.type === 'teacher') {
+                loadTeacherStats();
+            }
         }
     });
 
-    // Verificar sesión (Admin O Profesor) - FUNCIÓN CORREGIDA
+    // Configurar interfaz según tipo de usuario
+    function setupUserInterface(userType) {
+        if (userType === 'admin') {
+            // Mostrar elementos solo para admin
+            document.querySelectorAll('.admin-only').forEach(element => {
+                element.style.display = 'block';
+            });
+        } else if (userType === 'teacher') {
+            // Mostrar elementos solo para profesor
+            document.querySelectorAll('.teacher-only').forEach(element => {
+                element.style.display = 'block';
+            });
+        }
+    }
+
+    // Verificar sesión (Admin O Profesor)
     function checkUserSession() {
         // Primero verificar si es admin
         const adminSession = sessionStorage.getItem('adminSession');
         const adminUser = sessionStorage.getItem('adminUser');
         
         if (adminSession === 'true' && adminUser === 'Luiscraft') {
-            // Es admin - configurar header para admin
             updateHeaderWithAdmin(adminUser);
             return { type: 'admin', user: adminUser };
         }
@@ -338,9 +848,9 @@
         const teacherData = sessionStorage.getItem('teacherData');
         
         if (teacherSession === 'true' && teacherData) {
-            // Es profesor - configurar header para profesor
             const teacher = JSON.parse(teacherData);
             updateHeaderWithTeacher(teacher);
+            loadTeacherProfile();
             return { type: 'teacher', user: teacher };
         }
         
@@ -350,124 +860,8 @@
         return false;
     }
 
-    // Header para administrador - NUEVA FUNCIÓN
-    function updateHeaderWithAdmin(adminUser) {
-        const header = document.querySelector('.header');
-        
-        const adminInfo = document.createElement('div');
-        adminInfo.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            background: #dc2626;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        `;
-        adminInfo.innerHTML = `
-            <span>👑 ADMINISTRADOR</span>
-            <button onclick="logoutUser()" style="
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                padding: 4px 8px;
-                border-radius: 10px;
-                cursor: pointer;
-                font-size: 12px;
-            ">🚪 Salir</button>
-        `;
-        
-        header.style.position = 'relative';
-        header.appendChild(adminInfo);
-    }
-
-    // Header para profesor - FUNCIÓN ACTUALIZADA
-    function updateHeaderWithTeacher(teacher) {
-        const header = document.querySelector('.header');
-        
-        const teacherInfo = document.createElement('div');
-        teacherInfo.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        `;
-        teacherInfo.innerHTML = `
-            <span>👤 ${teacher.name}</span>
-            <button onclick="logoutUser()" style="
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                padding: 4px 8px;
-                border-radius: 10px;
-                cursor: pointer;
-                font-size: 12px;
-            ">🚪 Salir</button>
-        `;
-        
-        header.style.position = 'relative';
-        header.appendChild(teacherInfo);
-    }
-
-    // Verificar permisos de usuario (para el módulo admin)
-    function checkUserPermissions() {
-        const adminSession = sessionStorage.getItem('adminSession');
-        const adminUser = sessionStorage.getItem('adminUser');
-        
-        if (adminSession === 'true' && adminUser === 'Luiscraft') {
-            showAdminModule();
-        } else {
-            hideAdminModule();
-        }
-    }
-
-    // Mostrar módulo administrativo
-    function showAdminModule() {
-        const adminModule = document.querySelector('.admin-module');
-        if (!adminModule) {
-            createAdminModule();
-        }
-    }
-
-    // Crear módulo administrativo
-    function createAdminModule() {
-        const modulesGrid = document.querySelector('.modules-grid');
-        const adminModuleHTML = `
-            <div class="module-card admin-module" onclick="openModule('admin')">
-                <div class="module-icon">🔧</div>
-                <div class="module-title">Administración</div>
-                <div class="module-description">
-                    Panel de control para gestionar profesores, activaciones y pagos del sistema
-                </div>
-                <div class="module-status status-active">🔥 Activo</div>
-            </div>
-        `;
-        modulesGrid.insertAdjacentHTML('beforeend', adminModuleHTML);
-    }
-
-    // Ocultar módulo administrativo
-    function hideAdminModule() {
-        const adminModule = document.querySelector('.admin-module');
-        if (adminModule) {
-            adminModule.remove();
-        }
-    }
-
-    // Cargar estadísticas
-    async function loadDashboardStats() {
+    // Cargar estadísticas - Solo para admin
+    async function loadAdminStats() {
         try {
             document.getElementById('professorsCount').textContent = '⏳';
             document.getElementById('studentsCount').textContent = '⏳';
@@ -501,10 +895,39 @@
         }
     }
 
-    // Logout unificado - NUEVA FUNCIÓN
+    // Cargar estadísticas pequeñas para profesor
+    async function loadTeacherStats() {
+        try {
+            const teacherData = JSON.parse(sessionStorage.getItem('teacherData'));
+            
+            // Mostrar información del profesor
+            document.getElementById('teacherSchoolName').textContent = teacherData.school || 'No especificado';
+            
+            // Calcular tiempo activo (simulado)
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            document.getElementById('teacherSince').textContent = currentYear;
+            
+            // Cargar número de estudiantes
+            document.getElementById('teacherStudentsCount').textContent = '⏳';
+            
+            const studentsResponse = await fetch('/api/students');
+            if (studentsResponse.ok) {
+                const studentsResult = await studentsResponse.json();
+                if (studentsResult.success) {
+                    document.getElementById('teacherStudentsCount').textContent = studentsResult.data.length;
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error cargando estadísticas del profesor:', error);
+            document.getElementById('teacherStudentsCount').textContent = '0';
+        }
+    }
+
+    // Logout unificado
     function logoutUser() {
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-            // Limpiar todas las sesiones
             sessionStorage.removeItem('teacherSession');
             sessionStorage.removeItem('teacherData');
             sessionStorage.removeItem('adminSession');
@@ -522,23 +945,217 @@
                 window.location.href = 'admin.html';
             } else {
                 alert('🚫 Solo el administrador puede acceder a este módulo.\n\nUsa las credenciales especiales en el login principal.');
+                return;
             }
+        }
+        
+        const moduleRoutes = {
+            'estudiantes': 'students.html',
+            'asistencia': 'attendance.html',
+            'cotidiano': 'cotidiano.html',
+            'evaluaciones': 'evaluations.html',
+            'materias': 'subjects.html',
+            'reportes': 'reportes.html',
+            'sea': 'sea.html'
+        };
+        
+        if (moduleRoutes[moduleName]) {
+            window.location.href = moduleRoutes[moduleName];
+        } else {
+            alert(`📝 El módulo "${moduleName}" está en desarrollo.\n\n¡Próximamente estará disponible!`);
+        }
+    }
+
+    // Header para administrador
+    function updateHeaderWithAdmin(adminUser) {
+        const header = document.querySelector('.header');
+        
+        const adminInfo = document.createElement('div');
+        adminInfo.style.cssText = `
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        `;
+        adminInfo.innerHTML = `
+            <i class="fas fa-crown"></i>
+            <span>ADMINISTRADOR</span>
+            <button onclick="logoutUser()" style="
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 20px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 700;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        `;
+        
+        header.style.position = 'relative';
+        header.appendChild(adminInfo);
+    }
+
+    // Header para profesor
+    function updateHeaderWithTeacher(teacher) {
+        const header = document.querySelector('.header');
+        
+        const teacherInfo = document.createElement('div');
+        teacherInfo.style.cssText = `
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        `;
+        teacherInfo.innerHTML = `
+            <i class="fas fa-user-circle"></i>
+            <span>${teacher.name}</span>
+            <button onclick="logoutUser()" style="
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 20px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 700;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        `;
+        
+        header.style.position = 'relative';
+        header.appendChild(teacherInfo);
+    }
+
+    // ========================================
+    // FUNCIONES PARA EL PERFIL DEL PROFESOR
+    // ========================================
+
+    function loadTeacherProfile() {
+        const teacherData = sessionStorage.getItem('teacherData');
+        if (teacherData) {
+            const teacher = JSON.parse(teacherData);
+            
+            document.getElementById('profileSection').style.display = 'block';
+            
+            document.getElementById('display-name').textContent = teacher.name || 'No especificado';
+            document.getElementById('display-school').textContent = teacher.school || 'No especificado';
+            document.getElementById('display-email').textContent = teacher.email || 'No especificado';
+            document.getElementById('display-type').textContent = teacher.teacher_type || 'No especificado';
+            document.getElementById('display-cedula').textContent = teacher.cedula || 'No especificado';
+            document.getElementById('display-regional').textContent = teacher.regional || 'No especificado';
+            
+            document.getElementById('edit-name').value = teacher.name || '';
+            document.getElementById('edit-school').value = teacher.school || '';
+        }
+    }
+
+    function toggleEditMode() {
+        const displays = document.querySelectorAll('.display-value');
+        const inputs = document.querySelectorAll('.edit-input');
+        const editActions = document.getElementById('editActions');
+        const editBtn = document.getElementById('editBtn');
+        
+        const isEditing = inputs[0].style.display !== 'none';
+        
+        if (isEditing) {
+            displays.forEach(d => d.style.display = 'block');
+            inputs.forEach(i => i.style.display = 'none');
+            editActions.style.display = 'none';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
+        } else {
+            displays.forEach(d => d.style.display = 'none');
+            inputs.forEach(i => i.style.display = 'block');
+            editActions.style.display = 'block';
+            editBtn.innerHTML = '<i class="fas fa-eye"></i> Ver';
+        }
+    }
+
+    async function saveProfile() {
+        const teacherData = JSON.parse(sessionStorage.getItem('teacherData'));
+        
+        const updatedData = {
+            name: document.getElementById('edit-name').value.trim(),
+            school_name: document.getElementById('edit-school').value.trim()
+        };
+        
+        if (!updatedData.name || !updatedData.school_name) {
+            alert('❌ El nombre y la escuela son obligatorios');
             return;
         }
         
-        if (moduleName === 'estudiantes') {
-            window.location.href = 'students.html';
-        } else if (moduleName === 'asistencia') {
-            window.location.href = 'attendance.html';
-        } else if (moduleName === 'cotidiano') {
-            window.location.href = 'cotidiano.html';
-        } else if (moduleName === 'sea') {
-            window.location.href = 'sea.html';
-        } else if (moduleName === 'materias') {
-            window.location.href = 'subjects.html';
-        } else if (moduleName === 'tareas') {
-             window.location.href = 'evaluations.html';
+        if (updatedData.name.length < 3) {
+            alert('❌ El nombre debe tener al menos 3 caracteres');
+            return;
         }
+        
+        try {
+            const response = await fetch(`/api/teachers/${teacherData.id}/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                teacherData.name = updatedData.name;
+                teacherData.school = updatedData.school_name;
+                sessionStorage.setItem('teacherData', JSON.stringify(teacherData));
+                
+                loadTeacherProfile();
+                updateHeaderWithTeacher(teacherData);
+                toggleEditMode();
+                
+                // Actualizar también las estadísticas pequeñas
+                loadTeacherStats();
+                
+                alert('✅ Perfil actualizado exitosamente');
+            } else {
+                alert('❌ Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error de conexión. Intenta nuevamente.');
+        }
+    }
+
+    function cancelEdit() {
+        loadTeacherProfile();
+        toggleEditMode();
     }
     </script>
 </body>

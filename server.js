@@ -225,16 +225,19 @@ app.post('/api/teachers/login', async (req, res) => {
             console.error('⚠️ Error creando sesión activa:', sessionError);
         }
 
+        // Login del profesor 
         res.json({
             success: true,
             message: 'Login exitoso',
-            sessionToken: sessionToken, // Enviar token al frontend
+            sessionToken: sessionToken,
             teacher: {
                 id: teacher.id,
                 name: teacher.full_name,
                 email: teacher.email,
                 school: teacher.school_name,
-                teacher_type: teacher.teacher_type
+                teacher_type: teacher.teacher_type,
+                cedula: teacher.cedula,          // ✅ AGREGAR
+                regional: teacher.regional       // ✅ AGREGAR
             }
         });
         
@@ -247,7 +250,40 @@ app.post('/api/teachers/login', async (req, res) => {
     }
 });
 
-
+// NUEVO ENDPOINT: Actualizar perfil del profesor
+app.put('/api/teachers/:id/profile', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, school_name } = req.body;
+        
+        // Validar campos obligatorios
+        if (!name || !school_name) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nombre y escuela son obligatorios'
+            });
+        }
+        
+        const result = await database.updateTeacherProfile(id, {
+            full_name: name.trim(),
+            school_name: school_name.trim()
+        });
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Perfil actualizado exitosamente'
+        });
+        
+    } catch (error) {
+        console.error('Error actualizando perfil:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error actualizando perfil',
+            error: error.message
+        });
+    }
+});
 
 // ========================================
 // RUTAS API PARA PROFESORES
@@ -294,6 +330,11 @@ app.post('/api/teachers/register', async (req, res) => {
         });
     }
 });
+
+
+
+
+
 
 // Obtener todos los profesores (para admin)
 app.get('/api/teachers', async (req, res) => {
@@ -357,6 +398,43 @@ app.put('/api/teachers/:id/payment', async (req, res) => {
         });
     }
 });
+
+
+// NUEVO ENDPOINT: Actualizar perfil del profesor
+app.put('/api/teachers/:id/profile', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, school_name } = req.body;
+        
+        if (!name || !school_name) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nombre y escuela son obligatorios'
+            });
+        }
+        
+        const result = await database.updateTeacherProfile(id, {
+            full_name: name.trim(),
+            school_name: school_name.trim()
+        });
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Perfil actualizado exitosamente'
+        });
+        
+    } catch (error) {
+        console.error('Error actualizando perfil:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error actualizando perfil',
+            error: error.message
+        });
+    }
+});
+
+
 
 // ========================================
 // API PARA ESTADÍSTICAS DEL DASHBOARD
