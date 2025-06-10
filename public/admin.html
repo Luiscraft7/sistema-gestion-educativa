@@ -1643,12 +1643,35 @@
             return `Hace ${days} día${days > 1 ? 's' : ''}`;
         }
 
-        function disconnectSession(sessionId) {
+        async function disconnectSession(sessionId) {
             if (confirm('¿Desconectar esta sesión?')) {
-                sessions = sessions.filter(s => s.id !== sessionId);
-                renderSessionsTable();
-                updateStats();
-                addActivityLog('session', 'Sesión Desconectada', 'Sesión terminada por administrador');
+                try {
+                    // Buscar el token de la sesión
+                    const session = sessions.find(s => s.id === sessionId);
+                    if (session) {
+                        const response = await fetch('/api/teachers/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                sessionToken: session.session_token
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            // Actualizar la lista
+                            await loadSessions();
+                            updateStats();
+                            addActivityLog('session', 'Sesión Desconectada', `Sesión de ${session.teacher_name} terminada por administrador`);
+                        } else {
+                            alert('Error desconectando sesión');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error desconectando sesión');
+                }
             }
         }
 

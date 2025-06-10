@@ -205,7 +205,15 @@ app.post('/api/teachers/login', async (req, res) => {
         // Login exitoso - REEMPLAZAR esta sección completa
         await database.updateTeacherLastLogin(teacher.id);
 
-        // NUEVO: Crear sesión activa en base de datos
+        // NUEVO: Limpiar sesiones anteriores del mismo usuario
+        try {
+            await database.clearUserPreviousSessions(teacher.id);
+            console.log(`🧹 Sesiones anteriores limpiadas para: ${teacher.full_name}`);
+        } catch (cleanupError) {
+            console.error('⚠️ Error limpiando sesiones anteriores:', cleanupError);
+        }
+
+        // Crear nueva sesión activa en base de datos
         const sessionToken = generateSessionToken();
         const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
         const userAgent = req.get('User-Agent') || 'unknown';
@@ -215,7 +223,6 @@ app.post('/api/teachers/login', async (req, res) => {
             console.log(`✅ Sesión activa creada para profesor: ${teacher.full_name}`);
         } catch (sessionError) {
             console.error('⚠️ Error creando sesión activa:', sessionError);
-            // Continuar aunque falle la sesión (no es crítico)
         }
 
         res.json({

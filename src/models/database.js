@@ -2181,6 +2181,24 @@ async deleteActiveSession(sessionToken) {
         });
     });
 }
+
+async clearUserPreviousSessions(teacherId) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `DELETE FROM active_sessions WHERE teacher_id = ?`;
+        
+        this.db.run(query, [teacherId], function(err) {
+            if (err) {
+                console.error('❌ Error limpiando sesiones anteriores:', err);
+                reject(err);
+            } else {
+                console.log(`✅ ${this.changes} sesiones anteriores eliminadas`);
+                resolve({ changes: this.changes });
+            }
+        });
+    });
+}
     
 
     
