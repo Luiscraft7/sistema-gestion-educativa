@@ -2046,6 +2046,44 @@ async updateTeacherLastLogin(teacherId) {
         });
     }
 
+// Actualizar estado de pago de profesor
+async updateTeacherPayment(teacherId, isPaid) {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE teachers SET is_paid = ?, payment_date = ? WHERE id = ?`;
+        const paymentDate = isPaid ? new Date().toISOString() : null;
+        
+        this.db.run(sql, [isPaid ? 1 : 0, paymentDate, teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    id: teacherId,
+                    is_paid: isPaid,
+                    changes: this.changes
+                });
+            }
+        });
+    });
+}
+
+// Actualizar último login (ya existe pero asegúrate que esté)
+async updateTeacherLastLogin(teacherId) {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE teachers SET last_login = ? WHERE id = ?`;
+        
+        this.db.run(sql, [new Date().toISOString(), teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: teacherId, last_login: new Date().toISOString() });
+            }
+        });
+    });
+}
+
+
+
+    
 
     
 }

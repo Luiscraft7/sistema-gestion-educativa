@@ -1,6 +1,6 @@
 -- ========================================
 -- SISTEMA EDUCATIVO - ESQUEMA COMPLETAMENTE LIMPIO
--- Versión: 2.0 - Optimizado para Evaluaciones
+-- Versión: 2.0 - Optimizado para Evaluaciones + Admin Mejorado
 -- ========================================
 
 -- Tabla de Escuelas
@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS teachers (
     -- Control administrativo
     is_active INTEGER DEFAULT 0,
     is_paid INTEGER DEFAULT 0,
+    payment_date DATETIME,
     registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     activation_date DATETIME,
     last_login DATETIME,
@@ -364,6 +365,42 @@ CREATE INDEX IF NOT EXISTS idx_daily_evaluations_grade_subject_date ON daily_eva
 CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_evaluation ON daily_indicator_scores(daily_evaluation_id);
 CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_indicator ON daily_indicator_scores(indicator_id);
 
+-- ========================================
+-- NUEVAS TABLAS PARA FUNCIONALIDAD ADMIN
+-- ========================================
+
+-- Tabla para tracking de sesiones activas
+CREATE TABLE IF NOT EXISTS active_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL,
+    session_token TEXT UNIQUE NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+);
+
+-- Índices para sesiones
+CREATE INDEX IF NOT EXISTS idx_active_sessions_teacher ON active_sessions(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_active_sessions_token ON active_sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_active_sessions_activity ON active_sessions(last_activity);
+
+-- Tabla para log de actividad administrativa
+CREATE TABLE IF NOT EXISTS admin_activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_user TEXT NOT NULL,
+    action_type TEXT NOT NULL,
+    action_description TEXT,
+    target_teacher_id INTEGER,
+    ip_address TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (target_teacher_id) REFERENCES teachers(id)
+);
+
+-- Índices para log administrativo
+CREATE INDEX IF NOT EXISTS idx_admin_log_date ON admin_activity_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_admin_log_admin ON admin_activity_log(admin_user);
 
 -- ========================================
 -- DATOS MÍNIMOS ESENCIALES
@@ -390,3 +427,4 @@ CREATE TABLE IF NOT EXISTS admin_users (
 -- Insertar administrador único
 INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
 VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);
+

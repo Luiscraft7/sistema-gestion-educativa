@@ -3,52 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔧 Panel Administrativo - Sistema Educativo</title>
+    <title>Panel de Administración - Sistema Educativo</title>
     <style>
+        /* Variables CSS */
+        :root {
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --border-color: #e2e8f0;
+            --active-color: #22c55e;
+            --inactive-color: #f87171;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
-        
-        .admin-container {
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Container Styles */
+        .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 2rem;
         }
-        
-        .header {
+
+        /* Tabs Styles */
+        .tab-navigation {
+            display: flex;
             background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-button:hover {
+            background: #f1f5f9;
+        }
+
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .header h1 {
-            color: #333;
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+        .card-body {
+            padding: 2rem;
         }
-        
-        .header-actions {
-            display: flex;
-            gap: 15px;
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
-        
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
+
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Button Styles */
         .btn {
-            padding: 10px 20px;
+            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -56,529 +216,629 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
         }
-        
+
         .btn-primary {
-            background: #4f46e5;
+            background: var(--primary-color);
             color: white;
         }
-        
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: white;
+        }
+
         .btn-secondary {
             background: #6b7280;
             color: white;
         }
-        
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        
-        .stats-overview {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        
-        .stat-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        
-        .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .filters-section {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            align-items: end;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .filter-group label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .filter-group select,
-        .filter-group input {
-            padding: 8px 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .teachers-table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .table-header {
-            background: #f8fafc;
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-flex;
             align-items: center;
-        }
-        
-        .table-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .table-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .teachers-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .teachers-table th,
-        .teachers-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .teachers-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            color: #374151;
-            font-size: 14px;
-        }
-        
-        .teachers-table td {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .teachers-table tr:hover {
-            background: #f9fafb;
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 0.75rem;
             font-weight: 600;
-            text-align: center;
         }
-        
-        .status-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
+
         .status-active {
-            background: #d1fae5;
-            color: #065f46;
+            background: #dcfce7;
+            color: #166534;
         }
-        
+
         .status-inactive {
             background: #fee2e2;
             color: #991b1b;
         }
-        
-        .payment-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+
+        .status-paid {
+            background: #dbeafe;
+            color: #1e40af;
         }
-        
-        .payment-paid {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .payment-pending {
+
+        .status-unpaid {
             background: #fef3c7;
             color: #92400e;
         }
-        
-        .action-buttons {
+
+        /* Calendar Styles */
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .calendar-controls {
             display: flex;
-            gap: 5px;
+            flex-direction: column;
+            gap: 1rem;
         }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .month-btn {
+            background: var(--primary-color);
+            color: white;
             border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
             cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Payment Calendar Styles - Inspired by Attendance Calendar */
+        .payment-calendar-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .payment-calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: var(--primary-color);
+        }
+
+        .payment-day-header {
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            color: white;
             font-weight: 600;
-            transition: all 0.2s;
+            font-size: 0.875rem;
         }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
+
+        .payment-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
         }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
+
+        .payment-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #f1f1f1;
+            transition: all 0.2s ease;
+            position: relative;
+            background: white;
         }
-        
-        .btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-        
-        .btn-info {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-sm:hover {
+
+        .payment-day:hover {
+            background: #f8fafc;
             transform: scale(1.05);
         }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
+
+        .payment-day.today {
+            background: #3b82f6 !important;
+            color: white !important;
+            font-weight: 700;
         }
-        
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
+
+        .payment-day.payment-scheduled {
+            background: #22c55e !important;
+            color: white !important;
+            font-weight: 700;
         }
-        
+
+        .payment-day.payment-completed {
+            background: #f59e0b !important;
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .payment-day.payment-completed::after {
+            content: '💰';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
+        }
+
+        .payment-day.payment-scheduled::after {
+            content: '📅';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
+        }
+
+        .payment-day.other-month {
+            color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .payment-day.selected {
+            background: #667eea !important;
+            color: white !important;
+            font-weight: 700;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .payment-day.weekend {
+            background: #fff5f5;
+        }
+
+        .payment-day.weekend:hover {
+            background: #fed7d7;
+        }
+
+        /* Teacher Selection Styles */
+        .teacher-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.2s;
+        }
+
+        .teacher-checkbox-item:hover {
+            background: #f8fafc;
+        }
+
+        .teacher-checkbox-item:last-child {
+            border-bottom: none;
+        }
+
+        .teacher-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .teacher-info {
+            flex: 1;
+        }
+
+        .teacher-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
         .teacher-details {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 0.875rem;
+            color: #64748b;
         }
-        
+
+        .calendar-header {
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: #f8fafc;
+        }
+
+        .calendar-day.has-payment {
+            background: #dcfce7;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Payment Controls */
+        .payment-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        /* Activity Log */
+        .activity-log {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-icon {
+            font-size: 1.5rem;
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .log-details {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .log-time {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+            .container {
+                padding: 1rem;
             }
-            
-            .filters-grid {
+
+            .calendar-container {
                 grid-template-columns: 1fr;
             }
-            
-            .teachers-table {
-                font-size: 12px;
+
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
-            
-            .action-buttons {
+
+            .payment-controls {
                 flex-direction: column;
             }
+
+            .tab-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            /* Responsive para la página de pagos */
+            .payments-tab .card-body > div:first-child {
+                grid-template-columns: 1fr !important;
+            }
+
+            .mini-calendar {
+                max-width: 100%;
+            }
+
+            .teacher-checkbox-item {
+                padding: 0.5rem;
+            }
+
+            .teacher-name {
+                font-size: 0.875rem;
+            }
+
+            .teacher-details {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>🔧 Panel Administrativo</h1>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <span style="font-size: 2rem;">🔧</span>
+                <h1>Panel de Administración</h1>
+            </div>
             <div class="header-actions">
-                <button class="btn btn-secondary" onclick="refreshData()">
-                    🔄 Actualizar
-                </button>
-                <a href="dashboard.html" class="btn btn-primary">
-                    📊 Dashboard
-                </a>
+                <!-- Info del admin se agrega dinámicamente -->
             </div>
         </div>
-        
-        <!-- Stats Overview -->
-        <div class="stats-overview">
+    </div>
+
+    <!-- Container Principal -->
+    <div class="container">
+        <!-- Estadísticas Generales -->
+        <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">👥</div>
-                <div class="stat-number" id="totalTeachers">0</div>
-                <div class="stat-label">Total Registrados</div>
+                <div class="stat-value" id="total-teachers">0</div>
+                <div class="stat-label">Total Profesores</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-number" id="pendingTeachers">0</div>
-                <div class="stat-label">Pendientes</div>
+            <div class="stat-card success">
+                <div class="stat-value" id="active-sessions">0</div>
+                <div class="stat-label">Sesiones Activas</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">✅</div>
-                <div class="stat-number" id="activeTeachers">0</div>
-                <div class="stat-label">Activos</div>
+            <div class="stat-card warning">
+                <div class="stat-value" id="paid-teachers">0</div>
+                <div class="stat-label">Profesores al Día</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">💰</div>
-                <div class="stat-number" id="paidTeachers">0</div>
-                <div class="stat-label">Pagados</div>
+            <div class="stat-card danger">
+                <div class="stat-value" id="unpaid-teachers">0</div>
+                <div class="stat-label">Pendientes de Pago</div>
             </div>
         </div>
-        
-        <!-- Filters -->
-        <div class="filters-section">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>Estado</label>
-                    <select id="statusFilter" onchange="filterTeachers()">
-                        <option value="">Todos</option>
-                        <option value="0">Pendientes</option>
-                        <option value="1">Activos</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Pago</label>
-                    <select id="paymentFilter" onchange="filterTeachers()">
-                        <option value="">Todos</option>
-                        <option value="0">No Pagado</option>
-                        <option value="1">Pagado</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Buscar</label>
-                    <input type="text" id="searchFilter" placeholder="Nombre, email, escuela..." 
-                           onkeyup="filterTeachers()">
-                </div>
-                <div class="filter-group">
-                    <label>Regional</label>
-                    <select id="regionalFilter" onchange="filterTeachers()">
-                        <option value="">Todas</option>
-                    </select>
-                </div>
-            </div>
+
+        <!-- Navegación por Tabs -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('teachers')">
+                👥 Gestión Profesores
+            </button>
+            <button class="tab-button" onclick="switchTab('payments')">
+                💰 Gestión Pagos
+            </button>
+            <button class="tab-button" onclick="switchTab('sessions')">
+                🔒 Control Sesiones
+            </button>
+            <button class="tab-button" onclick="switchTab('activity')">
+                📊 Actividad
+            </button>
         </div>
-        
-        <!-- Teachers Table -->
-        <div class="teachers-table-container">
-            <div class="table-header">
-                <div class="table-title">🎓 Profesores Registrados</div>
-                <div class="table-actions">
-                    <button class="btn btn-primary" onclick="exportData()">
-                        📊 Exportar
+
+        <!-- Tab: Gestión de Profesores -->
+        <div id="teachers-tab" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h3>👥 Gestión de Profesores</h3>
+                    <button class="btn btn-primary" onclick="refreshTeachers()">
+                        🔄 Actualizar
                     </button>
                 </div>
+                <div class="card-body">
+                    <div id="teachers-table-container">
+                        <!-- Tabla se carga dinámicamente -->
+                    </div>
+                </div>
             </div>
-            
-            <div id="tableContent">
-                <div class="loading">
-                    <p>⏳ Cargando profesores...</p>
+        </div>
+
+        <!-- Tab: Gestión de Pagos -->
+        <div id="payments-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>💰 Gestión de Pagos Mensual</h3>
+                    <div class="payment-controls">
+                        <button class="btn btn-success" onclick="markSelectedAsPaid()">
+                            ✅ Marcar Seleccionados Pagados
+                        </button>
+                        <button class="btn btn-warning" onclick="markAllAsPaid()">
+                            ✅ Marcar TODOS Pagados
+                        </button>
+                        <button class="btn btn-info" onclick="generatePaymentReport()">
+                            📊 Generar Reporte
+                        </button>
+                        <button class="btn btn-secondary" onclick="configurePaymentDates()">
+                            ⚙️ Configurar Fechas
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Lista de Profesores con Checkboxes -->
+                    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem; margin-bottom: 2rem;">
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">👥 Seleccionar Profesores para Pago:</h4>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                <button class="btn btn-sm btn-primary" onclick="selectAllTeachers()">
+                                    ☑️ Seleccionar Todos
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="deselectAllTeachers()">
+                                    ⬜ Deseleccionar Todos
+                                </button>
+                                <button class="btn btn-sm btn-info" onclick="selectUnpaidOnly()">
+                                    🎯 Solo Pendientes
+                                </button>
+                            </div>
+                            <div id="teachers-payment-list" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                <!-- Lista de profesores se carga dinámicamente -->
+                            </div>
+                        </div>
+                        
+                        <!-- Calendario Interactivo Mejorado -->
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">📅 Calendario de Fechas de Pago:</h4>
+                            <div class="calendar-controls" style="margin-bottom: 1rem;">
+                                <div class="month-selector">
+                                    <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+                                    <span id="current-month" style="font-weight: 600;">Enero 2025</span>
+                                    <button class="month-btn" onclick="changeMonth(1)">▶</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Calendario Interactivo -->
+                            <div class="payment-calendar-container">
+                                <div class="payment-calendar-header">
+                                    <div class="payment-day-header">Dom</div>
+                                    <div class="payment-day-header">Lun</div>
+                                    <div class="payment-day-header">Mar</div>
+                                    <div class="payment-day-header">Mié</div>
+                                    <div class="payment-day-header">Jue</div>
+                                    <div class="payment-day-header">Vie</div>
+                                    <div class="payment-day-header">Sáb</div>
+                                </div>
+                                <div class="payment-calendar-grid" id="payment-calendar">
+                                    <!-- Calendario se genera dinámicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Leyenda del calendario -->
+                            <div style="margin-top: 1rem; font-size: 0.75rem; background: #f8fafc; padding: 1rem; border-radius: 8px;">
+                                <strong>📋 Leyenda:</strong><br>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                                    <span>🟢 <strong>Fecha de pago programada</strong></span>
+                                    <span>💰 <strong>Pago realizado</strong></span>
+                                    <span>🔵 <strong>Día actual</strong></span>
+                                    <span style="color: #64748b;">Haz clic en un día para programar fecha de pago</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Configuración de fechas -->
+                            <div style="margin-top: 1rem; background: #f1f5f9; padding: 1rem; border-radius: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <strong>⚙️ Config. Automática:</strong>
+                                    <input type="checkbox" id="auto-payment-reset" onchange="toggleAutoPaymentReset()" checked>
+                                </div>
+                                <div style="font-size: 0.875rem; color: #64748b;">
+                                    <div>Día de pago: <strong id="payment-day-config">15</strong> de cada mes</div>
+                                    <button class="btn btn-sm btn-secondary" onclick="changePaymentDay()" style="margin-top: 0.5rem;">
+                                        📅 Cambiar Día
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen de Selección -->
+                    <div id="payment-summary" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                        <strong>📊 Resumen:</strong> <span id="summary-text">No hay profesores seleccionados</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Control de Sesiones -->
+        <div id="sessions-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🔒 Control de Sesiones Activas</h3>
+                    <button class="btn btn-info" onclick="refreshSessions()">
+                        🔄 Actualizar Estado
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="sessions-table-container">
+                        <!-- Tabla de sesiones se carga dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Actividad -->
+        <div id="activity-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📊 Log de Actividad</h3>
+                    <button class="btn btn-secondary" onclick="clearActivityLog()">
+                        🗑️ Limpiar Log
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="activity-log" id="activity-log">
+                        <!-- Log de actividad se carga dinámicamente -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let allTeachers = [];
-        let filteredTeachers = [];
-
-        // Cargar datos iniciales
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTeachers();
-        });
-
-        // Cargar profesores desde la API
-        async function loadTeachers() {
-            try {
-                const response = await fetch('/api/teachers');
-                const result = await response.json();
-                
-                if (result.success) {
-                    allTeachers = result.data;
-                    filteredTeachers = [...allTeachers];
-                    updateStats();
-                    populateFilters();
-                    renderTable();
-                } else {
-                    document.getElementById('tableContent').innerHTML = 
-                        '<div class="no-data"><p>❌ Error cargando datos: ' + result.message + '</p></div>';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('tableContent').innerHTML = 
-                    '<div class="no-data"><p>❌ Error de conexión</p></div>';
-            }
-        }
-
-        // Actualizar estadísticas
-        function updateStats() {
-            const total = allTeachers.length;
-            const pending = allTeachers.filter(t => t.is_active === 0).length;
-            const active = allTeachers.filter(t => t.is_active === 1).length;
-            const paid = allTeachers.filter(t => t.is_paid === 1).length;
-            
-            document.getElementById('totalTeachers').textContent = total;
-            document.getElementById('pendingTeachers').textContent = pending;
-            document.getElementById('activeTeachers').textContent = active;
-            document.getElementById('paidTeachers').textContent = paid;
-        }
-
-        // Poblar filtros dinámicamente
-        function populateFilters() {
-            const regionalFilter = document.getElementById('regionalFilter');
-            const regionales = [...new Set(allTeachers.map(t => t.regional).filter(r => r))];
-            
-            regionalFilter.innerHTML = '<option value="">Todas</option>';
-            regionales.forEach(regional => {
-                regionalFilter.innerHTML += `<option value="${regional}">${regional}</option>`;
-            });
-        }
-
-        // Filtrar profesores
-        function filterTeachers() {
-            const statusFilter = document.getElementById('statusFilter').value;
-            const paymentFilter = document.getElementById('paymentFilter').value;
-            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
-            const regionalFilter = document.getElementById('regionalFilter').value;
-            
-            filteredTeachers = allTeachers.filter(teacher => {
-                let matches = true;
-                
-                if (statusFilter !== '' && teacher.is_active.toString() !== statusFilter) {
-                    matches = false;
-                }
-                
-                if (paymentFilter !== '' && teacher.is_paid.toString() !== paymentFilter) {
-                    matches = false;
-                }
-                
-                if (searchFilter && !teacher.full_name.toLowerCase().includes(searchFilter) && 
-                    !teacher.email.toLowerCase().includes(searchFilter) && 
-                    !teacher.school_name.toLowerCase().includes(searchFilter)) {
-                    matches = false;
-                }
-                
-                if (regionalFilter && teacher.regional !== regionalFilter) {
-                    matches = false;
-                }
-                
-                return matches;
-            });
-            
-            renderTable();
-        }
-
-        // Renderizar tabla
-        function renderTable() {
-            const tableContent = document.getElementById('tableContent');
-            
-            if (filteredTeachers.length === 0) {
-                tableContent.innerHTML = '<div class="no-data"><p>📭 No hay profesores que coincidan con los filtros</p></div>';
-                return;
-            }
-            
-            const tableHTML = `
-                <table class="teachers-table">
-                    <thead>
-                        <tr>
-                            <th>Profesor</th>
-                            <th>Cédula</th>
-                            <th>Escuela</th>
-                            <th>Tipo</th>
-                            <th>Regional</th>
-                            <th>Estado</th>
-                            <th>Pago</th>
-                            <th>Registro</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filteredTeachers.map(teacher => `
-                            <tr>
-                                <td>
-                                    <div class="teacher-details">
-                                        <strong>${teacher.full_name}</strong><br>
-                                        <small>${teacher.email}</small>
-                                    </div>
-                                </td>
-                                <td>${teacher.cedula}</td>
-                                <td class="teacher-details">${teacher.school_name}</td>
-                                <td>
-                                    ${teacher.teacher_type ? 
-                                        (teacher.teacher_type === 'especializado' ? 
-                                            `<small>${teacher.specialized_type || 'Especializado'}</small>` : 
-                                            'Maestro') : '-'}
-                                </td>
-                                <td>${teacher.regional || '-'}</td>
-                                <td>
-                                    <span class="status-badge ${teacher.is_active ? 'status-active' : 'status-pending'}">
-                                        ${teacher.is_active ? '✅ Activo' : '⏳ Pendiente'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="payment-badge ${teacher.is_paid ? 'payment-paid' : 'payment-pending'}">
-                                        ${teacher.is_paid ? '💰 Pagado' : '⏳ Pendiente'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <small>${new Date(teacher.registration_date).toLocaleDateString()}</small>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-sm ${teacher.is_active ? 'btn-danger' : 'btn-success'}" 
-                                                onclick="toggleStatus(${teacher.id}, '${teacher.is_active ? 'deactivate' : 'activate'}')">
-                                            ${teacher.is_active ? '❌' : '✅'}
-                                        </button>
-                                        <button class="btn-sm ${teacher.is_paid ? 'btn-warning' : 'btn-success'}" 
-                                                onclick="togglePayment(${teacher.id}, ${!teacher.is_paid})">
-                                            💰
-                                        </button>
-                                        <button class="btn-sm btn-info" onclick="viewDetails(${teacher.id})">
-                                            👁️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            tableContent.innerHTML = tableHTML;
-        }
+        // Variables globales
+        let currentDate = new Date();
+        let teachers = [];
+        let sessions = [];
+        let paymentData = {};
+        let paymentConfig = {
+            autoReset: true,
+            paymentDay: 15, // Día 15 de cada mes por defecto
+            scheduledDates: [], // Fechas específicas programadas
+            completedPayments: [] // Pagos completados
+        };
+        let selectedPaymentDate = null;
 
         // Verificar autenticación administrativa al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             checkAdminAuthentication();
-            loadTeachers();
+            initializeAdmin();
         });
 
         // Función para verificar autenticación
@@ -592,7 +852,6 @@
                 return false;
             }
             
-            // Mostrar usuario logueado en el header
             updateHeaderWithAdmin(adminUser);
             return true;
         }
@@ -601,30 +860,180 @@
         function updateHeaderWithAdmin(adminUser) {
             const headerActions = document.querySelector('.header-actions');
             
-            // Agregar info del admin y logout
             const adminInfo = document.createElement('div');
             adminInfo.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-right: 15px;';
             adminInfo.innerHTML = `
-                <span style="color: #4f46e5; font-weight: 600;">👤 ${adminUser}</span>
+                <span style="color: white; font-weight: 600;">👤 ${adminUser}</span>
                 <button class="btn btn-secondary" onclick="logoutAdmin()" style="padding: 8px 15px;">
                     🚪 Salir
                 </button>
             `;
             
-            headerActions.insertBefore(adminInfo, headerActions.firstChild);
+            headerActions.appendChild(adminInfo);
         }
 
-        // Función de logout
-        function logoutAdmin() {
-            if (confirm('¿Estás seguro de que quieres cerrar la sesión administrativa?')) {
-                sessionStorage.removeItem('adminSession');
-                sessionStorage.removeItem('adminUser');
-                window.location.href = 'admin-login.html';
+        // Inicializar panel administrativo
+        async function initializeAdmin() {
+            loadPaymentConfig(); // Cargar configuración de pagos
+            await loadTeachers();
+            await loadSessions();
+            updateStats();
+            updateCalendar();
+            loadActivityLog();
+            
+            // Renderizar lista de pagos si existe el contenedor
+            if (document.getElementById('teachers-payment-list')) {
+                renderTeachersPaymentList();
+            }
+            
+            // Verificar si necesita reset automático
+            checkAutoResetNeeded();
+            
+            // Actualizar cada 30 segundos
+            setInterval(() => {
+                loadSessions();
+                updateStats();
+            }, 30000);
+        }
+
+        function checkAutoResetNeeded() {
+            if (!paymentConfig.autoReset) return;
+            
+            const today = new Date();
+            const currentMonth = today.toISOString().slice(0, 7);
+            const paymentDay = paymentConfig.paymentDay;
+            
+            // Si ya pasó el día de pago y hay profesores que no han pagado
+            if (today.getDate() > paymentDay) {
+                const hasPaymentsThisMonth = paymentConfig.completedPayments.some(date => 
+                    date.startsWith(currentMonth)
+                );
+                
+                if (!hasPaymentsThisMonth && teachers.some(t => t.is_paid)) {
+                    // Sugerir reset automático
+                    setTimeout(() => {
+                        if (confirm(`🔄 RESET AUTOMÁTICO\n\nYa pasó el día ${paymentDay} del mes y algunos profesores aparecen como pagados.\n\n¿Reiniciar el estado de pagos para este mes?`)) {
+                            resetAllPaymentsForNewMonth();
+                        }
+                    }, 2000);
+                }
             }
         }
 
-        // Cambiar estado activo/inactivo
-        async function toggleStatus(teacherId, action) {
+        // ========================================
+        // GESTIÓN DE TABS
+        // ========================================
+        function switchTab(tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Mostrar tab seleccionado
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Cargar contenido específico del tab si es necesario
+            if (tabName === 'payments') {
+                setTimeout(() => {
+                    if (document.getElementById('teachers-payment-list')) {
+                        renderTeachersPaymentList();
+                    }
+                }, 100);
+            }
+        }
+
+        // ========================================
+        // GESTIÓN DE PROFESORES
+        // ========================================
+        async function loadTeachers() {
+            try {
+                const response = await fetch('/api/teachers');
+                const data = await response.json();
+                
+                if (data.success) {
+                    teachers = data.data;
+                    renderTeachersTable();
+                }
+            } catch (error) {
+                console.error('Error cargando profesores:', error);
+                addActivityLog('error', 'Error', 'Falló la carga de profesores');
+            }
+        }
+
+        function renderTeachersTable() {
+            const container = document.getElementById('teachers-table-container');
+            
+            const tableHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Profesor</th>
+                                <th>Email</th>
+                                <th>Escuela</th>
+                                <th>Estado</th>
+                                <th>Pago</th>
+                                <th>Último Acceso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${teachers.map(teacher => `
+                                <tr>
+                                    <td>
+                                        <strong>${teacher.full_name}</strong><br>
+                                        <small>ID: ${teacher.cedula}</small>
+                                    </td>
+                                    <td>${teacher.email}</td>
+                                    <td>${teacher.school_name}</td>
+                                    <td>
+                                        <span class="status-indicator ${teacher.is_active ? 'status-active' : 'status-inactive'}">
+                                            ${teacher.is_active ? '🟢 Activo' : '🔴 Inactivo'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="status-indicator ${teacher.is_paid ? 'status-paid' : 'status-unpaid'}">
+                                            ${teacher.is_paid ? '💰 Pagado' : '⏳ Pendiente'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        ${teacher.last_login ? new Date(teacher.last_login).toLocaleString() : 'Nunca'}
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn btn-sm ${teacher.is_active ? 'btn-danger' : 'btn-success'}" 
+                                                    onclick="toggleTeacherStatus(${teacher.id}, '${teacher.is_active ? 'deactivate' : 'activate'}')">
+                                                ${teacher.is_active ? '❌' : '✅'}
+                                            </button>
+                                            <button class="btn btn-sm ${teacher.is_paid ? 'btn-warning' : 'btn-success'}" 
+                                                    onclick="togglePayment(${teacher.id}, ${!teacher.is_paid})">
+                                                💰
+                                            </button>
+                                            <button class="btn btn-sm btn-info" onclick="viewTeacherDetails(${teacher.id})">
+                                                👁️
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHTML;
+            
+            // También actualizar la lista de pagos si existe
+            if (document.getElementById('teachers-payment-list')) {
+                renderTeachersPaymentList();
+            }
+        }
+
+        async function toggleTeacherStatus(teacherId, action) {
             try {
                 const response = await fetch(`/api/teachers/${teacherId}/toggle-status`, {
                     method: 'PUT',
@@ -633,101 +1042,719 @@
                     },
                     body: JSON.stringify({ action })
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    await loadTeachers(); // Recargar datos
-                    alert(`✅ ${action === 'activate' ? 'Profesor activado' : 'Profesor desactivado'} correctamente`);
-                } else {
-                    alert('❌ Error: ' + result.message);
+
+                const data = await response.json();
+                if (data.success) {
+                    await loadTeachers();
+                    updateStats();
+                    addActivityLog('status', 'Estado Cambiado', `Profesor ${action === 'activate' ? 'activado' : 'desactivado'}`);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
+                console.error('Error cambiando estado:', error);
             }
         }
 
-        // Cambiar estado de pago
         async function togglePayment(teacherId, isPaid) {
             try {
-                const response = await fetch(`/api/teachers/${teacherId}/payment`, {
+                const response = await fetch(`/api/teachers/${teacherId}/toggle-payment`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ is_paid: isPaid })
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    await loadTeachers(); // Recargar datos
-                    alert(`✅ Estado de pago ${isPaid ? 'marcado como pagado' : 'marcado como pendiente'}`);
-                } else {
-                    alert('❌ Error: ' + result.message);
+
+                const data = await response.json();
+                if (data.success) {
+                    await loadTeachers();
+                    updateStats();
+                    addActivityLog('payment', 'Pago Actualizado', `Estado de pago ${isPaid ? 'marcado' : 'desmarcado'}`);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
+                console.error('Error actualizando pago:', error);
             }
         }
 
-        // Ver detalles del profesor
-        function viewDetails(teacherId) {
-            const teacher = allTeachers.find(t => t.id === teacherId);
+        function viewTeacherDetails(teacherId) {
+            const teacher = teachers.find(t => t.id === teacherId);
             if (teacher) {
                 alert(`
-📋 DETALLES DEL PROFESOR
-
-👤 Nombre: ${teacher.full_name}
-🆔 Cédula: ${teacher.cedula}
-📧 Email: ${teacher.email}
-🏫 Escuela: ${teacher.school_name}
-📚 Tipo: ${teacher.teacher_type || 'No especificado'}
-${teacher.specialized_type ? `🎯 Especialidad: ${teacher.specialized_type}` : ''}
-🏢 Código Escuela: ${teacher.school_code || 'No especificado'}
-🔢 Código Circuito: ${teacher.circuit_code || 'No especificado'}
-🌍 Regional: ${teacher.regional || 'No especificado'}
-
-📅 Registro: ${new Date(teacher.registration_date).toLocaleString()}
-${teacher.activation_date ? `✅ Activación: ${new Date(teacher.activation_date).toLocaleString()}` : ''}
-${teacher.last_login ? `🔐 Último acceso: ${new Date(teacher.last_login).toLocaleString()}` : '🔐 Nunca ha iniciado sesión'}
+                    📋 DETALLES DEL PROFESOR
+                    
+                    Nombre: ${teacher.full_name}
+                    Cédula: ${teacher.cedula}
+                    Email: ${teacher.email}
+                    Escuela: ${teacher.school_name}
+                    Tipo: ${teacher.teacher_type}
+                    Estado: ${teacher.is_active ? 'Activo' : 'Inactivo'}
+                    Pago: ${teacher.is_paid ? 'Al día' : 'Pendiente'}
+                    Registro: ${new Date(teacher.created_at).toLocaleString()}
+                    Último acceso: ${teacher.last_login ? new Date(teacher.last_login).toLocaleString() : 'Nunca'}
                 `);
             }
         }
 
-        // Exportar datos
-        function exportData() {
-            const csvData = [
-                ['Nombre', 'Cédula', 'Email', 'Escuela', 'Tipo', 'Regional', 'Estado', 'Pago', 'Registro'],
-                ...filteredTeachers.map(teacher => [
-                    teacher.full_name,
-                    teacher.cedula,
-                    teacher.email,
-                    teacher.school_name,
-                    teacher.teacher_type || '',
-                    teacher.regional || '',
-                    teacher.is_active ? 'Activo' : 'Pendiente',
-                    teacher.is_paid ? 'Pagado' : 'Pendiente',
-                    new Date(teacher.registration_date).toLocaleDateString()
-                ])
-            ];
-            
-            const csvContent = csvData.map(row => row.join(',')).join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `profesores_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+        async function refreshTeachers() {
+            await loadTeachers();
+            addActivityLog('refresh', 'Actualización', 'Lista de profesores actualizada');
         }
 
-        // Actualizar datos
-        function refreshData() {
-            loadTeachers();
+        // ========================================
+        // GESTIÓN DE PAGOS
+        // ========================================
+        
+        function renderTeachersPaymentList() {
+            const container = document.getElementById('teachers-payment-list');
+            
+            const listHTML = teachers.map(teacher => `
+                <div class="teacher-checkbox-item">
+                    <input type="checkbox" 
+                           class="teacher-checkbox" 
+                           data-teacher-id="${teacher.id}"
+                           ${teacher.is_paid ? 'disabled' : ''}
+                           onchange="updatePaymentSummary()">
+                    <div class="teacher-info">
+                        <div class="teacher-name">${teacher.full_name}</div>
+                        <div class="teacher-details">
+                            ${teacher.school_name} • 
+                            <span class="status-indicator ${teacher.is_paid ? 'status-paid' : 'status-unpaid'}">
+                                ${teacher.is_paid ? '💰 Pagado' : '⏳ Pendiente'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = listHTML;
+            updatePaymentSummary();
         }
+
+        function selectAllTeachers() {
+            const checkboxes = document.querySelectorAll('.teacher-checkbox:not([disabled])');
+            checkboxes.forEach(cb => cb.checked = true);
+            updatePaymentSummary();
+        }
+
+        function deselectAllTeachers() {
+            const checkboxes = document.querySelectorAll('.teacher-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            updatePaymentSummary();
+        }
+
+        function selectUnpaidOnly() {
+            const checkboxes = document.querySelectorAll('.teacher-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = !cb.disabled; // Solo los no pagados (no disabled)
+            });
+            updatePaymentSummary();
+        }
+
+        function updatePaymentSummary() {
+            const selectedCheckboxes = document.querySelectorAll('.teacher-checkbox:checked');
+            const selectedCount = selectedCheckboxes.length;
+            const summaryText = document.getElementById('summary-text');
+            
+            if (selectedCount === 0) {
+                summaryText.textContent = 'No hay profesores seleccionados';
+            } else {
+                const totalAmount = selectedCount * 30; // $30 por profesor
+                summaryText.innerHTML = `
+                    <strong>${selectedCount} profesor${selectedCount > 1 ? 'es' : ''} seleccionado${selectedCount > 1 ? 's' : ''}</strong> 
+                    • Monto total: <strong>${totalAmount} USD</strong>
+                `;
+            }
+        }
+
+        async function markSelectedAsPaid() {
+            const selectedCheckboxes = document.querySelectorAll('.teacher-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('⚠️ Debes seleccionar al menos un profesor');
+                return;
+            }
+
+            const teacherIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.teacherId);
+            const confirmMessage = `¿Marcar ${teacherIds.length} profesor${teacherIds.length > 1 ? 'es' : ''} como pagado${teacherIds.length > 1 ? 's' : ''}?`;
+            
+            if (confirm(confirmMessage)) {
+                try {
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    for (const teacherId of teacherIds) {
+                        await fetch(`/api/teachers/${teacherId}/toggle-payment`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ is_paid: true })
+                        });
+                    }
+                    
+                    // Registrar en el calendario
+                    if (!paymentConfig.completedPayments.includes(today)) {
+                        paymentConfig.completedPayments.push(today);
+                        savePaymentConfig();
+                    }
+                    
+                    await loadTeachers();
+                    renderTeachersPaymentList();
+                    updateStats();
+                    updateCalendar();
+                    addActivityLog('payment', 'Pago Selectivo', `${teacherIds.length} profesores marcados como pagados`);
+                    
+                    alert(`✅ ${teacherIds.length} profesor${teacherIds.length > 1 ? 'es' : ''} marcado${teacherIds.length > 1 ? 's' : ''} como pagado${teacherIds.length > 1 ? 's' : ''}`);
+                } catch (error) {
+                    console.error('Error en pago selectivo:', error);
+                    alert('❌ Error al procesar los pagos');
+                }
+            }
+        }
+
+        async function markAllAsPaid() {
+            const unpaidTeachers = teachers.filter(t => t.is_active && !t.is_paid);
+            
+            if (unpaidTeachers.length === 0) {
+                alert('✅ Todos los profesores activos ya están marcados como pagados');
+                return;
+            }
+
+            if (confirm(`¿Marcar TODOS los ${unpaidTeachers.length} profesores pendientes como pagados?`)) {
+                try {
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    for (const teacher of unpaidTeachers) {
+                        await fetch(`/api/teachers/${teacher.id}/toggle-payment`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ is_paid: true })
+                        });
+                    }
+                    
+                    // Registrar en el calendario
+                    if (!paymentConfig.completedPayments.includes(today)) {
+                        paymentConfig.completedPayments.push(today);
+                        savePaymentConfig();
+                    }
+                    
+                    await loadTeachers();
+                    renderTeachersPaymentList();
+                    updateStats();
+                    updateCalendar();
+                    addActivityLog('payment', 'Pago Masivo', 'Todos los profesores marcados como pagados');
+                    
+                    alert(`✅ ${unpaidTeachers.length} profesores marcados como pagados`);
+                } catch (error) {
+                    console.error('Error en pago masivo:', error);
+                    alert('❌ Error al procesar el pago masivo');
+                }
+            }
+        }
+
+        function generatePaymentReport() {
+            const paid = teachers.filter(t => t.is_paid).length;
+            const unpaid = teachers.filter(t => !t.is_paid).length;
+            const total = teachers.length;
+            
+            const report = `
+            📊 REPORTE DE PAGOS - ${new Date().toLocaleDateString()}
+            
+            Total Profesores: ${total}
+            ✅ Pagados: ${paid} (${((paid/total)*100).toFixed(1)}%)
+            ⏳ Pendientes: ${unpaid} (${((unpaid/total)*100).toFixed(1)}%)
+            
+            💰 Ingresos recibidos: ${paid * 30} USD
+            ⚠️ Ingresos pendientes: ${unpaid * 30} USD
+            📈 Ingresos totales potenciales: ${total * 30} USD
+            
+            Profesores pendientes de pago:
+            ${teachers.filter(t => !t.is_paid).map(t => `- ${t.full_name} (${t.school_name})`).join('\n')}
+            `;
+            
+            alert(report);
+            addActivityLog('report', 'Reporte Generado', 'Reporte de pagos consultado');
+        }
+
+        function updateCalendar() {
+            const calendar = document.getElementById('payment-calendar');
+            const currentMonth = document.getElementById('current-month');
+            
+            if (!calendar) return;
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            currentMonth.textContent = currentDate.toLocaleDateString('es-ES', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Limpiar calendario
+            calendar.innerHTML = '';
+            
+            // Calcular primer día del mes y días en el mes
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // Días del mes anterior (para completar la primera semana)
+            const prevMonth = new Date(year, month - 1, 1);
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayElement = createPaymentDayElement(day, 'other-month');
+                calendar.appendChild(dayElement);
+            }
+            
+            // Días del mes actual
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayElement = createPaymentDayElement(day, '');
+                
+                // Marcar día actual
+                if (dateStr === todayStr) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Marcar día de pago programado
+                if (day === paymentConfig.paymentDay) {
+                    dayElement.classList.add('payment-scheduled');
+                }
+                
+                // Marcar pagos completados
+                if (paymentConfig.completedPayments.includes(dateStr)) {
+                    dayElement.classList.add('payment-completed');
+                }
+                
+                // Marcar fechas programadas específicas
+                if (paymentConfig.scheduledDates.includes(dateStr)) {
+                    dayElement.classList.add('payment-scheduled');
+                }
+                
+                // Marcar fines de semana
+                const dayOfWeek = new Date(year, month, day).getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    dayElement.classList.add('weekend');
+                }
+                
+                // Event listener para seleccionar fecha
+                dayElement.addEventListener('click', () => selectPaymentDate(dateStr, dayElement));
+                
+                calendar.appendChild(dayElement);
+            }
+            
+            // Días del mes siguiente (para completar la última semana)
+            const totalCells = calendar.children.length;
+            const remainingCells = 42 - totalCells; // 6 filas × 7 días
+            
+            for (let day = 1; day <= remainingCells && remainingCells < 14; day++) {
+                const dayElement = createPaymentDayElement(day, 'other-month');
+                calendar.appendChild(dayElement);
+            }
+            
+            updatePaymentConfigDisplay();
+        }
+
+        function createPaymentDayElement(day, extraClass) {
+            const dayElement = document.createElement('div');
+            dayElement.className = `payment-day ${extraClass}`;
+            dayElement.textContent = day;
+            dayElement.dataset.day = day;
+            return dayElement;
+        }
+
+        function selectPaymentDate(dateStr, dayElement) {
+            // Remover selección anterior
+            document.querySelectorAll('.payment-day.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Seleccionar nuevo día
+            dayElement.classList.add('selected');
+            selectedPaymentDate = dateStr;
+            
+            // Preguntar qué hacer con esta fecha
+            const options = [
+                'Programar como fecha de pago',
+                'Marcar como pago completado',
+                'Quitar programación',
+                'Cancelar'
+            ];
+            
+            const choice = prompt(`📅 Fecha seleccionada: ${new Date(dateStr).toLocaleDateString('es-ES')}\n\nElige una opción:\n1. ${options[0]}\n2. ${options[1]}\n3. ${options[2]}\n4. ${options[3]}\n\nEscribe el número (1-4):`);
+            
+            switch(choice) {
+                case '1':
+                    schedulePaymentDate(dateStr);
+                    break;
+                case '2':
+                    markPaymentCompleted(dateStr);
+                    break;
+                case '3':
+                    removePaymentDate(dateStr);
+                    break;
+                default:
+                    dayElement.classList.remove('selected');
+                    selectedPaymentDate = null;
+            }
+        }
+
+        function schedulePaymentDate(dateStr) {
+            if (!paymentConfig.scheduledDates.includes(dateStr)) {
+                paymentConfig.scheduledDates.push(dateStr);
+                savePaymentConfig();
+                updateCalendar();
+                addActivityLog('payment', 'Fecha Programada', `Fecha de pago programada: ${new Date(dateStr).toLocaleDateString('es-ES')}`);
+                alert('✅ Fecha de pago programada correctamente');
+            }
+        }
+
+        function markPaymentCompleted(dateStr) {
+            if (!paymentConfig.completedPayments.includes(dateStr)) {
+                paymentConfig.completedPayments.push(dateStr);
+                savePaymentConfig();
+                updateCalendar();
+                addActivityLog('payment', 'Pago Completado', `Pago marcado como completado: ${new Date(dateStr).toLocaleDateString('es-ES')}`);
+                alert('✅ Pago marcado como completado');
+            }
+        }
+
+        function removePaymentDate(dateStr) {
+            paymentConfig.scheduledDates = paymentConfig.scheduledDates.filter(date => date !== dateStr);
+            paymentConfig.completedPayments = paymentConfig.completedPayments.filter(date => date !== dateStr);
+            savePaymentConfig();
+            updateCalendar();
+            addActivityLog('payment', 'Fecha Removida', `Programación removida: ${new Date(dateStr).toLocaleDateString('es-ES')}`);
+            alert('✅ Programación removida');
+        }
+
+        function savePaymentConfig() {
+            localStorage.setItem('paymentConfig', JSON.stringify(paymentConfig));
+        }
+
+        function loadPaymentConfig() {
+            const saved = localStorage.getItem('paymentConfig');
+            if (saved) {
+                paymentConfig = { ...paymentConfig, ...JSON.parse(saved) };
+            }
+            updatePaymentConfigDisplay();
+        }
+
+        function updatePaymentConfigDisplay() {
+            const paymentDayConfig = document.getElementById('payment-day-config');
+            const autoPaymentReset = document.getElementById('auto-payment-reset');
+            
+            if (paymentDayConfig) {
+                paymentDayConfig.textContent = paymentConfig.paymentDay;
+            }
+            
+            if (autoPaymentReset) {
+                autoPaymentReset.checked = paymentConfig.autoReset;
+            }
+        }
+
+        function changePaymentDay() {
+            const newDay = prompt('¿Qué día del mes debe ser el pago automático?\n(Ingresa un número del 1 al 31):', paymentConfig.paymentDay);
+            
+            if (newDay && !isNaN(newDay) && newDay >= 1 && newDay <= 31) {
+                paymentConfig.paymentDay = parseInt(newDay);
+                savePaymentConfig();
+                updateCalendar();
+                addActivityLog('config', 'Día de Pago Cambiado', `Nuevo día de pago: ${newDay}`);
+                alert(`✅ Día de pago cambiado al ${newDay} de cada mes`);
+            }
+        }
+
+        function toggleAutoPaymentReset() {
+            const checkbox = document.getElementById('auto-payment-reset');
+            paymentConfig.autoReset = checkbox.checked;
+            savePaymentConfig();
+            addActivityLog('config', 'Auto-Reset Cambiado', `Auto-reset ${paymentConfig.autoReset ? 'activado' : 'desactivado'}`);
+        }
+
+        function configurePaymentDates() {
+            const config = `
+            ⚙️ CONFIGURACIÓN DE FECHAS DE PAGO
+            
+            📅 Día automático: ${paymentConfig.paymentDay} de cada mes
+            🔄 Auto-reset: ${paymentConfig.autoReset ? 'Activado' : 'Desactivado'}
+            📋 Fechas programadas: ${paymentConfig.scheduledDates.length}
+            💰 Pagos completados: ${paymentConfig.completedPayments.length}
+            
+            💡 INSTRUCCIONES:
+            - Haz clic en cualquier día del calendario para programarlo
+            - El día ${paymentConfig.paymentDay} de cada mes se marca automáticamente
+            - Los pagos se reinician automáticamente cada mes
+            
+            ¿Deseas restablecer toda la configuración?
+            `;
+            
+            if (confirm(config)) {
+                if (confirm('⚠️ ¿Estás seguro? Esto eliminará todas las fechas programadas')) {
+                    paymentConfig = {
+                        autoReset: true,
+                        paymentDay: 15,
+                        scheduledDates: [],
+                        completedPayments: []
+                    };
+                    savePaymentConfig();
+                    updateCalendar();
+                    addActivityLog('config', 'Config Restablecida', 'Configuración de pagos restablecida');
+                    alert('✅ Configuración restablecida');
+                }
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            updateCalendar();
+            
+            // Auto-reset mensual si está activado
+            if (paymentConfig.autoReset && direction === 1) {
+                autoResetMonthlyPayments();
+            }
+        }
+
+        function autoResetMonthlyPayments() {
+            const currentMonth = currentDate.toISOString().slice(0, 7); // YYYY-MM
+            const hasPaymentsThisMonth = paymentConfig.completedPayments.some(date => date.startsWith(currentMonth));
+            
+            if (!hasPaymentsThisMonth && paymentConfig.autoReset) {
+                // Reiniciar todos los profesores a pendiente al entrar a un nuevo mes
+                if (teachers.length > 0) {
+                    setTimeout(() => {
+                        if (confirm('🔄 ¿Reiniciar el estado de pagos para el nuevo mes?\n\nTodos los profesores se marcarán como pendientes.')) {
+                            resetAllPaymentsForNewMonth();
+                        }
+                    }, 1000);
+                }
+            }
+        }
+
+        async function resetAllPaymentsForNewMonth() {
+            try {
+                for (const teacher of teachers.filter(t => t.is_paid)) {
+                    await fetch(`/api/teachers/${teacher.id}/toggle-payment`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ is_paid: false })
+                    });
+                }
+                
+                await loadTeachers();
+                updateStats();
+                addActivityLog('payment', 'Reset Mensual', 'Pagos reiniciados para el nuevo mes');
+                alert('✅ Pagos reiniciados para el nuevo mes');
+            } catch (error) {
+                console.error('Error reiniciando pagos:', error);
+                alert('❌ Error al reiniciar pagos');
+            }
+        }
+
+        // ========================================
+        // GESTIÓN DE SESIONES
+        // ========================================
+        async function loadSessions() {
+            try {
+                const response = await fetch('/api/sessions/active');
+                const data = await response.json();
+                
+                if (data.success) {
+                    sessions = data.data;
+                } else {
+                    sessions = [];
+                }
+            } catch (error) {
+                console.error('Error cargando sesiones:', error);
+                sessions = [];
+            }
+            
+            renderSessionsTable();
+        }
+
+        function renderSessionsTable() {
+            const container = document.getElementById('sessions-table-container');
+            
+            if (sessions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #64748b;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                        <h3>No hay sesiones activas</h3>
+                        <p>Ningún profesor tiene sesión iniciada en este momento</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const tableHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Profesor</th>
+                                <th>Email</th>
+                                <th>IP</th>
+                                <th>Última Actividad</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sessions.map(session => `
+                                <tr>
+                                    <td><strong>${session.teacher_name}</strong></td>
+                                    <td>${session.email}</td>
+                                    <td><code>${session.ip || 'N/A'}</code></td>
+                                    <td>${getTimeAgo(new Date(session.last_activity))}</td>
+                                    <td>
+                                        <span class="status-indicator ${session.status === 'active' ? 'status-active' : 'status-inactive'}">
+                                            ${session.status === 'active' ? '🟢 Activo' : '🟡 Inactivo'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="disconnectSession(${session.id})">
+                                            🚪 Desconectar
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            
+            if (minutes < 1) return 'Ahora mismo';
+            if (minutes < 60) return `Hace ${minutes} min`;
+            
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `Hace ${hours} hora${hours > 1 ? 's' : ''}`;
+            
+            const days = Math.floor(hours / 24);
+            return `Hace ${days} día${days > 1 ? 's' : ''}`;
+        }
+
+        function disconnectSession(sessionId) {
+            if (confirm('¿Desconectar esta sesión?')) {
+                sessions = sessions.filter(s => s.id !== sessionId);
+                renderSessionsTable();
+                updateStats();
+                addActivityLog('session', 'Sesión Desconectada', 'Sesión terminada por administrador');
+            }
+        }
+
+        function refreshSessions() {
+            loadSessions();
+            addActivityLog('refresh', 'Actualización', 'Estado de sesiones actualizado');
+        }
+
+        // ========================================
+        // ESTADÍSTICAS
+        // ========================================
+        function updateStats() {
+            document.getElementById('total-teachers').textContent = teachers.length;
+            document.getElementById('active-sessions').textContent = sessions.filter(s => s.status === 'active').length;
+            document.getElementById('paid-teachers').textContent = teachers.filter(t => t.is_paid).length;
+            document.getElementById('unpaid-teachers').textContent = teachers.filter(t => !t.is_paid).length;
+        }
+
+        // ========================================
+        // LOG DE ACTIVIDAD
+        // ========================================
+        function addActivityLog(type, title, description) {
+            const log = {
+                id: Date.now(),
+                type,
+                title,
+                description,
+                timestamp: new Date()
+            };
+            
+            // Obtener logs existentes del localStorage
+            const existingLogs = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
+            existingLogs.unshift(log); // Agregar al inicio
+            
+            // Mantener solo los últimos 50 logs
+            if (existingLogs.length > 50) {
+                existingLogs.splice(50);
+            }
+            
+            localStorage.setItem('adminActivityLog', JSON.stringify(existingLogs));
+            loadActivityLog();
+        }
+
+        function loadActivityLog() {
+            const logs = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
+            const container = document.getElementById('activity-log');
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #64748b;">No hay actividad registrada</p>';
+                return;
+            }
+            
+            const logHTML = logs.map(log => {
+                const iconMap = {
+                    status: '🔄',
+                    payment: '💰',
+                    session: '🔒',
+                    refresh: '🔄',
+                    report: '📊',
+                    error: '❌'
+                };
+                
+                return `
+                    <div class="log-entry">
+                        <div class="log-icon">${iconMap[log.type] || '📝'}</div>
+                        <div class="log-content">
+                            <div class="log-title">${log.title}</div>
+                            <div class="log-details">${log.description}</div>
+                        </div>
+                        <div class="log-time">${new Date(log.timestamp).toLocaleString()}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = logHTML;
+        }
+
+        function clearActivityLog() {
+            if (confirm('¿Limpiar todo el log de actividad?')) {
+                localStorage.removeItem('adminActivityLog');
+                loadActivityLog();
+                addActivityLog('system', 'Log Limpiado', 'Historial de actividad eliminado');
+            }
+        }
+
+        // ========================================
+        // UTILIDADES
+        // ========================================
+        function logoutAdmin() {
+            if (confirm('¿Estás seguro de que quieres cerrar la sesión administrativa?')) {
+                sessionStorage.removeItem('adminSession');
+                sessionStorage.removeItem('adminUser');
+                addActivityLog('session', 'Logout Admin', 'Sesión administrativa cerrada');
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // Agregar log inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                addActivityLog('session', 'Login Admin', 'Sesión administrativa iniciada');
+            }, 1000);
+        });
     </script>
 </body>
 </html>

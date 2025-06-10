@@ -2726,6 +2726,74 @@ app.post('/api/admin/logout', (req, res) => {
 });
 
 
+// ========================================
+// NUEVAS RUTAS PARA FUNCIONALIDAD ADMIN
+// ========================================
+
+// Toggle payment status
+app.put('/api/teachers/:id/toggle-payment', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_paid } = req.body;
+        
+        const result = await database.updateTeacherPayment(id, is_paid);
+        res.json({
+            success: true,
+            data: result,
+            message: `Estado de pago ${is_paid ? 'activado' : 'desactivado'}`
+        });
+    } catch (error) {
+        console.error('Error actualizando pago:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error actualizando estado de pago',
+            error: error.message
+        });
+    }
+});
+
+// Obtener sesiones activas (simulado)
+app.get('/api/sessions', (req, res) => {
+    // En implementación real, aquí consultarías sesiones activas de la BD
+    const mockSessions = [
+        {
+            id: 1,
+            teacher_name: 'Usuario Demo',
+            email: 'demo@example.com',
+            ip: '127.0.0.1',
+            last_activity: new Date(),
+            status: 'active'
+        }
+    ];
+    
+    res.json({
+        success: true,
+        data: mockSessions
+    });
+});
+
+
+
+// Obtener sesiones activas usando la base de datos real
+app.get('/api/sessions/active', async (req, res) => {
+    try {
+        const sessions = await database.getActiveSessions();
+        res.json({
+            success: true,
+            data: sessions,
+            count: sessions.length
+        });
+    } catch (error) {
+        console.error('Error obteniendo sesiones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo sesiones activas',
+            error: error.message
+        });
+    }
+});
+
+
 // Iniciar todo
 startServer();
 
