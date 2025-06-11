@@ -548,7 +548,9 @@
                     // Login exitoso de profesor
                     sessionStorage.setItem('teacherSession', 'true');
                     sessionStorage.setItem('teacherData', JSON.stringify(teacherResult.teacher));
-                    
+                    // Guardar token de sesión para peticiones autenticadas
+                    localStorage.setItem('sessionToken', teacherResult.sessionToken);
+
                     alert(`✅ ¡Bienvenido ${teacherResult.teacher.name}!`);
                     window.location.href = 'dashboard.html';
                     
