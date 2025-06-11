@@ -14,7 +14,81 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// ========================================
+// MIDDLEWARE DE AUTENTICACIÓN
+// ========================================
 
+// Middleware para verificar sesión de profesor
+async function authenticateTeacher(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        const sessionToken = authHeader && authHeader.startsWith('Bearer ') 
+            ? authHeader.substring(7) 
+            : req.headers['x-session-token'];
+
+        if (!sessionToken) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token de sesión requerido'
+            });
+        }
+
+        // Verificar sesión en base de datos
+        const query = `
+            SELECT s.teacher_id, t.full_name, t.email, t.school_name, t.is_active
+            FROM active_sessions s
+            INNER JOIN teachers t ON s.teacher_id = t.id
+            WHERE s.session_token = ? 
+                AND datetime(s.last_activity) > datetime('now', '-24 hours')
+                AND t.is_active = 1
+        `;
+
+        database.db.get(query, [sessionToken], async (err, session) => {
+            if (err || !session) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Sesión inválida o expirada'
+                });
+            }
+
+            // Actualizar actividad de la sesión
+            await database.updateSessionActivity(sessionToken);
+
+            // Agregar info del profesor al request
+            req.teacher = {
+                id: session.teacher_id,
+                name: session.full_name,
+                email: session.email,
+                school: session.school_name
+            };
+
+            next();
+        });
+
+    } catch (error) {
+        console.error('Error en autenticación:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+}
+
+// Middleware solo para admin
+function requireAdmin(req, res, next) {
+    // Verificar si es admin (puedes ajustar esta lógica)
+    const adminEmails = ['Luiscraft']; // O usar una tabla de admins
+    
+    if (req.teacher && adminEmails.includes(req.teacher.email)) {
+        req.isAdmin = true;
+        next();
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'Acceso requiere privilegios de administrador'
+        });
+    }
+}
 
 // Función para generar tokens únicos de sesión
 function generateSessionToken() {
@@ -59,13 +133,24 @@ app.get('/', (req, res) => {
 // RUTAS API PARA ESTUDIANTES
 // ========================================
 
+// ========================================
+// REEMPLAZAR ESTE ENDPOINT COMPLETO
+// ========================================
+
 /// Obtener todos los estudiantes con filtros opcionales
-app.get('/api/students', async (req, res) => {
+app.get('/api/students', authenticateTeacher, async (req, res) => {
     try {
         const { year, period_type, period_number } = req.query;
         let academicPeriodId = null;
+        const teacherId = req.teacher.id; // ✅ OBTENER DEL TOKEN
         
-        console.log('📚 GET /api/students:', { year, period_type, period_number });
+        console.log('📚 GET /api/students:', { 
+            teacher: req.teacher.name, 
+            teacherId,
+            year, 
+            period_type, 
+            period_number 
+        });
         
         // CORRECCIÓN: Manejo mejorado de períodos académicos
         if (year && period_type && period_number) {
@@ -118,15 +203,20 @@ app.get('/api/students', async (req, res) => {
             }
         }
         
-        // Obtener estudiantes
-        const students = await database.getAllStudents(academicPeriodId);
+        // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
+        const students = await database.getAllStudents(academicPeriodId, teacherId);
         
-        console.log(`✅ Respuesta: ${students.length} estudiantes`);
+        console.log(`✅ Estudiantes del profesor ${req.teacher.name}: ${students.length}`);
         
         res.json({
             success: true,
             data: students,
             message: `${students.length} estudiantes encontrados`,
+            teacher_info: {
+                id: req.teacher.id,
+                name: req.teacher.name,
+                school: req.teacher.school
+            },
             filter_applied: !!(year && period_type && period_number),
             period_info: academicPeriodId ? {
                 year: parseInt(year),
@@ -145,7 +235,6 @@ app.get('/api/students', async (req, res) => {
         });
     }
 });
-
 
 // Copiar estudiantes entre períodos (para uso inicial)
 app.post('/api/students/copy-period', async (req, res) => {
@@ -197,9 +286,15 @@ app.get('/api/students/:id', async (req, res) => {
     }
 });
 
+// ========================================
+// REEMPLAZAR ESTE ENDPOINT COMPLETO
+// ========================================
+
 // Agregar nuevo estudiante
-app.post('/api/students', async (req, res) => {
+app.post('/api/students', authenticateTeacher, async (req, res) => {
     try {
+        const teacherId = req.teacher.id; // ✅ OBTENER DEL TOKEN
+        
         // Generar ID automático si no viene especificado
         if (!req.body.student_id) {
             req.body.student_id = await database.getNextStudentId();
@@ -229,16 +324,23 @@ app.post('/api/students', async (req, res) => {
         }
 
         console.log('👤 POST /api/students:', {
-            name: req.body.first_name + ' ' + req.body.first_surname,
+            teacher: req.teacher.name,
+            student: req.body.first_name + ' ' + req.body.first_surname,
             academic_period_id: req.body.academic_period_id,
             grade_level: req.body.grade_level
         });
         
-        const result = await database.addStudent(req.body);
+        // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
+        const result = await database.addStudent(req.body, teacherId);
+        
         res.json({
             success: true,
             data: result,
-            message: 'Estudiante agregado exitosamente'
+            message: 'Estudiante agregado exitosamente',
+            teacher_info: {
+                name: req.teacher.name,
+                school: req.teacher.school
+            }
         });
     } catch (error) {
         console.error('❌ Error agregando estudiante:', error);
@@ -260,14 +362,39 @@ app.post('/api/students', async (req, res) => {
     }
 });
 
+// ========================================
+// REEMPLAZAR ESTE ENDPOINT COMPLETO
+// ========================================
+
 // Actualizar estudiante
-app.put('/api/students/:id', async (req, res) => {
+app.put('/api/students/:id', authenticateTeacher, async (req, res) => {
     try {
-        const result = await database.updateStudent(req.params.id, req.body);
+        const teacherId = req.teacher.id; // ✅ OBTENER DEL TOKEN
+        
+        console.log('✏️ PUT /api/students:', {
+            studentId: req.params.id,
+            teacher: req.teacher.name,
+            teacherId
+        });
+        
+        // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
+        const result = await database.updateStudent(req.params.id, req.body, teacherId);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Estudiante no encontrado o no pertenece a este profesor'
+            });
+        }
+        
         res.json({
             success: true,
             data: result,
-            message: 'Estudiante actualizado correctamente'
+            message: 'Estudiante actualizado correctamente',
+            teacher_info: {
+                name: req.teacher.name,
+                school: req.teacher.school
+            }
         });
     } catch (error) {
         console.error('Error actualizando estudiante:', error);
@@ -279,14 +406,37 @@ app.put('/api/students/:id', async (req, res) => {
     }
 });
 
+
+
 // Eliminar estudiante
-app.delete('/api/students/:id', async (req, res) => {
+app.delete('/api/students/:id', authenticateTeacher, async (req, res) => {
     try {
-        const result = await database.deleteStudent(req.params.id);
+        const teacherId = req.teacher.id; // ✅ OBTENER DEL TOKEN
+        
+        console.log('🗑️ DELETE /api/students:', {
+            studentId: req.params.id,
+            teacher: req.teacher.name,
+            teacherId
+        });
+        
+        // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
+        const result = await database.deleteStudent(req.params.id, teacherId);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Estudiante no encontrado o no pertenece a este profesor'
+            });
+        }
+        
         res.json({
             success: true,
             data: result,
-            message: 'Estudiante eliminado correctamente'
+            message: 'Estudiante eliminado correctamente',
+            teacher_info: {
+                name: req.teacher.name,
+                school: req.teacher.school
+            }
         });
     } catch (error) {
         console.error('Error eliminando estudiante:', error);
@@ -3477,21 +3627,19 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
 });
 
 
-// API para obtener datos del profesor logueado (simulado por ahora)
-app.get('/api/teachers/current', async (req, res) => {
+// Obtener información del profesor logueado (VERSIÓN REAL CON AUTENTICACIÓN)
+app.get('/api/teachers/current', authenticateTeacher, async (req, res) => {
     try {
-        // Por ahora simulamos un profesor logueado
-        const mockTeacher = {
-            id: 1,
-            full_name: 'Profesor Demo',
-            school_name: 'Escuela Las Flores',
-            email: 'profesor@demo.com',
-            cedula: '123456789'
-        };
-        
+        // ✅ DATOS REALES del profesor autenticado (no mock)
         res.json({
             success: true,
-            data: mockTeacher
+            data: {
+                id: req.teacher.id,           // ID real del profesor logueado
+                full_name: req.teacher.name,  // Nombre real del profesor logueado
+                school_name: req.teacher.school, // Escuela real del profesor logueado
+                email: req.teacher.email,     // Email real del profesor logueado
+                cedula: req.teacher.cedula || 'No disponible' // Cédula si está disponible
+            }
         });
     } catch (error) {
         console.error('Error obteniendo profesor actual:', error);
@@ -3502,7 +3650,6 @@ app.get('/api/teachers/current', async (req, res) => {
         });
     }
 });
-
 
 // Iniciar todo
 startServer();

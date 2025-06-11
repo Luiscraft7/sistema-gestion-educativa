@@ -1027,8 +1027,7 @@
         // FUNCIONES DE CARGA DE DATOS
         // ========================================
 
-
-       async function loadStudents() {
+        async function loadStudents() {
             try {
                 console.log('📚 Cargando estudiantes...');
                 document.getElementById('loadingState').style.display = 'block';
@@ -1056,7 +1055,10 @@
                 const url = `/api/students?${params.toString()}`;
                 console.log('🔗 Consultando:', url);
 
-                const response = await fetch(url);
+                // ✅ USAR authenticatedFetch EN LUGAR DE fetch
+                const response = await authenticatedFetch(url);
+                if (!response) return; // Si falla la autenticación, se redirige automáticamente
+                
                 const result = await response.json();
 
                 if (result.success) {
@@ -1065,6 +1067,7 @@
                     
                     console.log('✅ Estudiantes cargados:', {
                         total: students.length,
+                        teacher_info: result.teacher_info,
                         period: result.period_info,
                         filter_applied: result.filter_applied
                     });
@@ -1075,6 +1078,11 @@
                         updateFilters();
                     }
                     renderStudentsTable();
+                    
+                    // Mostrar info del profesor si está disponible
+                    if (result.teacher_info) {
+                        updateTeacherInfo(result.teacher_info);
+                    }
                     
                     // CORRECCIÓN: Mejor mensaje cuando no hay estudiantes
                     if (students.length === 0) {
@@ -1368,6 +1376,10 @@
             document.getElementById('studentModal').classList.add('show');
         }
 
+        // ========================================
+        // REEMPLAZAR ESTA FUNCIÓN COMPLETA
+        // ========================================
+
         async function saveStudent(event) {
             event.preventDefault();
             
@@ -1380,7 +1392,9 @@
             
             // Buscar ID del período académico actual
             try {
-                const periodResponse = await fetch(`/api/academic-periods?year=${currentPeriod.year}&period_type=${currentPeriod.periodType}&period_number=${currentPeriod.periodNumber}`);
+                const periodResponse = await authenticatedFetch(`/api/academic-periods?year=${currentPeriod.year}&period_type=${currentPeriod.periodType}&period_number=${currentPeriod.periodNumber}`);
+                if (!periodResponse) return;
+                
                 const periodResult = await periodResponse.json();
                 
                 if (periodResult.success && periodResult.data.length > 0) {
@@ -1405,14 +1419,13 @@
                     grade_level: studentData.grade_level
                 });
 
-                const response = await fetch(url, {
+                // ✅ USAR authenticatedFetch
+                const response = await authenticatedFetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(studentData)
                 });
 
+                if (!response) return;
                 const result = await response.json();
 
                 if (result.success) {
@@ -1429,6 +1442,10 @@
             }
         }
 
+        // ========================================
+        // REEMPLAZAR ESTA FUNCIÓN COMPLETA
+        // ========================================
+
         async function deleteStudent(id) {
             const student = students.find(s => s.id === id);
             if (!student) return;
@@ -1437,7 +1454,12 @@
             if (!confirm(`¿Eliminar a ${fullName}?`)) return;
 
             try {
-                const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+                // ✅ USAR authenticatedFetch
+                const response = await authenticatedFetch(`/api/students/${id}`, { 
+                    method: 'DELETE' 
+                });
+                
+                if (!response) return;
                 const result = await response.json();
 
                 if (result.success) {
@@ -1452,7 +1474,6 @@
                 showMessage('error', 'Error de conexión');
             }
         }
-
         function closeModal() {
             document.getElementById('studentModal').classList.remove('show');
             editingStudentId = null;
@@ -1641,7 +1662,8 @@
 
             try {
                 // Obtener todos los estudiantes
-                const response = await fetch('/api/students');
+                const response = await authenticatedFetch('/api/students');
+                if (!response) return;
                 const result = await response.json();
 
                 if (!result.success) {
@@ -1711,9 +1733,10 @@
 
                 for (const student of studentsToDelete) {
                     try {
-                        const deleteResponse = await fetch(`/api/students/${student.id}`, {
+                        const deleteResponse = await authenticatedFetch(`/api/students/${student.id}`, {
                             method: 'DELETE'
                         });
+                        if (!deleteResponse) continue;
 
                         const deleteResult = await deleteResponse.json();
                         if (deleteResult.success) {
@@ -1826,7 +1849,7 @@
         // FUNCIONES MASIVAS CON INTERFAZ TIPO EXCEL
         // ========================================
 
-        async function deleteSelectedStudents() {
+       async function deleteSelectedStudents() {
             if (selectedStudents.size === 0) {
                 showMessage('error', 'No hay estudiantes seleccionados');
                 return;
@@ -1840,7 +1863,12 @@
 
                 for (const studentId of selectedStudents) {
                     try {
-                        const response = await fetch(`/api/students/${studentId}`, { method: 'DELETE' });
+                        // ✅ USAR authenticatedFetch
+                        const response = await authenticatedFetch(`/api/students/${studentId}`, { 
+                            method: 'DELETE' 
+                        });
+                        
+                        if (!response) continue;
                         const result = await response.json();
                         
                         if (result.success) {
@@ -1866,7 +1894,6 @@
                 showMessage('error', 'Error en eliminación masiva');
             }
         }
-
         function openBulkAddModal() {
             document.getElementById('bulkAddModal').classList.add('show');
             document.getElementById('bulkGrade').value = '';
@@ -2120,7 +2147,8 @@
             
             // Obtener estudiantes existentes
             try {
-                const response = await fetch('/api/students');
+                const response = await authenticatedFetch('/api/students');
+                if (!response) return;
                 const result = await response.json();
                 
                 if (!result.success) {
@@ -2338,7 +2366,7 @@
                     try {
                         console.log(`Guardando estudiante ${i + 1}:`, studentData);
                         
-                        const response = await fetch('/api/students', {
+                        const response = await authenticatedFetch('/api/students', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(studentData)
@@ -2651,6 +2679,76 @@ window.addEventListener('reloadPeriodData', function(event) {
 
 console.log('📚 Event listeners de período académico configurados en students.html');
 
+
+        // Al hacer login, guardar el token
+        function handleLoginSuccess(response) {
+            localStorage.setItem('sessionToken', response.sessionToken);
+            localStorage.setItem('teacherInfo', JSON.stringify(response.teacher));
+            // Redirigir a students.html
+        }
+
+        // Función helper para hacer peticiones autenticadas
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('sessionToken');
+            
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...options.headers
+                }
+            };
+            
+            try {
+                const response = await fetch(url, mergedOptions);
+                
+                if (response.status === 401) {
+                    localStorage.removeItem('sessionToken');
+                    localStorage.removeItem('teacherInfo');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                return response;
+            } catch (error) {
+                console.error('Error en petición autenticada:', error);
+                throw error;
+            }
+        }
+
+        
+
+        // Mostrar info del profesor en la interfaz
+        function updateTeacherInfo(teacherInfo) {
+            console.log('👤 Info del profesor:', teacherInfo);
+            
+            // Actualizar indicador de período si existe
+            if (window.simplePeriodIndicator && teacherInfo) {
+                // Guardar datos del profesor para el indicador
+                sessionStorage.setItem('teacherData', JSON.stringify(teacherInfo));
+                window.simplePeriodIndicator.updateDisplay();
+            }
+            
+            // Aquí puedes agregar más lógica para mostrar datos del profesor en la UI
+            // Por ejemplo, actualizar un elemento en el header
+            const teacherDisplay = document.getElementById('current-teacher');
+            if (teacherDisplay && teacherInfo) {
+                teacherDisplay.textContent = `${teacherInfo.name} - ${teacherInfo.school}`;
+            }
+        }
 
     </script>
 </body>

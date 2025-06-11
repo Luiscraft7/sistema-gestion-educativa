@@ -221,40 +221,79 @@ async addStudent(studentData, teacherId) {
     });
 }
 
-    async updateStudent(id, studentData) {
+   async updateStudent(id, studentData, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const query = `
-                UPDATE students SET 
-                    academic_period_id = ?, cedula = ?, first_surname = ?, second_surname = ?, first_name = ?,
-                    student_id = ?, email = ?, phone = ?, grade_level = ?, subject_area = ?,
-                    section = ?, birth_date = ?, address = ?, parent_name = ?,
-                    parent_phone = ?, parent_email = ?, notes = ?, status = ?
-                WHERE id = ?
-            `;
+            let query, values;
             
-            const values = [
-                studentData.academic_period_id || 1, // AGREGAR ESTE CAMPO
-                studentData.cedula,
-                studentData.first_surname,
-                studentData.second_surname,
-                studentData.first_name,
-                studentData.student_id,
-                studentData.email,
-                studentData.phone,
-                studentData.grade_level,
-                studentData.subject_area,
-                studentData.section,
-                studentData.birth_date,
-                studentData.address,
-                studentData.parent_name,
-                studentData.parent_phone,
-                studentData.parent_email,
-                studentData.notes,
-                studentData.status,
-                id
-            ];
+            if (teacherId) {
+                // Verificar que el estudiante pertenezca al profesor
+                query = `
+                    UPDATE students SET 
+                        academic_period_id = ?, cedula = ?, first_surname = ?, second_surname = ?, first_name = ?,
+                        student_id = ?, email = ?, phone = ?, grade_level = ?, subject_area = ?,
+                        section = ?, birth_date = ?, address = ?, parent_name = ?,
+                        parent_phone = ?, parent_email = ?, notes = ?, status = ?
+                    WHERE id = ? AND teacher_id = ?
+                `;
+                
+                values = [
+                    studentData.academic_period_id || 1,
+                    studentData.cedula,
+                    studentData.first_surname,
+                    studentData.second_surname,
+                    studentData.first_name,
+                    studentData.student_id,
+                    studentData.email,
+                    studentData.phone,
+                    studentData.grade_level,
+                    studentData.subject_area,
+                    studentData.section,
+                    studentData.birth_date,
+                    studentData.address,
+                    studentData.parent_name,
+                    studentData.parent_phone,
+                    studentData.parent_email,
+                    studentData.notes,
+                    studentData.status,
+                    id,
+                    teacherId // ✅ NUEVO: Verificar propiedad
+                ];
+            } else {
+                // Modo admin - puede actualizar cualquier estudiante
+                query = `
+                    UPDATE students SET 
+                        academic_period_id = ?, teacher_id = ?, cedula = ?, first_surname = ?, second_surname = ?, first_name = ?,
+                        student_id = ?, email = ?, phone = ?, grade_level = ?, subject_area = ?,
+                        section = ?, birth_date = ?, address = ?, parent_name = ?,
+                        parent_phone = ?, parent_email = ?, notes = ?, status = ?
+                    WHERE id = ?
+                `;
+                
+                values = [
+                    studentData.academic_period_id || 1,
+                    studentData.teacher_id,
+                    studentData.cedula,
+                    studentData.first_surname,
+                    studentData.second_surname,
+                    studentData.first_name,
+                    studentData.student_id,
+                    studentData.email,
+                    studentData.phone,
+                    studentData.grade_level,
+                    studentData.subject_area,
+                    studentData.section,
+                    studentData.birth_date,
+                    studentData.address,
+                    studentData.parent_name,
+                    studentData.parent_phone,
+                    studentData.parent_email,
+                    studentData.notes,
+                    studentData.status,
+                    id
+                ];
+            }
             
             this.db.run(query, values, function(err) {
                 if (err) {
@@ -302,7 +341,31 @@ async addStudent(studentData, teacherId) {
             });
         });
     }
-
+async deleteStudent(id, teacherId = null) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        let query, params;
+        
+        if (teacherId) {
+            // Solo puede eliminar sus propios estudiantes
+            query = 'UPDATE students SET status = ? WHERE id = ? AND teacher_id = ?';
+            params = ['deleted', id, teacherId];
+        } else {
+            // Modo admin - puede eliminar cualquier estudiante
+            query = 'UPDATE students SET status = ? WHERE id = ?';
+            params = ['deleted', id];
+        }
+        
+        this.db.run(query, params, function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: id, changes: this.changes });
+            }
+        });
+    });
+}
     // Función para limpiar datos relacionados cuando se cambia de período
     async cleanPeriodData(academicPeriodId) {
         this.ensureConnection();
@@ -2519,66 +2582,8 @@ async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
 
     
 
-// ========================================
-// ✅ AGREGAR ESTAS FUNCIONES AL FINAL DE TU database.js
-// ========================================
 
-// Obtener teacher_id desde sessionToken
-async getTeacherIdFromSession(sessionToken) {
-    this.ensureConnection();
-    
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT teacher_id FROM active_sessions 
-            WHERE session_token = ? AND last_activity > datetime('now', '-24 hours')
-        `;
-        
-        this.db.get(query, [sessionToken], (err, row) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(row ? row.teacher_id : null);
-            }
-        });
-    });
-}
 
-// Crear sesión activa para profesor
-async createActiveSession(teacherId, sessionToken, ipAddress, userAgent) {
-    this.ensureConnection();
-    
-    return new Promise((resolve, reject) => {
-        const query = `
-            INSERT INTO active_sessions (teacher_id, session_token, ip_address, user_agent)
-            VALUES (?, ?, ?, ?)
-        `;
-        
-        this.db.run(query, [teacherId, sessionToken, ipAddress, userAgent], function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({ id: this.lastID, teacher_id: teacherId });
-            }
-        });
-    });
-}
-
-// Limpiar sesiones anteriores del profesor
-async clearUserPreviousSessions(teacherId) {
-    this.ensureConnection();
-    
-    return new Promise((resolve, reject) => {
-        const query = 'DELETE FROM active_sessions WHERE teacher_id = ?';
-        
-        this.db.run(query, [teacherId], function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({ deletedSessions: this.changes });
-            }
-        });
-    });
-}
 
 
     
