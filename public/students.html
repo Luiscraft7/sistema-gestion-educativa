@@ -1157,7 +1157,7 @@
 
         async function loadGrades() {
             try {
-                const response = await fetch('/api/grades');
+                const response = await authenticatedFetch('/api/grades');
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1535,7 +1535,7 @@
 
         async function loadGradesForManagement() {
             try {
-                const response = await fetch('/api/grades');
+                const response = await authenticatedFetch('/api/grades');
                 const result = await response.json();
                 
                 const container = document.getElementById('gradesListManagement');
@@ -1576,7 +1576,7 @@
             if (!gradeName) return;
             
             try {
-                const response = await fetch('/api/grades', {
+                const response = await authenticatedFetch('/api/grades', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: gradeName })
@@ -1602,7 +1602,7 @@
             if (!confirm(`¿Eliminar el grado "${gradeName}"?`)) return;
             
             try {
-                const response = await fetch(`/api/grades/${gradeId}`, { method: 'DELETE' });
+                const response = await authenticatedFetch(`/api/grades/${gradeId}`, { method: 'DELETE' });
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1794,7 +1794,7 @@
             saveBtn.textContent = 'Creando...';
 
             try {
-                const response = await fetch('/api/grades', {
+                const response = await authenticatedFetch('/api/grades', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

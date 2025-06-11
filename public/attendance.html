@@ -1064,6 +1064,43 @@
         let lessonConfig = { lessonsPerWeek: 5, totalWeeks: 40, totalLessons: 200 };
         let debugMode = false;
 
+        // Helper para peticiones autenticadas
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('sessionToken');
+
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+
+            const response = await fetch(url, mergedOptions);
+
+            if (response.status === 401) {
+                localStorage.removeItem('sessionToken');
+                localStorage.removeItem('teacherInfo');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            return response;
+        }
+
         // ========================================
         // INICIALIZACIÓN
         // ========================================
@@ -1263,7 +1300,7 @@
                 debugLog('📋 Cargando filtros...');
                 
                 // Cargar grados
-                const gradesResponse = await fetch('/api/grades');
+                const gradesResponse = await authenticatedFetch('/api/grades');
                 const gradesResult = await gradesResponse.json();
                 
                 const gradeFilter = document.getElementById('gradeFilter');
