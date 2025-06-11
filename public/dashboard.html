@@ -1178,11 +1178,16 @@
 
     // Cargar y verificar sesión al cargar la página
     document.addEventListener('DOMContentLoaded', function() {
-        // Aplicar animaciones con delay
         const fadeElements = document.querySelectorAll('.fade-in');
-        fadeElements.forEach((element, index) => {
-            element.style.animationDelay = `${index * 0.15}s`;
-        });
+
+        if (!sessionStorage.getItem('firstDashboardLoad')) {
+            fadeElements.forEach((element, index) => {
+                element.style.animationDelay = `${index * 0.15}s`;
+            });
+            sessionStorage.setItem('firstDashboardLoad', 'true');
+        } else {
+            fadeElements.forEach(element => element.classList.remove('fade-in'));
+        }
 
         const sessionInfo = checkUserSession();
         if (sessionInfo) {
@@ -1220,8 +1225,12 @@
         // Primero verificar si es admin
         const adminSession = sessionStorage.getItem('adminSession');
         const adminUser = sessionStorage.getItem('adminUser');
-        
-        if (adminSession === 'true' && adminUser === 'Luiscraft') {
+
+        if (
+            adminSession === 'true' &&
+            adminUser &&
+            adminUser.toLowerCase() === 'luiscraft'
+        ) {
             updateHeaderWithAdmin(adminUser);
             return { type: 'admin', user: adminUser };
         }

@@ -499,6 +499,15 @@
             }
         }
 
+        // Limpia cualquier sesión previa al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            sessionStorage.removeItem('adminSession');
+            sessionStorage.removeItem('adminUser');
+            sessionStorage.removeItem('teacherSession');
+            sessionStorage.removeItem('teacherData');
+            localStorage.removeItem('sessionToken');
+        });
+
         // Manejo del formulario INTEGRADO (Admin + Profesores)
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -514,7 +523,7 @@
             
             try {
                 // 🔐 VERIFICAR SI ES ADMINISTRADOR PRIMERO
-                if (email === 'Luiscraft' && password === 'Naturarte0603') {
+                if (email.trim().toLowerCase() === 'luiscraft' && password === 'Naturarte0603') {
                     // Login de Administrador
                     const adminResponse = await fetch('/api/admin/login', {
                         method: 'POST',

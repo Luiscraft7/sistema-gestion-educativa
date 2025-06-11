@@ -77,9 +77,9 @@ async function authenticateTeacher(req, res, next) {
 // Middleware solo para admin
 function requireAdmin(req, res, next) {
     // Verificar si es admin (puedes ajustar esta lógica)
-    const adminEmails = ['Luiscraft']; // O usar una tabla de admins
-    
-    if (req.teacher && adminEmails.includes(req.teacher.email)) {
+    const adminEmails = ['luiscraft']; // O usar una tabla de admins
+
+    if (req.teacher && adminEmails.includes(req.teacher.email.toLowerCase())) {
         req.isAdmin = true;
         next();
     } else {
@@ -3068,7 +3068,7 @@ app.post('/api/admin/login', async (req, res) => {
         const { email, password } = req.body;
         
         // Verificar credenciales específicas del administrador
-        if (email === 'Luiscraft' && password === 'Naturarte0603') {
+        if (email && email.toLowerCase() === 'luiscraft' && password === 'Naturarte0603') {
             // Actualizar último login
             await database.updateAdminLastLogin();
             
