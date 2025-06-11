@@ -221,21 +221,68 @@ class Database {
         });
     }
 
-    async deleteStudent(id) {
+    // Eliminar estudiantes por período académico
+    async deleteStudentsByPeriod(academicPeriodId) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const query = 'UPDATE students SET status = ? WHERE id = ?';
+            const query = 'DELETE FROM students WHERE academic_period_id = ?';
             
-            this.db.run(query, ['inactive', id], function(err) {
+            this.db.run(query, [academicPeriodId], function(err) {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve({ id: id, changes: this.changes });
+                    resolve({
+                        deletedCount: this.changes,
+                        message: `${this.changes} estudiantes eliminados del período ${academicPeriodId}`
+                    });
                 }
             });
         });
     }
+
+    // Función para limpiar datos relacionados cuando se cambia de período
+    async cleanPeriodData(academicPeriodId) {
+        this.ensureConnection();
+        
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Eliminar asistencias del período
+                await new Promise((res, rej) => {
+                    this.db.run('DELETE FROM attendance WHERE academic_period_id = ?', [academicPeriodId], (err) => {
+                        if (err) rej(err);
+                        else res();
+                    });
+                });
+                
+                // Eliminar evaluaciones del período
+                await new Promise((res, rej) => {
+                    this.db.run('DELETE FROM assignment_grades WHERE academic_period_id = ?', [academicPeriodId], (err) => {
+                        if (err) rej(err);
+                        else res();
+                    });
+                });
+                
+                // Eliminar configuraciones de lecciones del período
+                await new Promise((res, rej) => {
+                    this.db.run('DELETE FROM lesson_config WHERE academic_period_id = ?', [academicPeriodId], (err) => {
+                        if (err) rej(err);
+                        else res();
+                    });
+                });
+                
+                resolve({
+                    success: true,
+                    message: 'Datos del período limpiados correctamente'
+                });
+                
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+
 
     async getNextStudentId() {
         this.ensureConnection();

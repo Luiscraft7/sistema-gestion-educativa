@@ -316,6 +316,32 @@
             width: 90%;
             text-align: center;
             animation: fadeInScale 0.3s ease;
+            position: relative;
+        }
+
+        /* Botón de cerrar (X) */
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            background: #f0f0f0;
+            text-decoration: none;
         }
 
         .modal-icon {
@@ -344,6 +370,9 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .modal-btn:hover {
@@ -360,6 +389,26 @@
                 opacity: 1;
                 transform: scale(1);
             }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            margin-left: 0.5rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff33;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Responsive */
@@ -414,26 +463,6 @@
                 padding: 2rem;
                 margin: 1rem;
             }
-        }
-
-        /* Loading animation */
-        .loading {
-            display: none;
-            margin-left: 0.5rem;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #ffffff33;
-            border-top: 2px solid #ffffff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -591,6 +620,7 @@
     <!-- Success Modal -->
     <div class="modal" id="successModal">
         <div class="modal-content">
+            <span class="close" onclick="closeSuccessModal()">&times;</span>
             <div class="modal-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
@@ -625,65 +655,118 @@
             }
         }
 
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Validar campos obligatorios
-    const requiredFields = ['full_name', 'cedula', 'school_name', 'email', 'password'];
-    let isValid = true;
-    
-    requiredFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (!field.value.trim()) {
-            field.style.borderColor = '#e53e3e';
-            isValid = false;
-        } else {
-            field.style.borderColor = '#e2e8f0';
+        // Función para ir al login
+        function goToLogin() {
+            window.location.href = 'login.html';
         }
-    });
 
-    if (!isValid) {
-        alert('Por favor completa todos los campos obligatorios.');
-        return;
-    }
+        // Función para cerrar el modal
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
 
-    // Recopilar datos del formulario
-    const formData = {
-        full_name: document.getElementById('full_name').value,
-        cedula: document.getElementById('cedula').value,
-        school_name: document.getElementById('school_name').value,
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-        teacher_type: document.getElementById('teacher_type').value,
-        specialized_type: document.getElementById('specialized_type').value,
-        school_code: document.getElementById('school_code').value,
-        circuit_code: document.getElementById('circuit_code').value,
-        regional: document.getElementById('regional').value
-    };
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('successModal');
+            if (event.target === modal) {
+                closeSuccessModal();
+            }
+        }
 
-    try {
-        const response = await fetch('/api/teachers/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+        // Event listener principal del formulario
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validar campos obligatorios
+            const requiredFields = ['full_name', 'cedula', 'school_name', 'email', 'password'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#e53e3e';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            if (!isValid) {
+                alert('Por favor completa todos los campos obligatorios.');
+                return;
+            }
+
+            // Mostrar loading
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            loading.style.display = 'inline-block';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            // Recopilar datos del formulario
+            const formData = {
+                full_name: document.getElementById('full_name').value.trim(),
+                cedula: document.getElementById('cedula').value.trim(),
+                school_name: document.getElementById('school_name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value,
+                teacher_type: document.getElementById('teacher_type').value || null,
+                specialized_type: document.getElementById('specialized_type').value.trim() || null,
+                school_code: document.getElementById('school_code').value.trim() || null,
+                circuit_code: document.getElementById('circuit_code').value.trim() || null,
+                regional: document.getElementById('regional').value.trim() || null
+            };
+
+            try {
+                const response = await fetch('/api/teachers/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Mostrar modal de éxito
+                    document.getElementById('successModal').style.display = 'flex';
+                } else {
+                    // Mostrar error
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al enviar el registro. Por favor intenta nuevamente.');
+            } finally {
+                // Restaurar botón
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+                submitBtn.innerHTML = originalText;
+            }
         });
 
-        const result = await response.json();
+        // Efectos visuales mejorados
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
 
-        if (result.success) {
-            document.getElementById('successModal').style.display = 'flex';
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al enviar el registro. Por favor intenta nuevamente.');
-    }
-});
-
-
+        // Animación de entrada
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => { 
+                document.body.style.opacity = '1'; 
+            }, 100);
+        });
     </script>
 </body>
 </html>

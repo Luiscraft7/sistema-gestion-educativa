@@ -244,6 +244,15 @@ class GlobalPeriodSelector {
             periodNumber: parseInt(periodSelector.value)
         };
 
+        console.log('📅 Cambiando a período:', newPeriod);
+
+        // Prevenir múltiples clicks/requests
+        const applyBtn = document.getElementById('applyPeriodBtn');
+        if (applyBtn && applyBtn.disabled) {
+            console.log('⚠️ Cambio de período ya en progreso, ignorando...');
+            return;
+        }
+
         try {
             // Mostrar loading
             this.setLoadingState(true);
@@ -264,33 +273,124 @@ class GlobalPeriodSelector {
             const result = await response.json();
 
             if (result.success) {
-                // Guardar en localStorage
-                this.saveCurrentPeriod(newPeriod);
+                console.log('✅ Período establecido en servidor:', result.data);
+
+                // ========================================
+                // ACTUALIZAR ESTADO INTERNO - SIN ELIMINAR DATOS
+                // ========================================
+
+                // Guardar en localStorage con el ID del período
+                const periodToSave = {
+                    ...newPeriod,
+                    periodId: result.data.periodId
+                };
+                
+                this.saveCurrentPeriod(periodToSave);
                 
                 // Actualizar estado interno
-                this.currentPeriod = newPeriod;
+                this.currentPeriod = periodToSave;
                 this.updateCurrentPeriodIndicator();
                 
-                // Resetear botón
+                // ========================================
+                // NOTIFICAR CAMBIOS
+                // ========================================
+                
+                // Resetear botón a estado de éxito
                 this.setSuccessState();
                 
-                // Notificar a otros componentes
-                this.broadcastPeriodChange(newPeriod);
+                // Notificar a otros componentes del cambio
+                this.broadcastPeriodChange(periodToSave);
 
+                // ========================================
+                // RECARGAR DATOS DEL NUEVO PERÍODO
+                // ========================================
+                
                 // Recargar datos si hay función disponible
                 if (typeof window.reloadDataForPeriod === 'function') {
-                    await window.reloadDataForPeriod(newPeriod);
+                    console.log('🔄 Recargando datos para el nuevo período...');
+                    await window.reloadDataForPeriod(periodToSave);
                 }
 
-                console.log('✅ Período académico actualizado:', newPeriod);
+                // Recargar datos específicos del módulo actual
+                await this.reloadCurrentModuleData(periodToSave);
+
+                console.log('✅ Período académico actualizado completamente:', periodToSave);
+                
+                // Mostrar mensaje de éxito
+                if (typeof showMessage === 'function') {
+                    showMessage('success', `Período cambiado a ${newPeriod.year} - ${this.getPeriodNumberName(newPeriod.periodNumber)} ${newPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre'}`);
+                }
+                
+                // Ocultar panel selector después de un breve delay
+                setTimeout(() => {
+                    const periodSelectorPanel = document.querySelector('.period-selector-panel');
+                    if (periodSelectorPanel && periodSelectorPanel.classList.contains('show')) {
+                        periodSelectorPanel.classList.remove('show');
+                    }
+                }, 2000);
+
             } else {
-                throw new Error(result.message);
+                throw new Error(result.message || 'Error desconocido cambiando período');
             }
         } catch (error) {
             console.error('❌ Error aplicando cambio de período:', error);
             this.setErrorState(error.message);
+            
+            // Mostrar error al usuario
+            if (typeof showMessage === 'function') {
+                showMessage('error', `Error cambiando período: ${error.message}`);
+            } else {
+                alert(`Error cambiando período: ${error.message}`);
+            }
         } finally {
             this.setLoadingState(false);
+        }
+    }
+
+    // ========================================
+    // FUNCIÓN AUXILIAR PARA RECARGAR DATOS DEL MÓDULO ACTUAL
+    // ========================================
+
+    async reloadCurrentModuleData(newPeriod) {
+        try {
+            // Detectar en qué página/módulo estamos
+            const currentPath = window.location.pathname;
+            
+            console.log('🔄 Recargando datos del módulo actual para período:', newPeriod);
+
+            // Recargar datos según el módulo actual
+            if (currentPath.includes('students.html')) {
+                // Recargar lista de estudiantes
+                if (typeof loadStudents === 'function') {
+                    await loadStudents();
+                }
+                if (typeof loadGradesAndSubjects === 'function') {
+                    await loadGradesAndSubjects();
+                }
+            } 
+            else if (currentPath.includes('attendance.html')) {
+                // Recargar datos de asistencia
+                if (typeof loadAttendanceData === 'function') {
+                    await loadAttendanceData();
+                }
+            }
+            else if (currentPath.includes('dashboard.html')) {
+                // Recargar dashboard
+                if (typeof loadDashboardData === 'function') {
+                    await loadDashboardData();
+                }
+            }
+            else if (currentPath.includes('cotidiano.html')) {
+                // Recargar datos cotidianos
+                if (typeof loadDailyData === 'function') {
+                    await loadDailyData();
+                }
+            }
+
+            console.log('✅ Datos del módulo recargados correctamente');
+            
+        } catch (error) {
+            console.warn('⚠️ Error recargando datos del módulo (no crítico):', error.message);
         }
     }
 
