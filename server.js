@@ -956,20 +956,37 @@ app.delete('/api/custom-subjects/:id', async (req, res) => {
 // ========================================
 
 // Obtener asistencia por fecha y grado
-app.get('/api/attendance', async (req, res) => {
+app.get('/api/attendance', authenticateTeacher, async (req, res) => {
     try {
-        const { date, grade, subject } = req.query;
-        
+        const { date, grade, subject, year, period_type, period_number } = req.query;
+
         console.log('📊 GET /api/attendance:', { date, grade, subject });
-        
+
         if (!date || !grade) {
             return res.status(400).json({
                 success: false,
                 message: 'Fecha y grado son requeridos'
             });
         }
-        
-        const attendance = await database.getAttendanceByDate(date, grade, subject);
+
+        let academicPeriodId = req.query.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
+        const attendance = await database.getAttendanceByDate(date, grade, req.teacher.id, academicPeriodId, subject);
         res.json({
             success: true,
             data: attendance,
@@ -986,11 +1003,34 @@ app.get('/api/attendance', async (req, res) => {
 });
 
 // Marcar o actualizar asistencia
-app.post('/api/attendance', async (req, res) => {
+app.post('/api/attendance', authenticateTeacher, async (req, res) => {
     try {
         console.log('📝 POST /api/attendance:', req.body);
-        
-        const result = await database.saveAttendance(req.body);
+
+        const { year, period_type, period_number } = req.body;
+
+        let academicPeriodId = req.body.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
+        const result = await database.saveAttendance({
+            ...req.body,
+            teacher_id: req.teacher.id,
+            academic_period_id: academicPeriodId
+        });
         res.json({
             success: true,
             data: result,
@@ -1007,10 +1047,10 @@ app.post('/api/attendance', async (req, res) => {
 });
 
 // Eliminar asistencia de un día específico
-app.delete('/api/attendance', async (req, res) => {
+app.delete('/api/attendance', authenticateTeacher, async (req, res) => {
     try {
-        const { date, grade, subject } = req.query;
-        
+        const { date, grade, subject, year, period_type, period_number } = req.query;
+
         console.log('🗑️ DELETE /api/attendance:', { date, grade, subject });
         
         if (!date || !grade) {
@@ -1020,7 +1060,24 @@ app.delete('/api/attendance', async (req, res) => {
             });
         }
         
-        const result = await database.deleteAttendanceByDate(date, grade, subject);
+        let academicPeriodId = req.query.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
+        const result = await database.deleteAttendanceByDate(date, grade, req.teacher.id, academicPeriodId, subject);
         res.json({
             success: true,
             data: result,
