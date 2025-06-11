@@ -1332,10 +1332,16 @@
             const currentYear = now.getFullYear();
             document.getElementById('teacherSince').textContent = currentYear;
             
-            // Cargar número de estudiantes
+            // Cargar número de estudiantes del período actual
             document.getElementById('teacherStudentsCount').textContent = '⏳';
-            
-            const studentsResponse = await authenticatedFetch('/api/students');
+
+            const period = window.getCurrentAcademicPeriod ? window.getCurrentAcademicPeriod() : null;
+            let query = '';
+            if (period) {
+                query = `?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
+            }
+
+            const studentsResponse = await authenticatedFetch(`/api/students${query}`);
             if (studentsResponse.ok) {
                 const studentsResult = await studentsResponse.json();
                 if (studentsResult.success) {
