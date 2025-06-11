@@ -78,27 +78,29 @@ class Database {
     }
 
     async applyMigrations() {
-        return new Promise((resolve, reject) => {
-            this.db.all("PRAGMA table_info(grades);", (err, rows) => {
-                if (err) return reject(err);
-
-                const hasTeacher = rows.some(r => r.name === 'teacher_id');
-
-                if (!hasTeacher) {
-                    this.db.serialize(() => {
-                        this.db.run('ALTER TABLE grades ADD COLUMN teacher_id INTEGER DEFAULT 0', (err) => {
-                            if (err) return reject(err);
-                            this.db.run('CREATE INDEX IF NOT EXISTS idx_grades_teacher ON grades(teacher_id)', (idxErr) => {
-                                if (idxErr) return reject(idxErr);
-                                resolve();
-                            });
-                        });
-                    });
-                } else {
-                    resolve();
-                }
-            });
+        const tableInfo = (table) => new Promise((resolve, reject) => {
+            this.db.all(`PRAGMA table_info(${table});`, (err, rows) => err ? reject(err) : resolve(rows));
         });
+
+        const run = (sql) => new Promise((resolve, reject) => {
+            this.db.run(sql, (err) => err ? reject(err) : resolve());
+        });
+
+        try {
+            const gradeInfo = await tableInfo('grades');
+            if (!gradeInfo.some(r => r.name === 'teacher_id')) {
+                await run('ALTER TABLE grades ADD COLUMN teacher_id INTEGER DEFAULT 0');
+                await run('CREATE INDEX IF NOT EXISTS idx_grades_teacher ON grades(teacher_id)');
+            }
+
+            const subjectInfo = await tableInfo('custom_subjects');
+            if (!subjectInfo.some(r => r.name === 'teacher_id')) {
+                await run('ALTER TABLE custom_subjects ADD COLUMN teacher_id INTEGER DEFAULT 0');
+                await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher ON custom_subjects(teacher_id)');
+            }
+        } catch (err) {
+            throw err;
+        }
     }
 
     close() {
@@ -630,20 +632,31 @@ async deleteStudent(id, teacherId = null) {
     // ========================================
     // FUNCIONES DE MATERIAS PERSONALIZADAS (BD REAL)
     // ========================================
-    async getAllCustomSubjects() {
+    async getAllCustomSubjects(teacherId = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT cs.*, 
-                       COUNT(s.id) as usage 
-                FROM custom_subjects cs 
-                LEFT JOIN students s ON cs.name = s.subject_area AND s.status = 'active'
+            let query = `
+                SELECT cs.*, COUNT(s.id) as usage
+                FROM custom_subjects cs
+                LEFT JOIN students s ON cs.name = s.subject_area AND s.status = 'active'`;
+            const params = [];
+
+            if (teacherId !== null) {
+                query += ' AND s.teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            if (teacherId !== null) {
+                query += ' WHERE cs.teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            query += `
                 GROUP BY cs.id, cs.name, cs.description, cs.priority, cs.created_at
-                ORDER BY cs.priority DESC, cs.name
-            `;
-            
-            this.db.all(query, [], (err, rows) => {
+                ORDER BY cs.priority DESC, cs.name`;
+
+            this.db.all(query, params, (err, rows) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -653,13 +666,14 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async addCustomSubject(subjectData) {
+    async addCustomSubject(subjectData, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = 'INSERT INTO custom_subjects (name, description, priority) VALUES (?, ?, ?)';
-            
+            const query = 'INSERT INTO custom_subjects (teacher_id, name, description, priority) VALUES (?, ?, ?, ?)';
+
             this.db.run(query, [
+                teacherId,
                 subjectData.name,
                 subjectData.description || null,
                 subjectData.priority || 0
@@ -673,11 +687,11 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async deleteCustomSubject(subjectId) {
+    async deleteCustomSubject(subjectId, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            this.db.run('DELETE FROM custom_subjects WHERE id = ?', [subjectId], function(err) {
+            this.db.run('DELETE FROM custom_subjects WHERE id = ? AND teacher_id = ?', [subjectId, teacherId], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -691,12 +705,12 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async checkSubjectUsage(subjectId) {
+    async checkSubjectUsage(subjectId, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             // Primero obtener el nombre de la materia
-            this.db.get('SELECT name FROM custom_subjects WHERE id = ?', [subjectId], (err, subjectRow) => {
+            this.db.get('SELECT name FROM custom_subjects WHERE id = ? AND teacher_id = ?', [subjectId, teacherId], (err, subjectRow) => {
                 if (err) {
                     reject(err);
                     return;
@@ -709,8 +723,8 @@ async deleteStudent(id, teacherId = null) {
 
                 // Verificar cuántos estudiantes usan esta materia
                 this.db.get(
-                    'SELECT COUNT(*) as count FROM students WHERE subject_area = ? AND status = "active"',
-                    [subjectRow.name],
+                    'SELECT COUNT(*) as count FROM students WHERE subject_area = ? AND status = "active" AND teacher_id = ?',
+                    [subjectRow.name, teacherId],
                     (err, row) => {
                         if (err) {
                             reject(err);
@@ -729,9 +743,9 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Eliminar múltiples materias
-    async deleteMultipleSubjects(subjectIds) {
+    async deleteMultipleSubjects(subjectIds, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
                 reject(new Error('subjectIds debe ser un array no vacío'));
@@ -742,12 +756,12 @@ async deleteStudent(id, teacherId = null) {
             
             // Crear placeholders para la consulta (?, ?, ?, ...)
             const placeholders = subjectIds.map(() => '?').join(',');
-            const query = `DELETE FROM custom_subjects WHERE id IN (${placeholders})`;
+            const query = `DELETE FROM custom_subjects WHERE id IN (${placeholders}) AND teacher_id = ?`;
             
             console.log('📝 Query SQL:', query);
             console.log('📝 Parámetros:', subjectIds);
             
-            this.db.run(query, subjectIds, function(err) {
+            this.db.run(query, [...subjectIds, teacherId], function(err) {
                 if (err) {
                     console.error('❌ Error SQL eliminando materias:', err);
                     reject(err);

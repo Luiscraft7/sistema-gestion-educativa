@@ -885,9 +885,9 @@ app.get('/api/subjects', async (req, res) => {
 });
 
 // Obtener todas las materias personalizadas (hardcoded)
-app.get('/api/custom-subjects', async (req, res) => {
+app.get('/api/custom-subjects', authenticateTeacher, async (req, res) => {
     try {
-        const subjects = await database.getAllCustomSubjects();
+        const subjects = await database.getAllCustomSubjects(req.teacher.id);
         res.json({
             success: true,
             data: subjects
@@ -903,9 +903,9 @@ app.get('/api/custom-subjects', async (req, res) => {
 });
 
 // Agregar nueva materia personalizada
-app.post('/api/custom-subjects', async (req, res) => {
+app.post('/api/custom-subjects', authenticateTeacher, async (req, res) => {
     try {
-        const result = await database.addCustomSubject(req.body);
+        const result = await database.addCustomSubject(req.body, req.teacher.id);
         res.json({
             success: true,
             data: result,
@@ -922,9 +922,9 @@ app.post('/api/custom-subjects', async (req, res) => {
 });
 
 // Eliminar materia personalizada
-app.delete('/api/custom-subjects/:id', async (req, res) => {
+app.delete('/api/custom-subjects/:id', authenticateTeacher, async (req, res) => {
     try {
-        const usageCheck = await database.checkSubjectUsage(req.params.id);
+        const usageCheck = await database.checkSubjectUsage(req.params.id, req.teacher.id);
         
         if (usageCheck.inUse) {
             return res.status(400).json({
@@ -935,7 +935,7 @@ app.delete('/api/custom-subjects/:id', async (req, res) => {
             });
         }
 
-        const result = await database.deleteCustomSubject(req.params.id);
+        const result = await database.deleteCustomSubject(req.params.id, req.teacher.id);
         res.json({
             success: true,
             data: result,
@@ -1683,7 +1683,7 @@ app.delete('/api/grades/bulk', authenticateTeacher, async (req, res) => {
 });
 
 // Eliminar múltiples materias
-app.delete('/api/custom-subjects/bulk', async (req, res) => {
+app.delete('/api/custom-subjects/bulk', authenticateTeacher, async (req, res) => {
     try {
         const { subjectIds } = req.body;
         
@@ -1698,7 +1698,7 @@ app.delete('/api/custom-subjects/bulk', async (req, res) => {
         
         // Verificar uso de cada materia antes de eliminar
         const usageChecks = await Promise.all(
-            subjectIds.map(id => database.checkSubjectUsage(id))
+            subjectIds.map(id => database.checkSubjectUsage(id, req.teacher.id))
         );
         
         const inUseSubjects = usageChecks.filter(check => check.inUse);
@@ -1712,7 +1712,7 @@ app.delete('/api/custom-subjects/bulk', async (req, res) => {
             });
         }
         
-        const result = await database.deleteMultipleSubjects(subjectIds);
+        const result = await database.deleteMultipleSubjects(subjectIds, req.teacher.id);
         res.json({
             success: true,
             data: result,
