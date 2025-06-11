@@ -1559,62 +1559,76 @@ async deleteStudent(id, teacherId = null) {
                 console.log(`💾 Iniciando guardado de ${grades.length} calificaciones...`);
                 
                 grades.forEach((grade, index) => {
-                    const query = `
-                        INSERT OR REPLACE INTO assignment_grades (
-                            assignment_id, student_id, points_earned, grade, percentage,
-                            is_submitted, is_late, notes, feedback, updated_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    `;
-                    
-                    // Calcular porcentaje basado en puntos obtenidos
-                    const percentage = grade.max_points && grade.max_points > 0 
-                        ? (grade.points_earned / grade.max_points) * 100 
-                        : 0;
-                    
-                    const values = [
-                        grade.assignment_id,
-                        grade.student_id,
-                        grade.points_earned || 0,
-                        grade.grade || percentage,
-                        percentage,
-                        grade.is_submitted !== undefined ? grade.is_submitted : 1,
-                        grade.is_late || 0,
-                        grade.notes || null,
-                        grade.feedback || null
-                    ];
-                    
-                    db.run(query, values, function(err) {
-                        completedOperations++;
-                        
-                        if (err) {
-                            console.error(`❌ Error guardando calificación ${index + 1}:`, err.message);
+                    // Obtener información de la evaluación para agregar datos faltantes
+                    db.get('SELECT academic_period_id, teacher_id, max_points FROM assignments WHERE id = ?', [grade.assignment_id], (err, row) => {
+                        if (err || !row) {
+                            console.error(`❌ Error obteniendo datos de la evaluación ${grade.assignment_id}:`, err ? err.message : 'no encontrada');
+                            completedOperations++;
                             errorCount++;
-                        } else {
-                            console.log(`✅ Calificación ${index + 1} guardada exitosamente`);
-                            savedCount++;
+                            if (completedOperations === grades.length) finalize();
+                            return;
                         }
-                        
-                        // Verificar si todas las operaciones han terminado
-                        if (completedOperations === grades.length) {
-                            if (errorCount === 0) {
-                                db.run('COMMIT', (err) => {  // ✅ USAR db EN LUGAR DE this.db
-                                    if (err) {
-                                        console.error('❌ Error en commit:', err);
-                                        reject(err);
-                                    } else {
-                                        console.log(`✅ Transacción completada: ${savedCount} guardadas, ${errorCount} errores`);
-                                        resolve({ savedCount, errorCount });
-                                    }
-                                });
+
+                        const query = `
+                            INSERT OR REPLACE INTO assignment_grades (
+                                academic_period_id, teacher_id, assignment_id, student_id,
+                                points_earned, grade, percentage, is_submitted, is_late,
+                                notes, feedback, updated_at
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                        `;
+
+                        const percentage = row.max_points && row.max_points > 0
+                            ? ((grade.points_earned || 0) / row.max_points) * 100
+                            : 0;
+
+                        const values = [
+                            row.academic_period_id,
+                            row.teacher_id,
+                            grade.assignment_id,
+                            grade.student_id,
+                            grade.points_earned || 0,
+                            grade.grade || percentage,
+                            percentage,
+                            grade.is_submitted !== undefined ? grade.is_submitted : 1,
+                            grade.is_late || 0,
+                            grade.notes || null,
+                            grade.feedback || null
+                        ];
+
+                        db.run(query, values, function(err) {
+                            completedOperations++;
+
+                            if (err) {
+                                console.error(`❌ Error guardando calificación ${index + 1}:`, err.message);
+                                errorCount++;
                             } else {
-                                db.run('ROLLBACK', (err) => {  // ✅ USAR db EN LUGAR DE this.db
-                                    console.log(`⚠️ Rollback ejecutado: ${savedCount} intentos, ${errorCount} errores`);
-                                    reject(new Error(`${errorCount} errores al guardar calificaciones`));
-                                });
+                                console.log(`✅ Calificación ${index + 1} guardada exitosamente`);
+                                savedCount++;
                             }
-                        }
+
+                            if (completedOperations === grades.length) finalize();
+                        });
                     });
                 });
+
+                function finalize() {
+                    if (errorCount === 0) {
+                        db.run('COMMIT', (err) => {
+                            if (err) {
+                                console.error('❌ Error en commit:', err);
+                                reject(err);
+                            } else {
+                                console.log(`✅ Transacción completada: ${savedCount} guardadas, ${errorCount} errores`);
+                                resolve({ savedCount, errorCount });
+                            }
+                        });
+                    } else {
+                        db.run('ROLLBACK', (err) => {
+                            console.log(`⚠️ Rollback ejecutado: ${savedCount} intentos, ${errorCount} errores`);
+                            reject(new Error(`${errorCount} errores al guardar calificaciones`));
+                        });
+                    }
+                }
             });
         });
     }
