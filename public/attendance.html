@@ -1342,7 +1342,7 @@
                 document.getElementById('loadingState').innerHTML = '🔄 Cargando estudiantes...';
                 document.getElementById('attendanceTable').style.display = 'none';
                 
-                const response = await fetch('/api/students');
+                const response = await authenticatedFetch('/api/students');
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1401,7 +1401,7 @@
             try {
                 debugLog('📚 Cargando configuración para grado:', currentGrade);
                 
-                const response = await fetch(`/api/lesson-config?grade=${encodeURIComponent(currentGrade)}&subject=general`);
+                const response = await authenticatedFetch(`/api/lesson-config?grade=${encodeURIComponent(currentGrade)}&subject=general`);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
@@ -1438,7 +1438,7 @@
             
             try {
                 // Contar días únicos con asistencia registrada para este grado
-                const response = await fetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}`);
+                const response = await authenticatedFetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1523,7 +1523,7 @@
                 let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}`;
                 // Ya no añadimos el parámetro subject porque no usamos filtro de materias
                 
-                const response = await fetch(url);
+                const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
                 attendanceData = {};
@@ -1737,7 +1737,7 @@
                 
                 debugLog('📤 Enviando datos:', attendanceRecord);
                 
-                const response = await fetch('/api/attendance', {
+                const response = await authenticatedFetch('/api/attendance', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1834,7 +1834,7 @@
                 
                 debugLog('🗑️ Eliminando asistencia:', { date: dateStr, grade: currentGrade, subject: currentSubject });
                 
-                const response = await fetch(url, {
+                const response = await authenticatedFetch(url, {
                     method: 'DELETE'
                 });
                 
@@ -1894,7 +1894,7 @@
                 debugLog(`🔍 Llamando API: ${url}`);
                 
                 // Hacer la petición
-                const response = await fetch(url);
+                const response = await authenticatedFetch(url);
                 debugLog(`📡 Respuesta HTTP: ${response.status} ${response.statusText}`);
                 
                 if (!response.ok) {
@@ -1977,18 +1977,24 @@
         // CONFIGURACIÓN DE LECCIONES
         // ========================================
         function calculateTotalLessons() {
-            const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
-            const totalWeeks = parseInt(document.getElementById('totalWeeks').value) || 40;
+            const lessonsInput = document.getElementById('lessonsPerWeek');
+            const weeksInput = document.getElementById('totalWeeks');
+            const lessonsPerWeek = parseInt(lessonsInput ? lessonsInput.value : 5) || 5;
+            const totalWeeks = parseInt(weeksInput ? weeksInput.value : 40) || 40;
             const totalLessons = lessonsPerWeek * totalWeeks;
-            
-            document.getElementById('totalLessons').textContent = totalLessons;
+
+            const totalLessonsElement = document.getElementById('totalLessons');
+            if (totalLessonsElement) {
+                totalLessonsElement.textContent = totalLessons;
+            }
             lessonConfig.totalLessons = totalLessons;
-            
+
             const configLessonsPerWeek = document.getElementById('configLessonsPerWeek');
             const configTotalWeeks = document.getElementById('configTotalWeeks');
-            if (configLessonsPerWeek && configTotalWeeks) {
+            const calculated = document.getElementById('calculatedLessons');
+            if (configLessonsPerWeek && configTotalWeeks && calculated) {
                 const modalLessons = (parseInt(configLessonsPerWeek.value) || 0) * (parseInt(configTotalWeeks.value) || 0);
-                document.getElementById('calculatedLessons').textContent = modalLessons;
+                calculated.textContent = modalLessons;
             }
         }
 
@@ -2007,7 +2013,7 @@
                     teacher_name: document.getElementById('configTeacher').value || null
                 };
                 
-                const response = await fetch('/api/lesson-config', {
+                const response = await authenticatedFetch('/api/lesson-config', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2077,7 +2083,7 @@
                     subject_area: subjectArea
                 };
                 
-                const response = await fetch('/api/attendance', {
+                const response = await authenticatedFetch('/api/attendance', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2127,7 +2133,7 @@
                     return;
                 }
                 
-                const response = await fetch(`/api/grade-scale?grade=${encodeURIComponent(currentGrade)}&subject=general`);
+                const response = await authenticatedFetch(`/api/grade-scale?grade=${encodeURIComponent(currentGrade)}&subject=general`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -2160,7 +2166,7 @@
                 }
                 
                 // ✅ GUARDAR ESCALA MÁXIMA (usando grado/materia actual)
-                const scaleResponse = await fetch('/api/grade-scale', {
+                const scaleResponse = await authenticatedFetch('/api/grade-scale', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2204,7 +2210,7 @@
                 const url = `/api/lesson-config?${params.toString()}`;
                 debugLog(`🔍 Obteniendo configuración: ${url}`);
                 
-                const response = await fetch(url);
+                const response = await authenticatedFetch(url);
                 
                 if (!response.ok) {
                     debugLog(`⚠️ Error HTTP obteniendo configuración: ${response.status}`);
@@ -2252,7 +2258,7 @@
                 
                 showMessage('success', '📊 Calculando estadísticas MEP...');
                 
-                const response = await fetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}`);
+                const response = await authenticatedFetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -2377,20 +2383,33 @@
             });
         }
 
-        // Event listeners
-        document.getElementById('lessonsPerWeek').addEventListener('input', calculateTotalLessons);
-        document.getElementById('totalWeeks').addEventListener('input', calculateTotalLessons);
-        document.getElementById('configLessonsPerWeek').addEventListener('input', calculateTotalLessons);
-        document.getElementById('configTotalWeeks').addEventListener('input', calculateTotalLessons);
+        // Event listeners (se verifican elementos opcionales)
+        const lpwInput = document.getElementById('lessonsPerWeek');
+        if (lpwInput) lpwInput.addEventListener('input', calculateTotalLessons);
+
+        const twInput = document.getElementById('totalWeeks');
+        if (twInput) twInput.addEventListener('input', calculateTotalLessons);
+
+        const clpwInput = document.getElementById('configLessonsPerWeek');
+        if (clpwInput) clpwInput.addEventListener('input', calculateTotalLessons);
+
+        const ctwInput = document.getElementById('configTotalWeeks');
+        if (ctwInput) ctwInput.addEventListener('input', calculateTotalLessons);
 
         // Cerrar modales al hacer clic fuera
-        document.getElementById('justificationModal').addEventListener('click', function(event) {
-            if (event.target === this) closeJustificationModal();
-        });
+        const justificationModal = document.getElementById('justificationModal');
+        if (justificationModal) {
+            justificationModal.addEventListener('click', function(event) {
+                if (event.target === this) closeJustificationModal();
+            });
+        }
 
-        document.getElementById('lessonConfigModal').addEventListener('click', function(event) {
-            if (event.target === this) closeLessonConfigModal();
-        });
+        const lessonConfigModalEl = document.getElementById('lessonConfigModal');
+        if (lessonConfigModalEl) {
+            lessonConfigModalEl.addEventListener('click', function(event) {
+                if (event.target === this) closeLessonConfigModal();
+            });
+        }
     </script>
 </body>
 </html>
