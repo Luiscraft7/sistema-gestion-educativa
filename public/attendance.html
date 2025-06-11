@@ -1977,18 +1977,24 @@
         // CONFIGURACIÓN DE LECCIONES
         // ========================================
         function calculateTotalLessons() {
-            const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
-            const totalWeeks = parseInt(document.getElementById('totalWeeks').value) || 40;
+            const lessonsInput = document.getElementById('lessonsPerWeek');
+            const weeksInput = document.getElementById('totalWeeks');
+            const lessonsPerWeek = parseInt(lessonsInput ? lessonsInput.value : 5) || 5;
+            const totalWeeks = parseInt(weeksInput ? weeksInput.value : 40) || 40;
             const totalLessons = lessonsPerWeek * totalWeeks;
-            
-            document.getElementById('totalLessons').textContent = totalLessons;
+
+            const totalLessonsElement = document.getElementById('totalLessons');
+            if (totalLessonsElement) {
+                totalLessonsElement.textContent = totalLessons;
+            }
             lessonConfig.totalLessons = totalLessons;
-            
+
             const configLessonsPerWeek = document.getElementById('configLessonsPerWeek');
             const configTotalWeeks = document.getElementById('configTotalWeeks');
-            if (configLessonsPerWeek && configTotalWeeks) {
+            const calculated = document.getElementById('calculatedLessons');
+            if (configLessonsPerWeek && configTotalWeeks && calculated) {
                 const modalLessons = (parseInt(configLessonsPerWeek.value) || 0) * (parseInt(configTotalWeeks.value) || 0);
-                document.getElementById('calculatedLessons').textContent = modalLessons;
+                calculated.textContent = modalLessons;
             }
         }
 
@@ -2377,20 +2383,33 @@
             });
         }
 
-        // Event listeners
-        document.getElementById('lessonsPerWeek').addEventListener('input', calculateTotalLessons);
-        document.getElementById('totalWeeks').addEventListener('input', calculateTotalLessons);
-        document.getElementById('configLessonsPerWeek').addEventListener('input', calculateTotalLessons);
-        document.getElementById('configTotalWeeks').addEventListener('input', calculateTotalLessons);
+        // Event listeners (se verifican elementos opcionales)
+        const lpwInput = document.getElementById('lessonsPerWeek');
+        if (lpwInput) lpwInput.addEventListener('input', calculateTotalLessons);
+
+        const twInput = document.getElementById('totalWeeks');
+        if (twInput) twInput.addEventListener('input', calculateTotalLessons);
+
+        const clpwInput = document.getElementById('configLessonsPerWeek');
+        if (clpwInput) clpwInput.addEventListener('input', calculateTotalLessons);
+
+        const ctwInput = document.getElementById('configTotalWeeks');
+        if (ctwInput) ctwInput.addEventListener('input', calculateTotalLessons);
 
         // Cerrar modales al hacer clic fuera
-        document.getElementById('justificationModal').addEventListener('click', function(event) {
-            if (event.target === this) closeJustificationModal();
-        });
+        const justificationModal = document.getElementById('justificationModal');
+        if (justificationModal) {
+            justificationModal.addEventListener('click', function(event) {
+                if (event.target === this) closeJustificationModal();
+            });
+        }
 
-        document.getElementById('lessonConfigModal').addEventListener('click', function(event) {
-            if (event.target === this) closeLessonConfigModal();
-        });
+        const lessonConfigModalEl = document.getElementById('lessonConfigModal');
+        if (lessonConfigModalEl) {
+            lessonConfigModalEl.addEventListener('click', function(event) {
+                if (event.target === this) closeLessonConfigModal();
+            });
+        }
     </script>
 </body>
 </html>
