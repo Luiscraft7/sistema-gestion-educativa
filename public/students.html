@@ -2733,20 +2733,33 @@ console.log('📚 Event listeners de período académico configurados en student
 
         // Mostrar info del profesor en la interfaz
         function updateTeacherInfo(teacherInfo) {
+            if (!teacherInfo) return;
+
             console.log('👤 Info del profesor:', teacherInfo);
-            
-            // Actualizar indicador de período si existe
-            if (window.simplePeriodIndicator && teacherInfo) {
-                // Guardar datos del profesor para el indicador
-                sessionStorage.setItem('teacherData', JSON.stringify(teacherInfo));
+
+            // Combinar con los datos actuales para no perder información
+            const existing = sessionStorage.getItem('teacherData');
+            let merged = teacherInfo;
+
+            if (existing) {
+                try {
+                    const current = JSON.parse(existing);
+                    merged = { ...current, ...teacherInfo };
+                } catch (error) {
+                    console.warn('Error parseando datos existentes del profesor:', error);
+                }
+            }
+
+            // Guardar datos combinados para que otras páginas los utilicen
+            sessionStorage.setItem('teacherData', JSON.stringify(merged));
+
+            if (window.simplePeriodIndicator) {
                 window.simplePeriodIndicator.updateDisplay();
             }
-            
-            // Aquí puedes agregar más lógica para mostrar datos del profesor en la UI
-            // Por ejemplo, actualizar un elemento en el header
+
             const teacherDisplay = document.getElementById('current-teacher');
-            if (teacherDisplay && teacherInfo) {
-                teacherDisplay.textContent = `${teacherInfo.name} - ${teacherInfo.school}`;
+            if (teacherDisplay) {
+                teacherDisplay.textContent = `${merged.name} - ${merged.school}`;
             }
         }
 
