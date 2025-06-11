@@ -97,35 +97,50 @@ class Database {
     // ========================================
     // FUNCIONES DE ESTUDIANTES
     // ========================================
-    async getAllStudents(academicPeriodId = null) {
+
+    async getAllStudents(academicPeriodId = null, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            let query;
-            let params = [];
-
-            if (academicPeriodId) {
-                // CORRECCIÓN: Si se especifica período, buscar solo de ese período
-                query = `
-                    SELECT s.*, sc.name as school_name 
-                    FROM students s 
-                    LEFT JOIN schools sc ON s.school_id = sc.id 
-                    WHERE s.academic_period_id = ? AND s.status = 'active'
-                    ORDER BY s.first_surname, s.first_name
-                `;
-                params = [academicPeriodId];
-                console.log(`📚 Buscando estudiantes para período académico: ${academicPeriodId}`);
-            } else {
-                // Si no se especifica período, mostrar TODOS los estudiantes activos
+            let query, params = [];
+            
+            if (academicPeriodId && teacherId) {
+                // LÓGICA PRINCIPAL: Filtrar por período académico Y profesor
                 query = `
                     SELECT s.*, sc.name as school_name, ap.name as period_name
                     FROM students s 
                     LEFT JOIN schools sc ON s.school_id = sc.id 
                     LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
-                    WHERE s.status = 'active'
-                    ORDER BY s.academic_period_id DESC, s.first_surname, s.first_name
+                    WHERE s.academic_period_id = ? AND s.teacher_id = ? AND s.status = 'active'
+                    ORDER BY s.first_surname, s.first_name
                 `;
-                console.log('📚 Buscando TODOS los estudiantes activos');
+                params = [academicPeriodId, teacherId];
+                console.log(`📚 Estudiantes: período ${academicPeriodId}, profesor ${teacherId}`);
+            } else if (academicPeriodId) {
+                // Solo filtrar por período académico (para admin)
+                query = `
+                    SELECT s.*, sc.name as school_name, ap.name as period_name
+                    FROM students s 
+                    LEFT JOIN schools sc ON s.school_id = sc.id 
+                    LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
+                    WHERE s.academic_period_id = ? AND s.status = 'active'
+                    ORDER BY s.first_surname, s.first_name
+                `;
+                params = [academicPeriodId];
+                console.log(`📚 Estudiantes para período académico: ${academicPeriodId}`);
+            } else {
+                // Mostrar TODOS los estudiantes activos (solo para admin)
+                query = `
+                    SELECT s.*, sc.name as school_name, ap.name as period_name, 
+                        t.full_name as teacher_name
+                    FROM students s 
+                    LEFT JOIN schools sc ON s.school_id = sc.id 
+                    LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
+                    LEFT JOIN teachers t ON s.teacher_id = t.id
+                    WHERE s.status = 'active'
+                    ORDER BY s.academic_period_id DESC, s.teacher_id, s.first_surname, s.first_name
+                `;
+                console.log('📚 TODOS los estudiantes activos (modo admin)');
             }
             
             this.db.all(query, params, (err, rows) => {
@@ -156,21 +171,26 @@ class Database {
         });
     }
 
-    async addStudent(studentData) {
+    // ========================================
+// ✅ REEMPLAZAR tu función addStudent() con esta versión
+// ========================================
+
+async addStudent(studentData, teacherId) {
     this.ensureConnection();
     
     return new Promise((resolve, reject) => {
         const query = `
             INSERT INTO students (
-                academic_period_id, school_id, cedula, first_surname, second_surname, first_name,
+                academic_period_id, teacher_id, school_id, cedula, first_surname, second_surname, first_name,
                 student_id, email, phone, grade_level, subject_area, section,
                 birth_date, address, parent_name, parent_phone, parent_email,
                 notes, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         
         const values = [
-            studentData.academic_period_id || 1, // AGREGAR ESTE CAMPO
+            studentData.academic_period_id || 1,
+            teacherId, // ✅ NUEVO: teacher_id obligatorio
             studentData.school_id || 1,
             studentData.cedula,
             studentData.first_surname,
@@ -247,19 +267,36 @@ class Database {
     }
 
     // Eliminar estudiantes por período académico
-    async deleteStudentsByPeriod(academicPeriodId) {
+
+    async deleteStudentsByPeriod(academicPeriodId, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const query = 'DELETE FROM students WHERE academic_period_id = ?';
+            let query, params;
             
-            this.db.run(query, [academicPeriodId], function(err) {
+            if (teacherId) {
+                // Solo eliminar estudiantes del profesor específico en ese período
+                query = 'DELETE FROM students WHERE academic_period_id = ? AND teacher_id = ?';
+                params = [academicPeriodId, teacherId];
+            } else {
+                // Modo admin - eliminar TODOS los estudiantes del período
+                query = 'DELETE FROM students WHERE academic_period_id = ?';
+                params = [academicPeriodId];
+            }
+            
+            this.db.run(query, params, function(err) {
                 if (err) {
                     reject(err);
                 } else {
+                    const message = teacherId 
+                        ? `${this.changes} estudiantes del profesor eliminados del período ${academicPeriodId}`
+                        : `${this.changes} estudiantes eliminados del período ${academicPeriodId}`;
+                        
                     resolve({
                         deletedCount: this.changes,
-                        message: `${this.changes} estudiantes eliminados del período ${academicPeriodId}`
+                        message: message,
+                        academicPeriodId: academicPeriodId,
+                        teacherId: teacherId
                     });
                 }
             });
@@ -2346,10 +2383,7 @@ async clearUserPreviousSessions(teacherId) {
     }
 
 
-// AGREGAR AL FINAL DE LAS FUNCIONES DE ESTUDIANTES
-
 // Copiar estudiantes de un período a otro
-// Copiar estudiantes de un período a otro (VERSIÓN SIMPLIFICADA)
 async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
     this.ensureConnection();
     
@@ -2416,18 +2450,19 @@ async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
                         const insertStudent = (student, index) => {
                             const newStudentId = `EST-${String(lastStudentIndex + index + 1).padStart(3, '0')}`;
                             const newCedula = student.cedula ? `${student.cedula}_P${toPeriodId}` : null;
-                            
+                                                        
                             const insertQuery = `
                                 INSERT INTO students (
-                                    academic_period_id, school_id, cedula, first_surname, second_surname, 
+                                    academic_period_id, teacher_id, school_id, cedula, first_surname, second_surname, 
                                     first_name, student_id, email, phone, grade_level, subject_area, 
                                     section, birth_date, address, parent_name, parent_phone, parent_email, 
                                     notes, status
-                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             `;
                             
                             const values = [
                                 toPeriodId,
+                                student.teacher_id,
                                 student.school_id || 1,
                                 newCedula,
                                 student.first_surname,
@@ -2483,6 +2518,69 @@ async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
 }
 
     
+
+// ========================================
+// ✅ AGREGAR ESTAS FUNCIONES AL FINAL DE TU database.js
+// ========================================
+
+// Obtener teacher_id desde sessionToken
+async getTeacherIdFromSession(sessionToken) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT teacher_id FROM active_sessions 
+            WHERE session_token = ? AND last_activity > datetime('now', '-24 hours')
+        `;
+        
+        this.db.get(query, [sessionToken], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row ? row.teacher_id : null);
+            }
+        });
+    });
+}
+
+// Crear sesión activa para profesor
+async createActiveSession(teacherId, sessionToken, ipAddress, userAgent) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO active_sessions (teacher_id, session_token, ip_address, user_agent)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        this.db.run(query, [teacherId, sessionToken, ipAddress, userAgent], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: this.lastID, teacher_id: teacherId });
+            }
+        });
+    });
+}
+
+// Limpiar sesiones anteriores del profesor
+async clearUserPreviousSessions(teacherId) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = 'DELETE FROM active_sessions WHERE teacher_id = ?';
+        
+        this.db.run(query, [teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ deletedSessions: this.changes });
+            }
+        });
+    });
+}
+
+
     
 }
 
