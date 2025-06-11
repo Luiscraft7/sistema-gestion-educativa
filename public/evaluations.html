@@ -1038,7 +1038,7 @@
                     period_type: period.periodType,
                     period_number: period.periodNumber
                 });
-                const response = await fetch(`/api/evaluations?${params.toString()}`);
+                const response = await authenticatedFetch(`/api/evaluations?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1201,7 +1201,7 @@
                 
                 console.log('📝 Creando evaluación:', evaluationData);
                 
-                const response = await fetch('/api/evaluations', {
+                const response = await authenticatedFetch('/api/evaluations', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1261,7 +1261,7 @@
                     due_date: dueDate || null
                 };
                 
-                const response = await fetch(`/api/evaluations/${currentEvaluationId}`, {
+                const response = await authenticatedFetch(`/api/evaluations/${currentEvaluationId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1291,7 +1291,7 @@
             }
             
             try {
-                const response = await fetch(`/api/evaluations/${currentEvaluationId}`, {
+                const response = await authenticatedFetch(`/api/evaluations/${currentEvaluationId}`, {
                     method: 'DELETE'
                 });
                 
@@ -1341,7 +1341,7 @@
                 `;
                 
                 // Cargar datos de calificaciones desde la API
-                const response = await fetch(`/api/evaluation-grades/${evaluationId}`);
+                const response = await authenticatedFetch(`/api/evaluation-grades/${evaluationId}`);
                 const result = await response.json();
                 
                 console.log('📥 Respuesta completa de la API:', result);
@@ -1579,7 +1579,7 @@
                 
                 console.log('💾 Guardando calificaciones:', gradesToSave);
                 
-                const response = await fetch('/api/evaluation-grades', {
+                const response = await authenticatedFetch('/api/evaluation-grades', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
