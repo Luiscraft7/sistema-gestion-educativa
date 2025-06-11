@@ -29,23 +29,40 @@ class GlobalPeriodSelector {
     // ========================================
 
     async loadSchools() {
+    try {
+        const response = await fetch('/api/schools');
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+            this.schools = result.data;
+            console.log('✅ Escuelas cargadas:', this.schools.length);
+        } else {
+            throw new Error('No se encontraron escuelas');
+        }
+    } catch (error) {
+        console.error('❌ Error cargando escuelas:', error);
+        // CORRECCIÓN: Asegurar que siempre haya al menos una escuela
+        this.schools = [
+            { id: 1, name: 'Mi Escuela Principal' }
+        ];
+        
+        // Crear escuela por defecto si no existe
         try {
-            const response = await fetch('/api/schools');
-            const result = await response.json();
-            
-            if (result.success) {
-                this.schools = result.data;
-            } else {
-                throw new Error(result.message);
-            }
-        } catch (error) {
-            console.error('Error cargando escuelas:', error);
-            // Datos de fallback
-            this.schools = [
-                { id: 1, name: 'Mi Escuela Principal' }
-            ];
+            await fetch('/api/schools', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'Mi Escuela Principal',
+                    address: 'Dirección de la Escuela',
+                    phone: '0000-0000',
+                    email: 'contacto@miescuela.cr'
+                })
+            });
+        } catch (createError) {
+            console.log('Escuela por defecto ya existe');
         }
     }
+}
 
     async loadAvailablePeriods() {
         try {
@@ -237,10 +254,9 @@ class GlobalPeriodSelector {
             return;
         }
 
-        // Protección simple: verificar si el botón ya está deshabilitado
         const applyBtn = document.getElementById('applyPeriodBtn');
         if (applyBtn && applyBtn.disabled) {
-            console.log('⚠️ Cambio de período ya en progreso, ignorando click adicional');
+            console.log('⚠️ Cambio de período ya en progreso');
             return;
         }
 
@@ -254,15 +270,15 @@ class GlobalPeriodSelector {
         console.log('📅 Cambiando a período:', newPeriod);
 
         try {
-            // Mostrar loading (esto deshabilitará el botón)
             this.setLoadingState(true);
 
-            // Enviar cambio al servidor
+            // Obtener período actual para posible migración
+            const currentPeriod = this.loadCurrentPeriod();
+            
+            // Establecer nuevo período en servidor
             const response = await fetch('/api/academic-periods/set-current', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     year: newPeriod.year,
                     period_type: newPeriod.periodType,
@@ -273,80 +289,57 @@ class GlobalPeriodSelector {
             const result = await response.json();
 
             if (result.success) {
-                console.log('✅ Período establecido en servidor:', result.data);
+                console.log('✅ Período establecido:', result.data);
 
-                // ========================================
-                // ACTUALIZAR ESTADO INTERNO - SIN ELIMINAR DATOS
-                // ========================================
+                // MIGRACIÓN AUTOMÁTICA DE ESTUDIANTES
+                if (result.data.wasCreated && currentPeriod.year && 
+                    (currentPeriod.year !== newPeriod.year || 
+                    currentPeriod.periodType !== newPeriod.periodType ||
+                    currentPeriod.periodNumber !== newPeriod.periodNumber)) {
+                    
+                    try {
+                        console.log('🔄 Iniciando migración automática de estudiantes...');
+                        
+                        const migrateResponse = await fetch('/api/students/migrate-period', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fromPeriodId: 1, // Período anterior (ajustar según necesidades)
+                                toPeriodId: result.data.periodId,
+                                copyAll: true
+                            })
+                        });
 
-                // Guardar en localStorage con el ID del período
+                        const migrateResult = await migrateResponse.json();
+                        
+                        if (migrateResult.success && migrateResult.migrated > 0) {
+                            console.log(`✅ ${migrateResult.migrated} estudiantes migrados automáticamente`);
+                        }
+                    } catch (migrateError) {
+                        console.log('ℹ️ Migración automática no disponible:', migrateError.message);
+                    }
+                }
+
+                // Actualizar estado interno
                 const periodToSave = {
                     ...newPeriod,
                     periodId: result.data.periodId
                 };
                 
                 this.saveCurrentPeriod(periodToSave);
-                
-                // Actualizar estado interno
                 this.currentPeriod = periodToSave;
-                await this.loadSchools();
                 this.updateCurrentPeriodIndicator();
-                
-                
-                // ========================================
-                // NOTIFICAR CAMBIOS
-                // ========================================
-                
-                // Resetear botón a estado de éxito
                 this.setSuccessState();
                 
-                // Notificar a otros componentes del cambio
+                // Enviar evento de cambio
                 this.broadcastPeriodChange(periodToSave);
-
-                // ========================================
-                // RECARGAR DATOS DEL NUEVO PERÍODO
-                // ========================================
                 
-                // Recargar datos si hay función disponible
-                if (typeof window.reloadDataForPeriod === 'function') {
-                    console.log('🔄 Recargando datos para el nuevo período...');
-                    await window.reloadDataForPeriod(periodToSave);
-                }
-
-                // Recargar datos específicos del módulo actual
-                await this.reloadCurrentModuleData(periodToSave);
-
-                console.log('✅ Período académico actualizado completamente:', periodToSave);
-                
-                // Mostrar mensaje de éxito
-                if (typeof showMessage === 'function') {
-                    showMessage('success', `Período cambiado a ${newPeriod.year} - ${this.getPeriodNumberName(newPeriod.periodNumber)} ${newPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre'}`);
-                }
-                
-                // Ocultar panel selector después de un breve delay
-                setTimeout(() => {
-                    const periodSelectorPanel = document.querySelector('.period-selector-panel');
-                    if (periodSelectorPanel && periodSelectorPanel.classList.contains('show')) {
-                        periodSelectorPanel.classList.remove('show');
-                    }
-                }, 2000);
-
             } else {
-                throw new Error(result.message || 'Error desconocido cambiando período');
+                throw new Error(result.message);
             }
         } catch (error) {
-            console.error('❌ Error aplicando cambio de período:', error);
+            console.error('❌ Error aplicando período:', error);
             this.setErrorState(error.message);
-            
-            // Mostrar error al usuario
-            if (typeof showMessage === 'function') {
-                showMessage('error', `Error cambiando período: ${error.message}`);
-            } else {
-                alert(`Error cambiando período: ${error.message}`);
-            }
-        } finally {
-            // SIEMPRE habilitar el botón al final
-            this.setLoadingState(false);
         }
     }
 

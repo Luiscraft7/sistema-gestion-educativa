@@ -101,25 +101,40 @@ class Database {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            let query = `
-                SELECT * FROM students 
-                WHERE status = 'active'
-            `;
-            const params = [];
-            
-            // Agregar filtro por período académico si se especifica
+            let query;
+            let params = [];
+
             if (academicPeriodId) {
-                query += ` AND academic_period_id = ?`;
-                params.push(academicPeriodId);
+                // CORRECCIÓN: Si se especifica período, buscar solo de ese período
+                query = `
+                    SELECT s.*, sc.name as school_name 
+                    FROM students s 
+                    LEFT JOIN schools sc ON s.school_id = sc.id 
+                    WHERE s.academic_period_id = ? AND s.status = 'active'
+                    ORDER BY s.first_surname, s.first_name
+                `;
+                params = [academicPeriodId];
+                console.log(`📚 Buscando estudiantes para período académico: ${academicPeriodId}`);
+            } else {
+                // Si no se especifica período, mostrar TODOS los estudiantes activos
+                query = `
+                    SELECT s.*, sc.name as school_name, ap.name as period_name
+                    FROM students s 
+                    LEFT JOIN schools sc ON s.school_id = sc.id 
+                    LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
+                    WHERE s.status = 'active'
+                    ORDER BY s.academic_period_id DESC, s.first_surname, s.first_name
+                `;
+                console.log('📚 Buscando TODOS los estudiantes activos');
             }
-            
-            query += ` ORDER BY first_surname, second_surname, first_name`;
             
             this.db.all(query, params, (err, rows) => {
                 if (err) {
+                    console.error('❌ Error en getAllStudents:', err);
                     reject(err);
                 } else {
-                    resolve(rows);
+                    console.log(`✅ Estudiantes encontrados: ${rows.length}`);
+                    resolve(rows || []);
                 }
             });
         });

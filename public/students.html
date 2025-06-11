@@ -618,6 +618,17 @@
                 <p>Administración eficiente y rápida de estudiantes</p>
             </div>
 
+            <div id="successMessage" class="message success" style="display: none; padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin: 10px 0;">
+                ✅ Operación completada exitosamente
+            </div>
+            <div id="errorMessage" class="message error" style="display: none; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 8px; margin: 10px 0;">
+                ❌ Error en la operación
+            </div>
+            <div id="infoMessage" class="message info" style="display: none; padding: 15px; background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; border-radius: 8px; margin: 10px 0;">
+                ℹ️ Información importante
+            </div>
+
+
             <!-- INDICADOR SIMPLE DE PERÍODO - Agregar después del <h1> en students.html -->
             <div class="period-indicator-banner">
                 <div class="period-icon">
@@ -1017,18 +1028,25 @@
         // ========================================
 
 
-        async function loadStudents() {
+       async function loadStudents() {
             try {
                 console.log('📚 Cargando estudiantes...');
                 document.getElementById('loadingState').style.display = 'block';
                 document.getElementById('studentsTable').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
 
-                // Obtener período académico actual automáticamente
+                // CORRECCIÓN: Mejor manejo del período académico actual
                 const currentPeriod = getCurrentAcademicPeriod();
                 console.log('📅 Período académico activo:', currentPeriod);
 
-                // Construir URL con filtro de período automático
+                // Validar que el período tenga datos válidos
+                if (!currentPeriod || !currentPeriod.year || !currentPeriod.periodType || !currentPeriod.periodNumber) {
+                    console.error('❌ Período académico inválido:', currentPeriod);
+                    showMessage('error', 'Error: Período académico no válido. Verifica la configuración.');
+                    return;
+                }
+
+                // Construir URL con filtro de período
                 const params = new URLSearchParams({
                     year: currentPeriod.year,
                     period_type: currentPeriod.periodType,
@@ -1042,7 +1060,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    students = result.data;
+                    students = result.data || [];
                     filteredStudents = [...students];
                     
                     console.log('✅ Estudiantes cargados:', {
@@ -1058,13 +1076,14 @@
                     }
                     renderStudentsTable();
                     
-                    // Actualizar indicador de período
-                    if (window.updatePeriodIndicator) {
-                        window.updatePeriodIndicator();
+                    // CORRECCIÓN: Mejor mensaje cuando no hay estudiantes
+                    if (students.length === 0) {
+                        const periodText = `${currentPeriod.year} - ${currentPeriod.periodNumber === 1 ? 'Primer' : 'Segundo'} ${currentPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre'}`;
+                        showMessage('info', `No hay estudiantes registrados para ${periodText}. Los estudiantes de otros períodos se mantienen guardados.`);
                     }
                     
                 } else {
-                    console.error('❌ Error:', result.message);
+                    console.error('❌ Error del servidor:', result.message);
                     showMessage('error', 'Error cargando estudiantes: ' + result.message);
                 }
             } catch (error) {
@@ -1072,9 +1091,9 @@
                 showMessage('error', 'Error de conexión. Verifica que el servidor esté funcionando.');
             } finally {
                 document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('studentsTable').style.display = 'block';
             }
         }
-
 
         // FUNCIÓN HELPER: Obtener período académico actual
         function getCurrentAcademicPeriod() {
@@ -1103,21 +1122,28 @@
         }
 
         function showMessage(type, message) {
-            const messageElement = type === 'success' ? 
-                document.getElementById('successMessage') : 
-                document.getElementById('errorMessage');
+            const messageEl = document.getElementById(type + 'Message');
             
-            if (messageElement) {
-                messageElement.textContent = message;
-                messageElement.classList.add('show');
-                
-                setTimeout(() => {
-                    messageElement.classList.remove('show');
-                }, 5000);
-            } else {
-                // Fallback a alert
-                alert((type === 'success' ? '✅ ' : '❌ ') + message);
+            // Verificar que el elemento existe antes de usarlo
+            if (!messageEl) {
+                console.error(`❌ Elemento ${type}Message no encontrado`);
+                // Fallback: usar alert como último recurso
+                if (type === 'error') {
+                    alert('❌ Error: ' + message);
+                } else {
+                    console.log(`📢 ${type.toUpperCase()}: ${message}`);
+                }
+                return;
             }
+
+            messageEl.textContent = message;
+            messageEl.style.display = 'block';
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+                messageEl.classList.remove('show');
+            }, 5000);
         }
 
 
@@ -2605,6 +2631,26 @@
     });
 
     console.log('📚 Sistema de estudiantes con filtro automático de período inicializado');
+
+
+// Event listener para cambios de período académico
+window.addEventListener('academicPeriodChanged', function(event) {
+    console.log('📅 Período académico cambió en students.html:', event.detail);
+    
+    // Recargar estudiantes automáticamente
+    setTimeout(() => {
+        loadStudents();
+    }, 500);
+});
+
+// Event listener para recargar datos
+window.addEventListener('reloadPeriodData', function(event) {
+    console.log('🔄 Recargando datos de estudiantes:', event.detail);
+    loadStudents();
+});
+
+console.log('📚 Event listeners de período académico configurados en students.html');
+
 
     </script>
 </body>

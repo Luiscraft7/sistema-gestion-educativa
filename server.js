@@ -59,19 +59,16 @@ app.get('/', (req, res) => {
 // RUTAS API PARA ESTUDIANTES
 // ========================================
 
-// REEMPLAZAR el primer endpoint /api/students en server.js
-// Obtener todos los estudiantes
+/// Obtener todos los estudiantes con filtros opcionales
 app.get('/api/students', async (req, res) => {
     try {
         const { year, period_type, period_number } = req.query;
-        
         let academicPeriodId = null;
         
-        // Si se especifican parámetros de período, encontrar el academic_period_id
+        console.log('📚 GET /api/students:', { year, period_type, period_number });
+        
+        // CORRECCIÓN: Manejo mejorado de períodos académicos
         if (year && period_type && period_number) {
-            console.log(`📅 Filtrando estudiantes por período: ${year} - ${period_type} ${period_number}`);
-            
-            // Buscar el período académico
             const periodQuery = `
                 SELECT id FROM academic_periods 
                 WHERE year = ? AND period_type = ? AND period_number = ?
@@ -89,33 +86,52 @@ app.get('/api/students', async (req, res) => {
                 academicPeriodId = periodRow.id;
                 console.log(`📚 Usando período académico ID: ${academicPeriodId}`);
             } else {
-                console.log(`⚠️ Período académico no encontrado: ${year}-${period_type}-${period_number}`);
-                return res.json({
-                    success: true,
-                    data: [],
-                    message: '0 estudiantes encontrados - período no existe',
-                    filter_applied: true,
-                    period_info: { year, period_type, period_number }
-                });
+                // CORRECCIÓN: Si no existe el período, crearlo automáticamente
+                console.log(`🔧 Creando período académico: ${year}-${period_type}-${period_number}`);
+                
+                const insertPeriodQuery = `
+                    INSERT INTO academic_periods (year, period_type, period_number, name, is_active)
+                    VALUES (?, ?, ?, ?, 1)
+                `;
+                
+                const periodName = `${year} - ${period_number === 1 ? 'Primer' : period_number === 2 ? 'Segundo' : 'Tercer'} ${period_type === 'semester' ? 'Semestre' : 'Trimestre'}`;
+                
+                try {
+                    const newPeriod = await new Promise((resolve, reject) => {
+                        database.db.run(insertPeriodQuery, [year, period_type, period_number, periodName], function(err) {
+                            if (err) reject(err);
+                            else resolve({ id: this.lastID });
+                        });
+                    });
+                    
+                    academicPeriodId = newPeriod.id;
+                    console.log(`✅ Período académico creado con ID: ${academicPeriodId}`);
+                } catch (createError) {
+                    console.error('❌ Error creando período:', createError);
+                    return res.json({
+                        success: true,
+                        data: [],
+                        message: '0 estudiantes - error creando período',
+                        filter_applied: true
+                    });
+                }
             }
-        } else {
-            console.log('📚 Sin filtro de período, mostrando todos los estudiantes activos');
         }
         
-        // Obtener estudiantes usando la función corregida
+        // Obtener estudiantes
         const students = await database.getAllStudents(academicPeriodId);
         
-        console.log(`✅ Estudiantes encontrados: ${students.length}`);
+        console.log(`✅ Respuesta: ${students.length} estudiantes`);
         
         res.json({
             success: true,
             data: students,
             message: `${students.length} estudiantes encontrados`,
             filter_applied: !!(year && period_type && period_number),
-            period_info: year && period_type && period_number ? {
-                year: year,
+            period_info: academicPeriodId ? {
+                year: parseInt(year),
                 period_type: period_type,
-                period_number: period_number,
+                period_number: parseInt(period_number),
                 academic_period_id: academicPeriodId
             } : null
         });
@@ -125,6 +141,64 @@ app.get('/api/students', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error obteniendo estudiantes',
+            error: error.message
+        });
+    }
+});
+
+
+// AGREGAR DESPUÉS DE LOS ENDPOINTS EXISTENTES DE STUDENTS
+
+// Migrar estudiantes del período actual al nuevo período
+app.post('/api/students/migrate-period', async (req, res) => {
+    try {
+        const { fromPeriodId, toPeriodId, copyAll } = req.body;
+        
+        console.log(`🔄 Migración solicitada: de ${fromPeriodId} a ${toPeriodId}, copyAll: ${copyAll}`);
+        
+        if (copyAll) {
+            // Copiar TODOS los estudiantes del período anterior al nuevo
+            const migrateQuery = `
+                INSERT INTO students (
+                    academic_period_id, school_id, cedula, first_surname, second_surname, 
+                    first_name, student_id, email, phone, grade_level, subject_area, 
+                    section, birth_date, address, parent_name, parent_phone, parent_email, 
+                    notes, status
+                )
+                SELECT 
+                    ? as academic_period_id, school_id, cedula, first_surname, second_surname,
+                    first_name, student_id, email, phone, grade_level, subject_area,
+                    section, birth_date, address, parent_name, parent_phone, parent_email,
+                    notes, status
+                FROM students 
+                WHERE academic_period_id = ? AND status = 'active'
+            `;
+            
+            const result = await new Promise((resolve, reject) => {
+                database.db.run(migrateQuery, [toPeriodId, fromPeriodId], function(err) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
+                });
+            });
+            
+            res.json({
+                success: true,
+                message: `${result.changes} estudiantes migrados exitosamente`,
+                migrated: result.changes
+            });
+        } else {
+            res.json({
+                success: true,
+                message: 'Migración parcial no implementada aún',
+                migrated: 0
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Error en migración:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error en la migración de estudiantes',
             error: error.message
         });
     }
