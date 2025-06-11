@@ -95,6 +95,34 @@ function generateSessionToken() {
     return 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+// Obtener o crear un período académico y devolver su ID
+async function getOrCreateAcademicPeriodId(year, period_type, period_number) {
+    if (!year || !period_type || !period_number) {
+        return null;
+    }
+
+    const findQuery = `SELECT id FROM academic_periods WHERE year = ? AND period_type = ? AND period_number = ? LIMIT 1`;
+    const existing = await new Promise((resolve, reject) => {
+        database.db.get(findQuery, [year, period_type, period_number], (err, row) => {
+            if (err) reject(err); else resolve(row);
+        });
+    });
+
+    if (existing) {
+        return existing.id;
+    }
+
+    const periodName = `${year} - ${period_number === 1 ? 'Primer' : period_number === 2 ? 'Segundo' : 'Tercer'} ${period_type === 'semester' ? 'Semestre' : 'Trimestre'}`;
+    const insertQuery = `INSERT INTO academic_periods (year, period_type, period_number, name, is_active) VALUES (?, ?, ?, ?, 1)`;
+    const created = await new Promise((resolve, reject) => {
+        database.db.run(insertQuery, [year, period_type, period_number, periodName], function(err) {
+            if (err) reject(err); else resolve({ id: this.lastID });
+        });
+    });
+
+    return created.id;
+}
+
 // ========================================
 // INICIALIZACIÓN DE BASE DE DATOS
 // ========================================
@@ -1305,7 +1333,24 @@ app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => 
     try {
         console.log('📚 POST /api/grade-subjects/assign:', req.body);
         
-        const { gradeName, subjects, teacherName } = req.body;
+        const { gradeName, subjects, teacherName, year, period_type, period_number } = req.body;
+
+        let academicPeriodId = req.body.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
         
         if (!gradeName || !subjects || !Array.isArray(subjects) || subjects.length === 0) {
             return res.status(400).json({
@@ -1314,7 +1359,7 @@ app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => 
             });
         }
         
-        const result = await database.assignSubjectsToGrade({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name });
+        const result = await database.assignSubjectsToGrade({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId });
         res.json({
             success: true,
             data: result,
@@ -1334,8 +1379,25 @@ app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => 
 app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req, res) => {
     try {
         console.log('📚 POST /api/grade-subjects/assign-multiple:', req.body);
-        
-        const { grades, subjects, teacherName } = req.body;
+
+        const { grades, subjects, teacherName, year, period_type, period_number } = req.body;
+
+        let academicPeriodId = req.body.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
         
         if (!grades || !Array.isArray(grades) || grades.length === 0 ||
             !subjects || !Array.isArray(subjects) || subjects.length === 0) {
@@ -1345,7 +1407,7 @@ app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req,
             });
         }
         
-        const result = await database.assignSubjectsToMultipleGrades({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name });
+        const result = await database.assignSubjectsToMultipleGrades({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId });
         res.json({
             success: true,
             data: result,
@@ -1365,10 +1427,27 @@ app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req,
 app.get('/api/grade-subjects/:gradeName', authenticateTeacher, async (req, res) => {
     try {
         const { gradeName } = req.params;
-        
+        const { year, period_type, period_number } = req.query;
+
+        let academicPeriodId = req.query.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
         console.log('📖 GET /api/grade-subjects/' + gradeName);
-        
-        const subjects = await database.getSubjectsByGrade(gradeName, req.teacher.id);
+        const subjects = await database.getSubjectsByGrade(gradeName, req.teacher.id, academicPeriodId);
         res.json({
             success: true,
             data: subjects,
@@ -1389,8 +1468,27 @@ app.get('/api/grade-subjects/:gradeName', authenticateTeacher, async (req, res) 
 app.get('/api/grade-subjects', authenticateTeacher, async (req, res) => {
     try {
         console.log('📚 GET /api/grade-subjects');
-        
-        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id);
+
+        const { year, period_type, period_number } = req.query;
+
+        let academicPeriodId = req.query.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
+        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id, academicPeriodId);
         res.json({
             success: true,
             data: gradesWithSubjects,
@@ -1410,10 +1508,28 @@ app.get('/api/grade-subjects', authenticateTeacher, async (req, res) => {
 app.delete('/api/grade-subjects/:gradeName/:subjectName', authenticateTeacher, async (req, res) => {
     try {
         const { gradeName, subjectName } = req.params;
-        
+        const { year, period_type, period_number } = req.query;
+
+        let academicPeriodId = req.query.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
         console.log(`🗑️ DELETE /api/grade-subjects/${gradeName}/${subjectName}`);
-        
-        const result = await database.removeSubjectFromGrade(gradeName, subjectName, req.teacher.id);
+
+        const result = await database.removeSubjectFromGrade(gradeName, subjectName, req.teacher.id, academicPeriodId);
         res.json({
             success: true,
             data: result,
