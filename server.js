@@ -1733,7 +1733,7 @@ app.delete('/api/custom-subjects/bulk', async (req, res) => {
 // ========================================
 
 // Obtener evaluaciones por grado y materia filtradas por período académico
-app.get('/api/evaluations', async (req, res) => {
+app.get('/api/evaluations', authenticateTeacher, async (req, res) => {
     try {
         const { grade, subject, year, period_type, period_number } = req.query;
 
@@ -1775,9 +1775,14 @@ app.get('/api/evaluations', async (req, res) => {
             }
         }
 
-        console.log('📝 GET /api/evaluations:', { grade, subject, academicPeriodId });
+        console.log('📝 GET /api/evaluations:', { grade, subject, academicPeriodId, teacher: req.teacher.id });
 
-        const evaluations = await database.getEvaluationsByGradeSubjectAndPeriod(grade, subject, academicPeriodId);
+        const evaluations = await database.getEvaluationsByGradeSubjectAndPeriod(
+            grade,
+            subject,
+            academicPeriodId,
+            req.teacher.id
+        );
         res.json({
             success: true,
             data: evaluations,
@@ -1794,11 +1799,34 @@ app.get('/api/evaluations', async (req, res) => {
 });
 
 // Crear nueva evaluación
-app.post('/api/evaluations', async (req, res) => {
+app.post('/api/evaluations', authenticateTeacher, async (req, res) => {
     try {
         console.log('📝 POST /api/evaluations:', req.body);
-        
-        const result = await database.createEvaluation(req.body);
+
+        const { year, period_type, period_number } = req.body;
+
+        let academicPeriodId = req.body.academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
+        const result = await database.createEvaluation({
+            ...req.body,
+            teacher_id: req.teacher.id,
+            teacher_name: req.body.teacher_name || req.teacher.name,
+            academic_period_id: academicPeriodId
+        });
         res.json({
             success: true,
             data: result,
@@ -1815,7 +1843,7 @@ app.post('/api/evaluations', async (req, res) => {
 });
 
 // Actualizar evaluación
-app.put('/api/evaluations/:id', async (req, res) => {
+app.put('/api/evaluations/:id', authenticateTeacher, async (req, res) => {
     try {
         const { id } = req.params;
         console.log(`📝 PUT /api/evaluations/${id}:`, req.body);
@@ -1837,7 +1865,7 @@ app.put('/api/evaluations/:id', async (req, res) => {
 });
 
 // Eliminar evaluación
-app.delete('/api/evaluations/:id', async (req, res) => {
+app.delete('/api/evaluations/:id', authenticateTeacher, async (req, res) => {
     try {
         const { id } = req.params;
         console.log(`🗑️ DELETE /api/evaluations/${id}`);

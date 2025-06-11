@@ -1316,7 +1316,7 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Obtener evaluaciones por grado, materia y período académico
-    async getEvaluationsByGradeSubjectAndPeriod(gradeLevel, subjectArea, academicPeriodId) {
+    async getEvaluationsByGradeSubjectAndPeriod(gradeLevel, subjectArea, academicPeriodId, teacherId) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
@@ -1346,6 +1346,11 @@ async deleteStudent(id, teacherId = null) {
                 params.push(academicPeriodId);
             }
 
+            if (teacherId) {
+                query += ' AND a.teacher_id = ?';
+                params.push(teacherId);
+            }
+
             query += ' GROUP BY a.id ORDER BY a.created_at DESC';
 
             this.db.all(query, params, (err, rows) => {
@@ -1365,12 +1370,23 @@ async deleteStudent(id, teacherId = null) {
         return new Promise((resolve, reject) => {
             const query = `
                 INSERT INTO assignments (
-                    title, description, due_date, max_points, percentage,
-                    grade_level, subject_area, teacher_name, type
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    academic_period_id,
+                    teacher_id,
+                    title,
+                    description,
+                    due_date,
+                    max_points,
+                    percentage,
+                    grade_level,
+                    subject_area,
+                    teacher_name,
+                    type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             
             const values = [
+                evaluationData.academic_period_id || 1,
+                evaluationData.teacher_id,
                 evaluationData.title,
                 evaluationData.description || null,
                 evaluationData.due_date || null,
