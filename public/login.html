@@ -508,7 +508,7 @@
             localStorage.removeItem('sessionToken');
         });
 
-        // Manejo del formulario INTEGRADO (Admin + Profesores)
+        // Manejo del formulario INTEGRADO (Admin + Profesores) - VERSIÓN CORREGIDA
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -538,9 +538,17 @@
                         sessionStorage.setItem('adminSession', 'true');
                         sessionStorage.setItem('adminUser', email.trim());
                         
+                        // MOSTRAR ALERTA Y REDIRECCIONAR CON DELAY
                         alert('👑 ¡Bienvenido Administrador!');
-                        window.location.href = 'dashboard.html';
-                        return;
+                        
+                        // AGREGAR DELAY PARA ASEGURAR QUE LA SESIÓN SE GUARDE
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 500); // 500ms de delay
+                        
+                        return; // Salir de la función
+                    } else {
+                        throw new Error(adminResult.message);
                     }
                 }
                 
@@ -554,27 +562,25 @@
                 const teacherResult = await teacherResponse.json();
                 
                 if (teacherResult.success) {
-                    // Login exitoso de profesor
+                    // Guardar sesión del profesor
                     sessionStorage.setItem('teacherSession', 'true');
                     sessionStorage.setItem('teacherData', JSON.stringify(teacherResult.teacher));
-                    // Guardar token de sesión para peticiones autenticadas
                     localStorage.setItem('sessionToken', teacherResult.sessionToken);
-
-                    alert(`✅ ¡Bienvenido ${teacherResult.teacher.name}!`);
-                    window.location.href = 'dashboard.html';
+                    
+                    alert(`🎓 ¡Bienvenido ${teacherResult.teacher.name}!`);
+                    
+                    // AGREGAR DELAY TAMBIÉN PARA PROFESORES
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500); // 500ms de delay
                     
                 } else {
-                    // Error en login de profesor
-                    if (teacherResult.status === 'pending_approval') {
-                        showPendingModal(teacherResult.message);
-                    } else {
-                        alert(`❌ ${teacherResult.message}`);
-                    }
+                    throw new Error(teacherResult.message);
                 }
                 
             } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión. Intenta nuevamente.');
+                console.error('Error en login:', error);
+                alert(`❌ Error: ${error.message}`);
             } finally {
                 // Restaurar botón
                 btn.innerHTML = originalText;

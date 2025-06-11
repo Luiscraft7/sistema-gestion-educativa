@@ -1228,17 +1228,22 @@
         }
     }
 
-    // Verificar sesión (Admin O Profesor) - FUNCIÓN CORREGIDA
+   // Verificar sesión (Admin O Profesor) - VERSIÓN CORREGIDA
     function checkUserSession() {
+        console.log('🔍 Verificando sesión de usuario...');
+        
         // Primero verificar si es admin
         const adminSession = sessionStorage.getItem('adminSession');
         const adminUser = sessionStorage.getItem('adminUser');
+
+        console.log('Admin Session:', adminSession, 'Admin User:', adminUser);
 
         if (
             adminSession === 'true' &&
             adminUser &&
             adminUser.trim().toLowerCase() === 'luiscraft'
         ) {
+            console.log('✅ Sesión de administrador válida encontrada');
             updateHeaderWithAdmin(adminUser);
             return { type: 'admin', user: adminUser };
         }
@@ -1247,22 +1252,37 @@
         const teacherSession = sessionStorage.getItem('teacherSession');
         const teacherData = sessionStorage.getItem('teacherData');
         
+        console.log('Teacher Session:', teacherSession, 'Teacher Data existe:', !!teacherData);
+        
         if (teacherSession === 'true' && teacherData) {
-            const teacher = JSON.parse(teacherData);
-            updateHeaderWithTeacher(teacher);
-            return { type: 'teacher', user: teacher };
+            try {
+                const teacher = JSON.parse(teacherData);
+                console.log('✅ Sesión de profesor válida encontrada');
+                updateHeaderWithTeacher(teacher);
+                return { type: 'teacher', user: teacher };
+            } catch (error) {
+                console.error('Error parseando datos del profesor:', error);
+            }
         }
         
-        // PROBLEMA AQUÍ: No hay sesión válida - REMOVER REDIRECCIÓN AUTOMÁTICA
-        console.log('🚫 No hay sesión válida encontrada');
+        // PROBLEMA CORREGIDO: Dar más tiempo antes de redireccionar
+        console.log('⚠️ No se encontró sesión válida, verificando en 2 segundos...');
         
-        // Solo mostrar alerta sin redireccionar inmediatamente
         setTimeout(() => {
-            if (!sessionStorage.getItem('adminSession') && !sessionStorage.getItem('teacherSession')) {
+            // Verificar una vez más antes de redireccionar
+            const adminSessionCheck = sessionStorage.getItem('adminSession');
+            const teacherSessionCheck = sessionStorage.getItem('teacherSession');
+            
+            if (!adminSessionCheck && !teacherSessionCheck) {
+                console.log('🚫 Definitivamente no hay sesión válida, redirigiendo...');
                 alert('🚫 Debes iniciar sesión para acceder al dashboard.');
                 window.location.href = 'login.html';
+            } else {
+                console.log('✅ Sesión encontrada en segunda verificación, recargar interfaz');
+                // Si encuentra sesión, recargar la página para aplicar la interfaz correcta
+                window.location.reload();
             }
-        }, 1000); // Dar tiempo para que se establezca la sesión
+        }, 2000); // 2 segundos de delay en lugar de 1
         
         return null;
     }
