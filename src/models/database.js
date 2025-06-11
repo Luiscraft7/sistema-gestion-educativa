@@ -51,7 +51,7 @@ class Database {
     async createTables() {
         return new Promise((resolve, reject) => {
             const schemaPath = path.join(__dirname, '../../database/schema.sql');
-            
+
             if (!fs.existsSync(schemaPath)) {
                 console.error('❌ Archivo schema.sql no encontrado en:', schemaPath);
                 reject(new Error('❌ Archivo schema.sql no encontrado'));
@@ -59,13 +59,42 @@ class Database {
             }
 
             const schema = fs.readFileSync(schemaPath, 'utf8');
-            
-            this.db.exec(schema, (err) => {
+
+            this.db.exec(schema, async (err) => {
                 if (err) {
                     console.error('❌ Error creando tablas:', err);
                     reject(err);
                 } else {
                     console.log('✅ Tablas creadas/verificadas correctamente');
+                    try {
+                        await this.applyMigrations();
+                        resolve();
+                    } catch (migErr) {
+                        reject(migErr);
+                    }
+                }
+            });
+        });
+    }
+
+    async applyMigrations() {
+        return new Promise((resolve, reject) => {
+            this.db.all("PRAGMA table_info(grades);", (err, rows) => {
+                if (err) return reject(err);
+
+                const hasTeacher = rows.some(r => r.name === 'teacher_id');
+
+                if (!hasTeacher) {
+                    this.db.serialize(() => {
+                        this.db.run('ALTER TABLE grades ADD COLUMN teacher_id INTEGER DEFAULT 0', (err) => {
+                            if (err) return reject(err);
+                            this.db.run('CREATE INDEX IF NOT EXISTS idx_grades_teacher ON grades(teacher_id)', (idxErr) => {
+                                if (idxErr) return reject(idxErr);
+                                resolve();
+                            });
+                        });
+                    });
+                } else {
                     resolve();
                 }
             });
@@ -449,20 +478,37 @@ async deleteStudent(id, teacherId = null) {
     // ========================================
     // FUNCIONES DE GRADOS (BD REAL)
     // ========================================
-    async getAllGrades() {
+    async getAllGrades(teacherId = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT g.*, 
-                       COUNT(s.id) as usage 
-                FROM grades g 
-                LEFT JOIN students s ON g.name = s.grade_level AND s.status = 'active'
-                GROUP BY g.id, g.name, g.description, g.priority, g.created_at
-                ORDER BY g.priority DESC, g.name
-            `;
-            
-            this.db.all(query, [], (err, rows) => {
+            let query;
+            let params = [];
+
+            if (teacherId !== null && teacherId !== undefined) {
+                query = `
+                    SELECT g.*,\n                           COUNT(s.id) as usage
+                    FROM grades g
+                    LEFT JOIN students s ON g.name = s.grade_level
+                        AND s.status = 'active'
+                        AND s.teacher_id = ?
+                    WHERE g.teacher_id = ?
+                    GROUP BY g.id, g.name, g.description, g.priority, g.created_at
+                    ORDER BY g.priority DESC, g.name
+                `;
+                params = [teacherId, teacherId];
+            } else {
+                query = `
+                    SELECT g.*,\n                           COUNT(s.id) as usage
+                    FROM grades g
+                    LEFT JOIN students s ON g.name = s.grade_level
+                        AND s.status = 'active'
+                    GROUP BY g.id, g.name, g.description, g.priority, g.created_at
+                    ORDER BY g.priority DESC, g.name
+                `;
+            }
+
+            this.db.all(query, params, (err, rows) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -474,11 +520,12 @@ async deleteStudent(id, teacherId = null) {
 
     async addGrade(gradeData) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = 'INSERT INTO grades (name, description, priority) VALUES (?, ?, ?)';
-            
+            const query = 'INSERT INTO grades (teacher_id, name, description, priority) VALUES (?, ?, ?, ?)';
+
             this.db.run(query, [
+                gradeData.teacher_id,
                 gradeData.name,
                 gradeData.description || null,
                 gradeData.priority || 0
@@ -492,11 +539,11 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async deleteGrade(gradeId) {
+    async deleteGrade(gradeId, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            this.db.run('DELETE FROM grades WHERE id = ?', [gradeId], function(err) {
+            this.db.run('DELETE FROM grades WHERE id = ? AND teacher_id = ?', [gradeId, teacherId], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -510,12 +557,12 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async checkGradeUsage(gradeId) {
+    async checkGradeUsage(gradeId, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             // Primero obtener el nombre del grado
-            this.db.get('SELECT name FROM grades WHERE id = ?', [gradeId], (err, gradeRow) => {
+            this.db.get('SELECT name FROM grades WHERE id = ? AND teacher_id = ?', [gradeId, teacherId], (err, gradeRow) => {
                 if (err) {
                     reject(err);
                     return;
@@ -528,8 +575,8 @@ async deleteStudent(id, teacherId = null) {
 
                 // Verificar cuántos estudiantes usan este grado
                 this.db.get(
-                    'SELECT COUNT(*) as count FROM students WHERE grade_level = ? AND status = "active"',
-                    [gradeRow.name],
+                    'SELECT COUNT(*) as count FROM students WHERE grade_level = ? AND teacher_id = ? AND status = "active"',
+                    [gradeRow.name, teacherId],
                     (err, row) => {
                         if (err) {
                             reject(err);
@@ -548,14 +595,14 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Eliminar múltiples grados
-    async deleteMultipleGrades(gradeIds) {
+    async deleteMultipleGrades(gradeIds, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             const placeholders = gradeIds.map(() => '?').join(',');
-            const query = `DELETE FROM grades WHERE id IN (${placeholders})`;
-            
-            this.db.run(query, gradeIds, function(err) {
+            const query = `DELETE FROM grades WHERE id IN (${placeholders}) AND teacher_id = ?`;
+
+            this.db.run(query, [...gradeIds, teacherId], function(err) {
                 if (err) {
                     reject(err);
                 } else {
