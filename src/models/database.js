@@ -2349,6 +2349,7 @@ async clearUserPreviousSessions(teacherId) {
 // AGREGAR AL FINAL DE LAS FUNCIONES DE ESTUDIANTES
 
 // Copiar estudiantes de un período a otro
+// Copiar estudiantes de un período a otro (VERSIÓN SIMPLIFICADA)
 async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
     this.ensureConnection();
     
@@ -2371,40 +2372,111 @@ async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
                 return;
             }
             
-            // Copiar estudiantes
-            const copyQuery = `
-                INSERT INTO students (
-                    academic_period_id, school_id, cedula, first_surname, second_surname, 
-                    first_name, student_id, email, phone, grade_level, subject_area, 
-                    section, birth_date, address, parent_name, parent_phone, parent_email, 
-                    notes, status
-                )
-                SELECT 
-                    ? as academic_period_id, school_id, 
-                    cedula || '_P' || ? as cedula, -- Modificar cédula para evitar duplicados
-                    first_surname, second_surname, first_name,
-                    'EST-' || (
-                        SELECT COALESCE(MAX(CAST(SUBSTR(student_id, 5) AS INTEGER)), 0) + 
-                        ROW_NUMBER() OVER (ORDER BY id) 
-                        FROM students 
-                        WHERE student_id LIKE 'EST-%'
-                    ) as student_id, -- Generar nuevo ID único
-                    email, phone, grade_level, subject_area, section, birth_date, address, 
-                    parent_name, parent_phone, parent_email, notes, status
-                FROM students 
+            // Obtener estudiantes del período origen
+            const selectQuery = `
+                SELECT * FROM students 
                 WHERE academic_period_id = ? AND status = 'active'
+                ORDER BY first_surname, first_name
             `;
             
-            this.db.run(copyQuery, [toPeriodId, toPeriodId, fromPeriodId], function(err) {
+            this.db.all(selectQuery, [fromPeriodId], (err, students) => {
                 if (err) {
                     reject(err);
-                } else {
-                    resolve({
-                        copied: this.changes,
-                        message: `${this.changes} estudiantes copiados exitosamente al nuevo período`,
-                        skipped: false
-                    });
+                    return;
                 }
+                
+                if (students.length === 0) {
+                    resolve({
+                        copied: 0,
+                        message: 'No hay estudiantes activos en el período origen.',
+                        skipped: true
+                    });
+                    return;
+                }
+                
+                console.log(`📋 Copiando ${students.length} estudiantes...`);
+                
+                // Insertar estudiantes uno por uno con IDs únicos
+                let insertedCount = 0;
+                let lastStudentIndex = 0;
+                
+                // Obtener el último número de estudiante para generar IDs únicos
+                this.db.get(
+                    "SELECT MAX(CAST(SUBSTR(student_id, 5) AS INTEGER)) as maxId FROM students WHERE student_id LIKE 'EST-%'",
+                    [],
+                    (err, result) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+                        
+                        lastStudentIndex = (result.maxId || 0);
+                        
+                        // Función para insertar cada estudiante
+                        const insertStudent = (student, index) => {
+                            const newStudentId = `EST-${String(lastStudentIndex + index + 1).padStart(3, '0')}`;
+                            const newCedula = student.cedula ? `${student.cedula}_P${toPeriodId}` : null;
+                            
+                            const insertQuery = `
+                                INSERT INTO students (
+                                    academic_period_id, school_id, cedula, first_surname, second_surname, 
+                                    first_name, student_id, email, phone, grade_level, subject_area, 
+                                    section, birth_date, address, parent_name, parent_phone, parent_email, 
+                                    notes, status
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            `;
+                            
+                            const values = [
+                                toPeriodId,
+                                student.school_id || 1,
+                                newCedula,
+                                student.first_surname,
+                                student.second_surname,
+                                student.first_name,
+                                newStudentId,
+                                student.email,
+                                student.phone,
+                                student.grade_level,
+                                student.subject_area,
+                                student.section,
+                                student.birth_date,
+                                student.address,
+                                student.parent_name,
+                                student.parent_phone,
+                                student.parent_email,
+                                student.notes,
+                                'active'
+                            ];
+                            
+                            this.db.run(insertQuery, values, function(err) {
+                                if (err) {
+                                    console.error(`❌ Error insertando estudiante ${index + 1}:`, err);
+                                } else {
+                                    insertedCount++;
+                                    console.log(`✅ Estudiante ${index + 1}/${students.length} copiado: ${student.first_name} ${student.first_surname}`);
+                                }
+                                
+                                // Si es el último estudiante, resolver la promesa
+                                if (index === students.length - 1) {
+                                    if (insertedCount > 0) {
+                                        resolve({
+                                            copied: insertedCount,
+                                            message: `${insertedCount} estudiantes copiados exitosamente al nuevo período`,
+                                            skipped: false
+                                        });
+                                    } else {
+                                        reject(new Error('No se pudo copiar ningún estudiante'));
+                                    }
+                                }
+                            });
+                        };
+                        
+                        // Insertar todos los estudiantes
+                        students.forEach((student, index) => {
+                            insertStudent(student, index);
+                        });
+                    }
+                );
             });
         });
     });
