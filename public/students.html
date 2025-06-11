@@ -1045,6 +1045,8 @@
         async function loadStudents() {
             try {
                 console.log('📚 Cargando estudiantes...');
+                
+                // ✅ MOSTRAR ESTADO DE CARGA INICIAL
                 document.getElementById('loadingState').style.display = 'block';
                 document.getElementById('studentsTable').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
@@ -1056,6 +1058,8 @@
                 // Validar que el período tenga datos válidos
                 if (!currentPeriod || !currentPeriod.year || !currentPeriod.periodType || !currentPeriod.periodNumber) {
                     console.error('❌ Período académico inválido:', currentPeriod);
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
                     showMessage('error', 'Error: Período académico no válido. Verifica la configuración.');
                     return;
                 }
@@ -1072,49 +1076,62 @@
 
                 // ✅ USAR authenticatedFetch EN LUGAR DE fetch
                 const response = await authenticatedFetch(url);
-                if (!response) return; // Si falla la autenticación, se redirige automáticamente
-                
+                if (!response) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    return; // Si falla la autenticación, se redirige automáticamente
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
                     students = result.data || [];
                     filteredStudents = [...students];
-                    
+
                     console.log('✅ Estudiantes cargados:', {
                         total: students.length,
                         teacher_info: result.teacher_info,
                         period: result.period_info,
                         filter_applied: result.filter_applied
                     });
-                    
+
                     // Actualizar estadísticas y tabla
                     updateStats();
                     if (typeof updateFilters === 'function') {
                         updateFilters();
                     }
-                    renderStudentsTable();
-                    
+
                     // Mostrar info del profesor si está disponible
                     if (result.teacher_info) {
                         updateTeacherInfo(result.teacher_info);
                     }
-                    
+
+                    // ✅ RENDERIZAR TABLA O MOSTRAR EMPTY STATE
+                    renderStudentsTable();
+
                     // CORRECCIÓN: Mejor mensaje cuando no hay estudiantes
                     if (students.length === 0) {
-                        const periodText = `${currentPeriod.year} - ${currentPeriod.periodNumber === 1 ? 'Primer' : 'Segundo'} ${currentPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre'}`;
+                        const periodText = `${currentPeriod.year} - ${currentPeriod.periodNumber === 1 ? 'Primer' : currentPeriod.periodNumber === 2 ? 'Segundo' : 'Tercer'} ${currentPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre'}`;
                         showMessage('info', `No hay estudiantes registrados para ${periodText}. Los estudiantes de otros períodos se mantienen guardados.`);
                     }
-                    
+
                 } else {
                     console.error('❌ Error del servidor:', result.message);
+                    // ✅ MOSTRAR EMPTY STATE EN CASO DE ERROR DEL SERVIDOR
+                    document.getElementById('emptyState').style.display = 'block';
                     showMessage('error', 'Error cargando estudiantes: ' + result.message);
                 }
+
             } catch (error) {
                 console.error('❌ Error de conexión:', error);
+                // ✅ MOSTRAR EMPTY STATE EN CASO DE ERROR DE CONEXIÓN
+                document.getElementById('emptyState').style.display = 'block';
                 showMessage('error', 'Error de conexión. Verifica que el servidor esté funcionando.');
             } finally {
+                // ✅ OCULTAR LOADING STATE AL FINAL SIEMPRE
                 document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('studentsTable').style.display = 'block';
+                
+                // ✅ NO MOSTRAR TABLA AUTOMÁTICAMENTE - Dejar que renderStudentsTable() decida
+                // La tabla solo se mostrará si hay estudiantes (en renderStudentsTable)
             }
         }
 
