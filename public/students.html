@@ -1076,10 +1076,11 @@
         }
 
 
+        // FUNCIÓN HELPER: Obtener período académico actual
         function getCurrentAcademicPeriod() {
             // Intentar obtener del selector global del dashboard si existe
-            if (window.getCurrentAcademicPeriod) {
-                return window.getCurrentAcademicPeriod();
+            if (window.unifiedPeriodSelector) {
+                return window.unifiedPeriodSelector.getCurrentPeriod();
             }
             
             // Fallback a localStorage
@@ -1347,9 +1348,36 @@
             const formData = new FormData(event.target);
             const studentData = Object.fromEntries(formData.entries());
 
+            // AGREGAR PERÍODO ACADÉMICO ACTUAL
+            const currentPeriod = getCurrentAcademicPeriod();
+            console.log('📅 Guardando estudiante en período:', currentPeriod);
+            
+            // Buscar ID del período académico actual
+            try {
+                const periodResponse = await fetch(`/api/academic-periods?year=${currentPeriod.year}&period_type=${currentPeriod.periodType}&period_number=${currentPeriod.periodNumber}`);
+                const periodResult = await periodResponse.json();
+                
+                if (periodResult.success && periodResult.data.length > 0) {
+                    studentData.academic_period_id = periodResult.data[0].id;
+                    console.log('📚 Asignando período académico ID:', studentData.academic_period_id);
+                } else {
+                    studentData.academic_period_id = 1; // Fallback
+                    console.warn('⚠️ No se encontró período académico, usando ID por defecto');
+                }
+            } catch (error) {
+                console.error('Error obteniendo período académico:', error);
+                studentData.academic_period_id = 1; // Fallback
+            }
+
             try {
                 const url = editingStudentId ? `/api/students/${editingStudentId}` : '/api/students';
                 const method = editingStudentId ? 'PUT' : 'POST';
+
+                console.log('💾 Enviando datos del estudiante:', {
+                    name: studentData.first_name + ' ' + studentData.first_surname,
+                    academic_period_id: studentData.academic_period_id,
+                    grade_level: studentData.grade_level
+                });
 
                 const response = await fetch(url, {
                     method: method,
@@ -2437,16 +2465,20 @@
             }
         }
 
-        getCurrentPeriod() {
-            // Intentar obtener del selector global si existe
-            if (window.getCurrentAcademicPeriod) {
-                return window.getCurrentAcademicPeriod();
+       getCurrentPeriod() {
+            // Intentar obtener del selector global del dashboard si existe
+            if (window.unifiedPeriodSelector) {
+                return window.unifiedPeriodSelector.getCurrentPeriod();
             }
             
             // Fallback a localStorage
             const saved = localStorage.getItem('currentAcademicPeriod');
             if (saved) {
-                return JSON.parse(saved);
+                try {
+                    return JSON.parse(saved);
+                } catch (error) {
+                    console.error('Error parseando período guardado:', error);
+                }
             }
             
             // Período por defecto
@@ -2457,7 +2489,6 @@
                 periodNumber: 1
             };
         }
-
         getTeacherInfo() {
             // Intentar obtener datos del profesor de sessionStorage
             const teacherData = sessionStorage.getItem('teacherData');

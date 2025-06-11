@@ -254,7 +254,11 @@ class GlobalPeriodSelector {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(newPeriod)
+                body: JSON.stringify({
+                    year: newPeriod.year,
+                    period_type: newPeriod.periodType,
+                    period_number: newPeriod.periodNumber
+                })
             });
 
             const result = await response.json();

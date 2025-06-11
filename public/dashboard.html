@@ -1626,97 +1626,130 @@
             }
         }
 
-        async applyPeriodChange() {
-            const schoolSelector = document.getElementById('schoolSelector');
-            const yearSelector = document.getElementById('yearSelector');
-            const periodTypeSelector = document.getElementById('periodTypeSelector');
-            const periodNumberSelector = document.getElementById('periodSelector');
+    async applyPeriodChange() {
+        const schoolSelector = document.getElementById('schoolSelector');
+        const yearSelector = document.getElementById('yearSelector');
+        const periodTypeSelector = document.getElementById('periodTypeSelector');
+        const periodSelector = document.getElementById('periodSelector'); // ← CORREGIDO
 
-            if (!schoolSelector || !yearSelector || !periodTypeSelector || !periodNumberSelector) {
-                console.error('No se encontraron todos los selectores necesarios');
-                return;
-            }
+        if (!schoolSelector || !yearSelector || !periodTypeSelector || !periodSelector) {
+            console.error('No se encontraron todos los selectores necesarios');
+            return;
+        }
 
-            const newPeriod = {
-                schoolId: schoolSelector.value,
-                year: parseInt(yearSelector.value),
-                periodType: periodTypeSelector.value,
-                periodNumber: parseInt(periodNumberSelector.value)
-            };
+        console.log('📊 Valores de selectores:', {
+            school: schoolSelector.value,
+            year: yearSelector.value,
+            periodType: periodTypeSelector.value,
+            periodNumber: periodSelector.value
+        });
 
-            // Guardar en localStorage
-            this.saveCurrentPeriod(newPeriod);
+        const newPeriod = {
+            schoolId: schoolSelector.value,
+            year: parseInt(yearSelector.value),
+            periodType: periodTypeSelector.value,
+            periodNumber: parseInt(periodSelector.value) // ← CORREGIDO
+        };
+
+        console.log('📅 Aplicando período:', newPeriod);
+
+        try {
+            // Enviar al servidor
+            const response = await fetch('/api/academic-periods/set-current', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    year: newPeriod.year,
+                    period_type: newPeriod.periodType,
+                    period_number: newPeriod.periodNumber
+                })
+            });
+
+            const result = await response.json();
             
-            // Actualizar período actual
-            this.currentPeriod = newPeriod;
-            updateCurrentPeriodDisplay();
-            
-            // Resetear botón
-            const applyBtn = document.getElementById('applyPeriodBtn');
-            if (applyBtn) {
-                applyBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #7c3aed)';
-                applyBtn.innerHTML = '<i class="fas fa-check"></i> Período Aplicado';
-            }
-
-            // Notificar cambio
-            this.broadcastPeriodChange(newPeriod);
-
-            // Ocultar panel después de aplicar
-            setTimeout(() => {
+            if (result.success) {
+                // Guardar en localStorage
+                this.saveCurrentPeriod(newPeriod);
+                
+                // Actualizar período actual
+                this.currentPeriod = newPeriod;
+                updateCurrentPeriodDisplay();
+                
+                // Resetear botón
+                const applyBtn = document.getElementById('applyPeriodBtn');
                 if (applyBtn) {
-                    applyBtn.innerHTML = '<i class="fas fa-check"></i> Aplicar Período';
+                    applyBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #7c3aed)';
+                    applyBtn.innerHTML = '<i class="fas fa-check"></i> Período Aplicado';
                 }
-                togglePeriodSelector();
-            }, 2000);
 
-            console.log('✅ Período académico actualizado:', newPeriod);
-        }
+                // Notificar cambio
+                this.broadcastPeriodChange(newPeriod);
 
-        updateUI() {
-            const schoolSelector = document.getElementById('schoolSelector');
-            const yearSelector = document.getElementById('yearSelector');
-            const periodTypeSelector = document.getElementById('periodTypeSelector');
-            const periodNumberSelector = document.getElementById('periodSelector');
+                // Ocultar panel después de aplicar
+                setTimeout(() => {
+                    if (applyBtn) {
+                        applyBtn.innerHTML = '<i class="fas fa-check"></i> Aplicar Período';
+                    }
+                    togglePeriodSelector();
+                }, 2000);
 
-            if (schoolSelector) schoolSelector.value = this.currentPeriod.schoolId;
-            if (yearSelector) yearSelector.value = this.currentPeriod.year;
-            if (periodTypeSelector) periodTypeSelector.value = this.currentPeriod.periodType;
-            
-            this.updatePeriodOptions(this.currentPeriod.periodType);
-            if (periodNumberSelector) periodNumberSelector.value = this.currentPeriod.periodNumber;
-            
-            updateCurrentPeriodDisplay();
-        }
-
-        loadCurrentPeriod() {
-            const saved = localStorage.getItem('currentAcademicPeriod');
-            if (saved) {
-                return JSON.parse(saved);
+                console.log('✅ Período académico actualizado:', newPeriod);
+            } else {
+                throw new Error(result.message);
             }
-            
-            // Período por defecto
-            return {
-                schoolId: '1',
-                year: 2025,
-                periodType: 'semester',
-                periodNumber: 1
-            };
-        }
-
-        saveCurrentPeriod(period) {
-            localStorage.setItem('currentAcademicPeriod', JSON.stringify(period));
-        }
-
-        broadcastPeriodChange(newPeriod) {
-            window.dispatchEvent(new CustomEvent('academicPeriodChanged', {
-                detail: newPeriod
-            }));
-        }
-
-        getCurrentPeriod() {
-            return this.currentPeriod;
+        } catch (error) {
+            console.error('❌ Error aplicando período:', error);
+            alert('Error aplicando período: ' + error.message);
         }
     }
+
+    updateUI() {
+        const schoolSelector = document.getElementById('schoolSelector');
+        const yearSelector = document.getElementById('yearSelector');
+        const periodTypeSelector = document.getElementById('periodTypeSelector');
+        const periodNumberSelector = document.getElementById('periodSelector');
+
+        if (schoolSelector) schoolSelector.value = this.currentPeriod.schoolId;
+        if (yearSelector) yearSelector.value = this.currentPeriod.year;
+        if (periodTypeSelector) periodTypeSelector.value = this.currentPeriod.periodType;
+        
+        this.updatePeriodOptions(this.currentPeriod.periodType);
+        if (periodNumberSelector) periodNumberSelector.value = this.currentPeriod.periodNumber;
+        
+        updateCurrentPeriodDisplay();
+    }
+
+    loadCurrentPeriod() {
+        const saved = localStorage.getItem('currentAcademicPeriod');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        
+        // Período por defecto
+        return {
+            schoolId: '1',
+            year: 2025,
+            periodType: 'semester',
+            periodNumber: 1
+        };
+    }
+
+    saveCurrentPeriod(period) {
+        localStorage.setItem('currentAcademicPeriod', JSON.stringify(period));
+    }
+
+    broadcastPeriodChange(newPeriod) {
+        window.dispatchEvent(new CustomEvent('academicPeriodChanged', {
+            detail: newPeriod
+        }));
+    }
+
+    getCurrentPeriod() {
+        return this.currentPeriod;
+    }
+}
 
     // Inicializar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', () => {
