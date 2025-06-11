@@ -157,48 +157,49 @@ class Database {
     }
 
     async addStudent(studentData) {
-        this.ensureConnection();
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO students (
+                academic_period_id, school_id, cedula, first_surname, second_surname, first_name,
+                student_id, email, phone, grade_level, subject_area, section,
+                birth_date, address, parent_name, parent_phone, parent_email,
+                notes, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
         
-        return new Promise((resolve, reject) => {
-            const query = `
-                INSERT INTO students (
-                    school_id, cedula, first_surname, second_surname, first_name,
-                    student_id, email, phone, grade_level, subject_area, section,
-                    birth_date, address, parent_name, parent_phone, parent_email,
-                    notes, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-            
-            const values = [
-                studentData.school_id || 1,
-                studentData.cedula,
-                studentData.first_surname,
-                studentData.second_surname,
-                studentData.first_name,
-                studentData.student_id,
-                studentData.email,
-                studentData.phone,
-                studentData.grade_level,
-                studentData.subject_area,
-                studentData.section,
-                studentData.birth_date,
-                studentData.address,
-                studentData.parent_name,
-                studentData.parent_phone,
-                studentData.parent_email,
-                studentData.notes,
-                studentData.status || 'active'
-            ];
-            
-            this.db.run(query, values, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ id: this.lastID, changes: this.changes });
-                }
-            });
+        const values = [
+            studentData.academic_period_id || 1, // AGREGAR ESTE CAMPO
+            studentData.school_id || 1,
+            studentData.cedula,
+            studentData.first_surname,
+            studentData.second_surname,
+            studentData.first_name,
+            studentData.student_id,
+            studentData.email,
+            studentData.phone,
+            studentData.grade_level,
+            studentData.subject_area,
+            studentData.section,
+            studentData.birth_date,
+            studentData.address,
+            studentData.parent_name,
+            studentData.parent_phone,
+            studentData.parent_email,
+            studentData.notes,
+            studentData.status || 'active'
+        ];
+        
+        this.db.run(query, values, function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: this.lastID, changes: this.changes });
+            }
         });
-    }
+    });
+}
 
     async updateStudent(id, studentData) {
         this.ensureConnection();
@@ -206,7 +207,7 @@ class Database {
         return new Promise((resolve, reject) => {
             const query = `
                 UPDATE students SET 
-                    cedula = ?, first_surname = ?, second_surname = ?, first_name = ?,
+                    academic_period_id = ?, cedula = ?, first_surname = ?, second_surname = ?, first_name = ?,
                     student_id = ?, email = ?, phone = ?, grade_level = ?, subject_area = ?,
                     section = ?, birth_date = ?, address = ?, parent_name = ?,
                     parent_phone = ?, parent_email = ?, notes = ?, status = ?
@@ -214,6 +215,7 @@ class Database {
             `;
             
             const values = [
+                studentData.academic_period_id || 1, // AGREGAR ESTE CAMPO
                 studentData.cedula,
                 studentData.first_surname,
                 studentData.second_surname,
@@ -2344,7 +2346,69 @@ async clearUserPreviousSessions(teacherId) {
     }
 
 
+// AGREGAR AL FINAL DE LAS FUNCIONES DE ESTUDIANTES
 
+// Copiar estudiantes de un período a otro
+async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        // Verificar que no existan estudiantes en el período destino
+        const checkQuery = 'SELECT COUNT(*) as count FROM students WHERE academic_period_id = ? AND status = "active"';
+        
+        this.db.get(checkQuery, [toPeriodId], (err, row) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            if (row.count > 0) {
+                resolve({
+                    copied: 0,
+                    message: `El período destino ya tiene ${row.count} estudiantes. No se realizó la copia.`,
+                    skipped: true
+                });
+                return;
+            }
+            
+            // Copiar estudiantes
+            const copyQuery = `
+                INSERT INTO students (
+                    academic_period_id, school_id, cedula, first_surname, second_surname, 
+                    first_name, student_id, email, phone, grade_level, subject_area, 
+                    section, birth_date, address, parent_name, parent_phone, parent_email, 
+                    notes, status
+                )
+                SELECT 
+                    ? as academic_period_id, school_id, 
+                    cedula || '_P' || ? as cedula, -- Modificar cédula para evitar duplicados
+                    first_surname, second_surname, first_name,
+                    'EST-' || (
+                        SELECT COALESCE(MAX(CAST(SUBSTR(student_id, 5) AS INTEGER)), 0) + 
+                        ROW_NUMBER() OVER (ORDER BY id) 
+                        FROM students 
+                        WHERE student_id LIKE 'EST-%'
+                    ) as student_id, -- Generar nuevo ID único
+                    email, phone, grade_level, subject_area, section, birth_date, address, 
+                    parent_name, parent_phone, parent_email, notes, status
+                FROM students 
+                WHERE academic_period_id = ? AND status = 'active'
+            `;
+            
+            this.db.run(copyQuery, [toPeriodId, toPeriodId, fromPeriodId], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({
+                        copied: this.changes,
+                        message: `${this.changes} estudiantes copiados exitosamente al nuevo período`,
+                        skipped: false
+                    });
+                }
+            });
+        });
+    });
+}
 
     
     

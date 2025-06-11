@@ -243,105 +243,182 @@ class GlobalPeriodSelector {
         }
     }
 
-    async applyPeriodChange() {
-        const schoolSelector = document.getElementById('schoolSelector');
-        const yearSelector = document.getElementById('yearSelector');
-        const periodTypeSelector = document.getElementById('periodTypeSelector');
-        const periodSelector = document.getElementById('periodSelector');
+async applyPeriodChange() {
+    const schoolSelector = document.getElementById('schoolSelector');
+    const yearSelector = document.getElementById('yearSelector');
+    const periodTypeSelector = document.getElementById('periodTypeSelector');
+    const periodSelector = document.getElementById('periodSelector');
 
-        if (!schoolSelector || !yearSelector || !periodTypeSelector || !periodSelector) {
-            console.error('No se encontraron los selectores necesarios');
-            return;
-        }
-
-        const applyBtn = document.getElementById('applyPeriodBtn');
-        if (applyBtn && applyBtn.disabled) {
-            console.log('⚠️ Cambio de período ya en progreso');
-            return;
-        }
-
-        const newPeriod = {
-            schoolId: schoolSelector.value,
-            year: parseInt(yearSelector.value),
-            periodType: periodTypeSelector.value,
-            periodNumber: parseInt(periodSelector.value)
-        };
-
-        console.log('📅 Cambiando a período:', newPeriod);
-
-        try {
-            this.setLoadingState(true);
-
-            // Obtener período actual para posible migración
-            const currentPeriod = this.loadCurrentPeriod();
-            
-            // Establecer nuevo período en servidor
-            const response = await fetch('/api/academic-periods/set-current', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    year: newPeriod.year,
-                    period_type: newPeriod.periodType,
-                    period_number: newPeriod.periodNumber
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                console.log('✅ Período establecido:', result.data);
-
-                // MIGRACIÓN AUTOMÁTICA DE ESTUDIANTES
-                if (result.data.wasCreated && currentPeriod.year && 
-                    (currentPeriod.year !== newPeriod.year || 
-                    currentPeriod.periodType !== newPeriod.periodType ||
-                    currentPeriod.periodNumber !== newPeriod.periodNumber)) {
-                    
-                    try {
-                        console.log('🔄 Iniciando migración automática de estudiantes...');
-                        
-                        const migrateResponse = await fetch('/api/students/migrate-period', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                fromPeriodId: 1, // Período anterior (ajustar según necesidades)
-                                toPeriodId: result.data.periodId,
-                                copyAll: true
-                            })
-                        });
-
-                        const migrateResult = await migrateResponse.json();
-                        
-                        if (migrateResult.success && migrateResult.migrated > 0) {
-                            console.log(`✅ ${migrateResult.migrated} estudiantes migrados automáticamente`);
-                        }
-                    } catch (migrateError) {
-                        console.log('ℹ️ Migración automática no disponible:', migrateError.message);
-                    }
-                }
-
-                // Actualizar estado interno
-                const periodToSave = {
-                    ...newPeriod,
-                    periodId: result.data.periodId
-                };
-                
-                this.saveCurrentPeriod(periodToSave);
-                this.currentPeriod = periodToSave;
-                this.updateCurrentPeriodIndicator();
-                this.setSuccessState();
-                
-                // Enviar evento de cambio
-                this.broadcastPeriodChange(periodToSave);
-                
-            } else {
-                throw new Error(result.message);
-            }
-        } catch (error) {
-            console.error('❌ Error aplicando período:', error);
-            this.setErrorState(error.message);
-        }
+    if (!schoolSelector || !yearSelector || !periodTypeSelector || !periodSelector) {
+        console.error('No se encontraron los selectores necesarios');
+        return;
     }
+
+    // Protección contra múltiples clicks
+    const applyBtn = document.getElementById('applyPeriodBtn');
+    if (applyBtn && applyBtn.disabled) {
+        console.log('⚠️ Cambio de período ya en progreso, ignorando click adicional');
+        return;
+    }
+
+    const newPeriod = {
+        schoolId: schoolSelector.value,
+        year: parseInt(yearSelector.value),
+        periodType: periodTypeSelector.value,
+        periodNumber: parseInt(periodSelector.value)
+    };
+
+    console.log('📅 Cambiando a período:', newPeriod);
+
+    try {
+        // Mostrar estado de carga
+        this.setLoadingState(true);
+
+        // Obtener período actual para comparación
+        const currentPeriod = this.loadCurrentPeriod();
+        
+        // Establecer nuevo período en servidor
+        const response = await fetch('/api/academic-periods/set-current', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                year: newPeriod.year,
+                period_type: newPeriod.periodType,
+                period_number: newPeriod.periodNumber
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('✅ Período establecido en servidor:', result.data);
+
+            // VERIFICAR SI EL NUEVO PERÍODO ESTÁ VACÍO Y OFRECER COPIA
+            try {
+                const checkStudentsResponse = await fetch(`/api/students?year=${newPeriod.year}&period_type=${newPeriod.periodType}&period_number=${newPeriod.periodNumber}`);
+                const checkResult = await checkStudentsResponse.json();
+                
+                if (checkResult.success && checkResult.data.length === 0) {
+                    console.log('📝 Período nuevo sin estudiantes detectado');
+                    
+                    // Solo ofrecer copia si hay un período anterior diferente
+                    const isDifferentPeriod = currentPeriod.year && (
+                        currentPeriod.year !== newPeriod.year || 
+                        currentPeriod.periodType !== newPeriod.periodType ||
+                        currentPeriod.periodNumber !== newPeriod.periodNumber
+                    );
+                    
+                    if (isDifferentPeriod) {
+                        // Construir mensaje descriptivo
+                        const periodTypeName = newPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre';
+                        const periodNumber = newPeriod.periodNumber === 1 ? 'Primer' : 
+                                           newPeriod.periodNumber === 2 ? 'Segundo' : 'Tercer';
+                        
+                        const confirmCopy = confirm(
+                            `El ${periodNumber} ${periodTypeName} ${newPeriod.year} está vacío.\n\n` +
+                            `¿Deseas copiar la lista de estudiantes del período anterior como base?\n\n` +
+                            `📋 Esto copiará solo la información básica de los estudiantes\n` +
+                            `📚 Cada período mantendrá sus datos completamente independientes\n` +
+                            `✅ Los cambios en un período NO afectarán al otro\n\n` +
+                            `¿Continuar con la copia?`
+                        );
+                        
+                        if (confirmCopy) {
+                            try {
+                                console.log('🔄 Iniciando copia de estudiantes...');
+                                
+                                // Determinar período de origen (el anterior al actual)
+                                let fromPeriodId = 1; // Fallback
+                                
+                                if (currentPeriod.periodId) {
+                                    fromPeriodId = currentPeriod.periodId;
+                                }
+                                
+                                const copyResponse = await fetch('/api/students/copy-period', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        fromPeriodId: fromPeriodId,
+                                        toPeriodId: result.data.periodId
+                                    })
+                                });
+                                
+                                const copyResult = await copyResponse.json();
+                                
+                                if (copyResult.success && !copyResult.data.skipped) {
+                                    console.log(`✅ ${copyResult.data.copied} estudiantes copiados`);
+                                    
+                                    // Mostrar mensaje de éxito más detallado
+                                    setTimeout(() => {
+                                        alert(
+                                            `✅ Copia completada exitosamente\n\n` +
+                                            `📊 ${copyResult.data.copied} estudiantes copiados al ${periodNumber} ${periodTypeName}\n\n` +
+                                            `📝 Recordatorio: Cada período es independiente\n` +
+                                            `🔄 Recarga la página de estudiantes para ver los datos`
+                                        );
+                                    }, 1000);
+                                    
+                                } else if (copyResult.data && copyResult.data.skipped) {
+                                    console.log('ℹ️ Copia omitida:', copyResult.data.message);
+                                    alert('ℹ️ ' + copyResult.data.message);
+                                } else {
+                                    throw new Error(copyResult.message || 'Error en la copia');
+                                }
+                                
+                            } catch (copyError) {
+                                console.error('❌ Error en copia de estudiantes:', copyError);
+                                alert(`⚠️ Error copiando estudiantes: ${copyError.message}\n\nEl período se cambió correctamente, pero no se pudieron copiar los estudiantes.`);
+                            }
+                        } else {
+                            console.log('👤 Usuario eligió no copiar estudiantes');
+                        }
+                    }
+                } else if (checkResult.success && checkResult.data.length > 0) {
+                    console.log(`✅ Período ya tiene ${checkResult.data.length} estudiantes`);
+                }
+                
+            } catch (checkError) {
+                console.log('ℹ️ No se pudo verificar estudiantes para copia automática:', checkError.message);
+            }
+
+            // ========================================
+            // ACTUALIZAR ESTADO INTERNO
+            // ========================================
+
+            // Guardar período con ID en localStorage
+            const periodToSave = {
+                ...newPeriod,
+                periodId: result.data.periodId
+            };
+            
+            this.saveCurrentPeriod(periodToSave);
+            
+            // Actualizar estado interno
+            this.currentPeriod = periodToSave;
+            
+            // Actualizar indicador visual
+            this.updateCurrentPeriodIndicator();
+            
+            // Mostrar estado de éxito
+            this.setSuccessState();
+            
+            // Enviar evento global para que otros módulos recarguen sus datos
+            this.broadcastPeriodChange(periodToSave);
+            
+            console.log('📅 Cambio de período completado exitosamente');
+            
+        } else {
+            throw new Error(result.message || 'Error estableciendo período en servidor');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error aplicando cambio de período:', error);
+        this.setErrorState(error.message);
+        
+        // Mostrar mensaje de error al usuario
+        alert(`❌ Error cambiando período: ${error.message}`);
+    }
+}
 
     // ========================================
     // FUNCIÓN AUXILIAR PARA RECARGAR DATOS DEL MÓDULO ACTUAL

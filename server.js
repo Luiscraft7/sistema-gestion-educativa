@@ -147,58 +147,26 @@ app.get('/api/students', async (req, res) => {
 });
 
 
-// AGREGAR DESPUÉS DE LOS ENDPOINTS EXISTENTES DE STUDENTS
-
-// Migrar estudiantes del período actual al nuevo período
-app.post('/api/students/migrate-period', async (req, res) => {
+// Copiar estudiantes entre períodos (para uso inicial)
+app.post('/api/students/copy-period', async (req, res) => {
     try {
-        const { fromPeriodId, toPeriodId, copyAll } = req.body;
+        const { fromPeriodId, toPeriodId } = req.body;
         
-        console.log(`🔄 Migración solicitada: de ${fromPeriodId} a ${toPeriodId}, copyAll: ${copyAll}`);
+        console.log(`📋 Copia solicitada: de período ${fromPeriodId} a período ${toPeriodId}`);
         
-        if (copyAll) {
-            // Copiar TODOS los estudiantes del período anterior al nuevo
-            const migrateQuery = `
-                INSERT INTO students (
-                    academic_period_id, school_id, cedula, first_surname, second_surname, 
-                    first_name, student_id, email, phone, grade_level, subject_area, 
-                    section, birth_date, address, parent_name, parent_phone, parent_email, 
-                    notes, status
-                )
-                SELECT 
-                    ? as academic_period_id, school_id, cedula, first_surname, second_surname,
-                    first_name, student_id, email, phone, grade_level, subject_area,
-                    section, birth_date, address, parent_name, parent_phone, parent_email,
-                    notes, status
-                FROM students 
-                WHERE academic_period_id = ? AND status = 'active'
-            `;
-            
-            const result = await new Promise((resolve, reject) => {
-                database.db.run(migrateQuery, [toPeriodId, fromPeriodId], function(err) {
-                    if (err) reject(err);
-                    else resolve({ changes: this.changes });
-                });
-            });
-            
-            res.json({
-                success: true,
-                message: `${result.changes} estudiantes migrados exitosamente`,
-                migrated: result.changes
-            });
-        } else {
-            res.json({
-                success: true,
-                message: 'Migración parcial no implementada aún',
-                migrated: 0
-            });
-        }
+        const result = await database.copyStudentsBetweenPeriods(fromPeriodId, toPeriodId);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: result.message
+        });
         
     } catch (error) {
-        console.error('❌ Error en migración:', error);
+        console.error('❌ Error copiando estudiantes:', error);
         res.status(500).json({
             success: false,
-            message: 'Error en la migración de estudiantes',
+            message: 'Error copiando estudiantes entre períodos',
             error: error.message
         });
     }
