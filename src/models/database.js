@@ -120,30 +120,18 @@ class Database {
                 // Solo filtrar por período académico (para admin)
                 query = `
                     SELECT s.*, sc.name as school_name, ap.name as period_name
-                    FROM students s
-                    LEFT JOIN schools sc ON s.school_id = sc.id
+                    FROM students s 
+                    LEFT JOIN schools sc ON s.school_id = sc.id 
                     LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
                     WHERE s.academic_period_id = ? AND s.status = 'active'
                     ORDER BY s.first_surname, s.first_name
                 `;
                 params = [academicPeriodId];
                 console.log(`📚 Estudiantes para período académico: ${academicPeriodId}`);
-            } else if (teacherId) {
-                // Filtrar por profesor sin especificar período
-                query = `
-                    SELECT s.*, sc.name as school_name, ap.name as period_name
-                    FROM students s
-                    LEFT JOIN schools sc ON s.school_id = sc.id
-                    LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
-                    WHERE s.teacher_id = ? AND s.status = 'active'
-                    ORDER BY s.academic_period_id DESC, s.first_surname, s.first_name
-                `;
-                params = [teacherId];
-                console.log(`📚 Estudiantes para profesor ${teacherId} (todos los períodos)`);
             } else {
                 // Mostrar TODOS los estudiantes activos (solo para admin)
                 query = `
-                    SELECT s.*, sc.name as school_name, ap.name as period_name,
+                    SELECT s.*, sc.name as school_name, ap.name as period_name, 
                         t.full_name as teacher_name
                     FROM students s 
                     LEFT JOIN schools sc ON s.school_id = sc.id 
@@ -461,26 +449,20 @@ async deleteStudent(id, teacherId = null) {
     // ========================================
     // FUNCIONES DE GRADOS (BD REAL)
     // ========================================
-    async getAllGrades(teacherId = null) {
+    async getAllGrades() {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
-            let query = `
-                SELECT g.*,
-                       COUNT(s.id) as usage
-                FROM grades g
-                LEFT JOIN students s ON g.name = s.grade_level AND s.status = 'active'`;
-            const params = [];
-            if (teacherId !== null) {
-                query += ' AND s.teacher_id = ?';
-                params.push(teacherId);
-                query += ' WHERE g.teacher_id = ?';
-                params.push(teacherId);
-            }
-            query += ` GROUP BY g.id, g.name, g.description, g.priority, g.created_at
-                ORDER BY g.priority DESC, g.name`;
-
-            this.db.all(query, params, (err, rows) => {
+            const query = `
+                SELECT g.*, 
+                       COUNT(s.id) as usage 
+                FROM grades g 
+                LEFT JOIN students s ON g.name = s.grade_level AND s.status = 'active'
+                GROUP BY g.id, g.name, g.description, g.priority, g.created_at
+                ORDER BY g.priority DESC, g.name
+            `;
+            
+            this.db.all(query, [], (err, rows) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -492,12 +474,11 @@ async deleteStudent(id, teacherId = null) {
 
     async addGrade(gradeData) {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
-            const query = 'INSERT INTO grades (teacher_id, name, description, priority) VALUES (?, ?, ?, ?)';
-
+            const query = 'INSERT INTO grades (name, description, priority) VALUES (?, ?, ?)';
+            
             this.db.run(query, [
-                gradeData.teacher_id,
                 gradeData.name,
                 gradeData.description || null,
                 gradeData.priority || 0
@@ -511,11 +492,11 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async deleteGrade(gradeId, teacherId) {
+    async deleteGrade(gradeId) {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
-            this.db.run('DELETE FROM grades WHERE id = ? AND teacher_id = ?', [gradeId, teacherId], function(err) {
+            this.db.run('DELETE FROM grades WHERE id = ?', [gradeId], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -529,12 +510,12 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async checkGradeUsage(gradeId, teacherId) {
+    async checkGradeUsage(gradeId) {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
             // Primero obtener el nombre del grado
-            this.db.get('SELECT name FROM grades WHERE id = ? AND teacher_id = ?', [gradeId, teacherId], (err, gradeRow) => {
+            this.db.get('SELECT name FROM grades WHERE id = ?', [gradeId], (err, gradeRow) => {
                 if (err) {
                     reject(err);
                     return;
@@ -547,8 +528,8 @@ async deleteStudent(id, teacherId = null) {
 
                 // Verificar cuántos estudiantes usan este grado
                 this.db.get(
-                    'SELECT COUNT(*) as count FROM students WHERE grade_level = ? AND teacher_id = ? AND status = "active"',
-                    [gradeRow.name, teacherId],
+                    'SELECT COUNT(*) as count FROM students WHERE grade_level = ? AND status = "active"',
+                    [gradeRow.name],
                     (err, row) => {
                         if (err) {
                             reject(err);
@@ -567,13 +548,14 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Eliminar múltiples grados
-    async deleteMultipleGrades(gradeIds, teacherId) {
+    async deleteMultipleGrades(gradeIds) {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
             const placeholders = gradeIds.map(() => '?').join(',');
-            const query = `DELETE FROM grades WHERE id IN (${placeholders}) AND teacher_id = ?`;
-            this.db.run(query, [...gradeIds, teacherId], function(err) {
+            const query = `DELETE FROM grades WHERE id IN (${placeholders})`;
+            
+            this.db.run(query, gradeIds, function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -734,7 +716,7 @@ async deleteStudent(id, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { gradeName, subjects, teacherName, teacherId } = gradeData;
+            const { gradeName, subjects, teacherName } = gradeData;
             
             // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
             const db = this.db;
@@ -749,10 +731,10 @@ async deleteStudent(id, teacherId = null) {
                 let completed = 0;
 
                 subjects.forEach((subject) => {
-                      db.run(
-                        `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, teacher_id, is_active)`
-                        VALUES (?, ?, ?, ?, 1)`,
-                        [gradeName, subject, teacherName || null, teacherId],
+                    db.run(
+                        `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, is_active) 
+                        VALUES (?, ?, ?, 1)`,
+                        [gradeName, subject, teacherName || null],
                         function(err) {
                             if (err) {
                                 errorCount++;
@@ -796,7 +778,7 @@ async deleteStudent(id, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { grades, subjects, teacherName, teacherId } = assignmentData;
+            const { grades, subjects, teacherName } = assignmentData;
             
             // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
             const db = this.db;
@@ -813,9 +795,10 @@ async deleteStudent(id, teacherId = null) {
                 grades.forEach((gradeName) => {
                     subjects.forEach((subject) => {
                         db.run(
-                            `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, teacher_id, is_active)`
-                            VALUES (?, ?, ?, ?, 1)`,
-                            [gradeName, subject, teacherName || null, teacherId],
+                            `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, is_active) 
+                            VALUES (?, ?, ?, 1)`,
+                            [gradeName, subject, teacherName || null],
+                            function(err) {
                                 if (err) {
                                     totalErrorCount++;
                                     errors.push(`Error con ${gradeName} - ${subject}: ${err.message}`);
@@ -857,15 +840,13 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Obtener materias asignadas a un grado
-    async getSubjectsByGrade(gradeName, teacherId = null) {
+    async getSubjectsByGrade(gradeName) {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
-            const query = `SELECT * FROM grade_subjects WHERE grade_name = ? ${teacherId ? 'AND teacher_id = ?' : ''} AND is_active = 1 ORDER BY subject_name`;
-            const params = teacherId ? [gradeName, teacherId] : [gradeName];
             this.db.all(
-                query,
-                params,
+                'SELECT * FROM grade_subjects WHERE grade_name = ? AND is_active = 1 ORDER BY subject_name',
+                [gradeName],
                 (err, rows) => {
                     if (err) {
                         reject(err);
@@ -879,26 +860,19 @@ async deleteStudent(id, teacherId = null) {
 
 
     // Obtener todos los grados con sus materias (FORMATO CORREGIDO)
-  async getAllGradesWithSubjects(teacherId = null) {
+  async getAllGradesWithSubjects() {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
-            let query = `SELECT g.name as grade_name,
-                               GROUP_CONCAT(gs.subject_name) as subjects,
-                               COUNT(gs.subject_name) as subject_count
-                        FROM grades g
-                        LEFT JOIN grade_subjects gs ON g.name = gs.grade_name AND gs.is_active = 1`;
-            const params = [];
-            if (teacherId !== null) {
-                query += ' AND gs.teacher_id = ?';
-                params.push(teacherId);
-                query += ' WHERE g.teacher_id = ?';
-                params.push(teacherId);
-            }
-            query += ' GROUP BY g.name ORDER BY g.name';
             this.db.all(
-                query,
-                params,
+                `SELECT g.name as grade_name, 
+                        GROUP_CONCAT(gs.subject_name) as subjects,
+                        COUNT(gs.subject_name) as subject_count
+                 FROM grades g
+                 LEFT JOIN grade_subjects gs ON g.name = gs.grade_name AND gs.is_active = 1
+                 GROUP BY g.name
+                 ORDER BY g.name`,
+                [],
                 (err, rows) => {
                     if (err) {
                         reject(err);
@@ -916,15 +890,13 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Eliminar asignación de materia a grado
-    async removeSubjectFromGrade(gradeName, subjectName, teacherId = null) {
+    async removeSubjectFromGrade(gradeName, subjectName) {
         this.ensureConnection();
-
+        
         return new Promise((resolve, reject) => {
-            const query = 'DELETE FROM grade_subjects WHERE grade_name = ? AND subject_name = ?' + (teacherId ? ' AND teacher_id = ?' : '');
-            const params = teacherId ? [gradeName, subjectName, teacherId] : [gradeName, subjectName];
             this.db.run(
-                query,
-                params,
+                'DELETE FROM grade_subjects WHERE grade_name = ? AND subject_name = ?',
+                [gradeName, subjectName],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -2246,6 +2218,40 @@ async updateTeacherLastLogin(teacherId) {
         });
     }
 
+// Actualizar estado de pago de profesor
+async updateTeacherPayment(teacherId, isPaid) {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE teachers SET is_paid = ?, payment_date = ? WHERE id = ?`;
+        const paymentDate = isPaid ? new Date().toISOString() : null;
+        
+        this.db.run(sql, [isPaid ? 1 : 0, paymentDate, teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    id: teacherId,
+                    is_paid: isPaid,
+                    changes: this.changes
+                });
+            }
+        });
+    });
+}
+
+// Actualizar último login (ya existe pero asegúrate que esté)
+async updateTeacherLastLogin(teacherId) {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE teachers SET last_login = ? WHERE id = ?`;
+        
+        this.db.run(sql, [new Date().toISOString(), teacherId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: teacherId, last_login: new Date().toISOString() });
+            }
+        });
+    });
+}
 
 
 // ========================================
@@ -2373,6 +2379,39 @@ async clearUserPreviousSessions(teacherId) {
     });
 }
     
+
+// NUEVA FUNCIÓN: Actualizar perfil del profesor
+    async updateTeacherProfile(teacherId, profileData) {
+        this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            const query = `
+                UPDATE teachers 
+                SET full_name = ?, school_name = ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            `;
+            
+            const values = [
+                profileData.full_name,
+                profileData.school_name,
+                teacherId
+            ];
+            
+            this.db.run(query, values, function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ 
+                        id: teacherId, 
+                        changes: this.changes,
+                        full_name: profileData.full_name,
+                        school_name: profileData.school_name
+                    });
+                }
+            });
+        });
+    }
+
 
 // NUEVA FUNCIÓN: Actualizar perfil del profesor
     async updateTeacherProfile(teacherId, profileData) {
@@ -2540,10 +2579,6 @@ async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
         });
     });
 }
-
-    
-
-
 
 
 
