@@ -120,18 +120,30 @@ class Database {
                 // Solo filtrar por período académico (para admin)
                 query = `
                     SELECT s.*, sc.name as school_name, ap.name as period_name
-                    FROM students s 
-                    LEFT JOIN schools sc ON s.school_id = sc.id 
+                    FROM students s
+                    LEFT JOIN schools sc ON s.school_id = sc.id
                     LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
                     WHERE s.academic_period_id = ? AND s.status = 'active'
                     ORDER BY s.first_surname, s.first_name
                 `;
                 params = [academicPeriodId];
                 console.log(`📚 Estudiantes para período académico: ${academicPeriodId}`);
+            } else if (teacherId) {
+                // Filtrar por profesor sin especificar período
+                query = `
+                    SELECT s.*, sc.name as school_name, ap.name as period_name
+                    FROM students s
+                    LEFT JOIN schools sc ON s.school_id = sc.id
+                    LEFT JOIN academic_periods ap ON s.academic_period_id = ap.id
+                    WHERE s.teacher_id = ? AND s.status = 'active'
+                    ORDER BY s.academic_period_id DESC, s.first_surname, s.first_name
+                `;
+                params = [teacherId];
+                console.log(`📚 Estudiantes para profesor ${teacherId} (todos los períodos)`);
             } else {
                 // Mostrar TODOS los estudiantes activos (solo para admin)
                 query = `
-                    SELECT s.*, sc.name as school_name, ap.name as period_name, 
+                    SELECT s.*, sc.name as school_name, ap.name as period_name,
                         t.full_name as teacher_name
                     FROM students s 
                     LEFT JOIN schools sc ON s.school_id = sc.id 

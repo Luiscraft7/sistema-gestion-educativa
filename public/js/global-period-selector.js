@@ -332,15 +332,27 @@ async applyPeriodChange() {
                 
                 if (checkResult.success && checkResult.data.length === 0) {
                     console.log('📝 Período nuevo sin estudiantes detectado');
-                    
+
                     // Solo ofrecer copia si hay un período anterior diferente
                     const isDifferentPeriod = currentPeriod.year && (
-                        currentPeriod.year !== newPeriod.year || 
+                        currentPeriod.year !== newPeriod.year ||
                         currentPeriod.periodType !== newPeriod.periodType ||
                         currentPeriod.periodNumber !== newPeriod.periodNumber
                     );
-                    
-                    if (isDifferentPeriod) {
+
+                    // Verificar si el período anterior tiene estudiantes
+                    let previousHasStudents = false;
+                    if (isDifferentPeriod && currentPeriod.year) {
+                        try {
+                            const prevResp = await authenticatedFetch(`/api/students?year=${currentPeriod.year}&period_type=${currentPeriod.periodType}&period_number=${currentPeriod.periodNumber}`);
+                            const prevResult = await prevResp.json();
+                            previousHasStudents = prevResult.success && prevResult.data.length > 0;
+                        } catch (prevError) {
+                            console.log('ℹ️ No se pudo verificar estudiantes del período anterior:', prevError.message);
+                        }
+                    }
+
+                    if (isDifferentPeriod && previousHasStudents) {
                         // Construir mensaje descriptivo
                         const periodTypeName = newPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre';
                         const periodNumber = newPeriod.periodNumber === 1 ? 'Primer' : 
