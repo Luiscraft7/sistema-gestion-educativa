@@ -773,9 +773,9 @@ async deleteStudent(id, teacherId = null) {
     // Asignar múltiples materias a un grado
     async assignSubjectsToGrade(gradeData) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const { gradeName, subjects, teacherName } = gradeData;
+            const { gradeName, subjects, teacherId, academicPeriodId, teacherName } = gradeData;
             
             // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
             const db = this.db;
@@ -791,9 +791,9 @@ async deleteStudent(id, teacherId = null) {
 
                 subjects.forEach((subject) => {
                     db.run(
-                        `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, is_active) 
-                        VALUES (?, ?, ?, 1)`,
-                        [gradeName, subject, teacherName || null],
+                        `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, grade_name, subject_name, teacher_name, is_active)
+                        VALUES (?, ?, ?, ?, ?, 1)`,
+                        [academicPeriodId || 1, teacherId, gradeName, subject, teacherName || null],
                         function(err) {
                             if (err) {
                                 errorCount++;
@@ -837,7 +837,7 @@ async deleteStudent(id, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { grades, subjects, teacherName } = assignmentData;
+            const { grades, subjects, teacherId, academicPeriodId, teacherName } = assignmentData;
             
             // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
             const db = this.db;
@@ -854,9 +854,9 @@ async deleteStudent(id, teacherId = null) {
                 grades.forEach((gradeName) => {
                     subjects.forEach((subject) => {
                         db.run(
-                            `INSERT OR REPLACE INTO grade_subjects (grade_name, subject_name, teacher_name, is_active) 
-                            VALUES (?, ?, ?, 1)`,
-                            [gradeName, subject, teacherName || null],
+                            `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, grade_name, subject_name, teacher_name, is_active)
+                            VALUES (?, ?, ?, ?, ?, 1)`,
+                            [academicPeriodId || 1, teacherId, gradeName, subject, teacherName || null],
                             function(err) {
                                 if (err) {
                                     totalErrorCount++;
@@ -899,13 +899,28 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Obtener materias asignadas a un grado
-    async getSubjectsByGrade(gradeName) {
+    async getSubjectsByGrade(gradeName, teacherId = null, academicPeriodId = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
+            let query = 'SELECT * FROM grade_subjects WHERE grade_name = ?';
+            const params = [gradeName];
+
+            if (teacherId !== null) {
+                query += ' AND teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            if (academicPeriodId !== null) {
+                query += ' AND academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
+            query += ' AND is_active = 1 ORDER BY subject_name';
+
             this.db.all(
-                'SELECT * FROM grade_subjects WHERE grade_name = ? AND is_active = 1 ORDER BY subject_name',
-                [gradeName],
+                query,
+                params,
                 (err, rows) => {
                     if (err) {
                         reject(err);
@@ -919,43 +934,72 @@ async deleteStudent(id, teacherId = null) {
 
 
     // Obtener todos los grados con sus materias (FORMATO CORREGIDO)
-  async getAllGradesWithSubjects() {
+  async getAllGradesWithSubjects(teacherId = null, academicPeriodId = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            this.db.all(
-                `SELECT g.name as grade_name, 
-                        GROUP_CONCAT(gs.subject_name) as subjects,
-                        COUNT(gs.subject_name) as subject_count
-                 FROM grades g
-                 LEFT JOIN grade_subjects gs ON g.name = gs.grade_name AND gs.is_active = 1
-                 GROUP BY g.name
-                 ORDER BY g.name`,
-                [],
-                (err, rows) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        const result = rows.map(row => ({
-                            gradeName: row.grade_name,
-                            subjects: row.subjects ? row.subjects.split(',') : [],
-                            subjectCount: row.subject_count || 0
-                        }));
-                        resolve(result);
-                    }
+            let query = `SELECT g.name as grade_name,
+                                GROUP_CONCAT(gs.subject_name) as subjects,
+                                COUNT(gs.subject_name) as subject_count
+                         FROM grades g
+                         LEFT JOIN grade_subjects gs ON g.name = gs.grade_name AND gs.is_active = 1`;
+            const params = [];
+            const conditions = [];
+
+            if (teacherId !== null) {
+                conditions.push('g.teacher_id = ?');
+                params.push(teacherId);
+                conditions.push('gs.teacher_id = ?');
+                params.push(teacherId);
+            }
+
+            if (academicPeriodId !== null) {
+                conditions.push('gs.academic_period_id = ?');
+                params.push(academicPeriodId);
+            }
+
+            if (conditions.length > 0) {
+                query += ' WHERE ' + conditions.join(' AND ');
+            }
+
+            query += ' GROUP BY g.name ORDER BY g.name';
+
+            this.db.all(query, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const result = rows.map(row => ({
+                        gradeName: row.grade_name,
+                        subjects: row.subjects ? row.subjects.split(',') : [],
+                        subjectCount: row.subject_count || 0
+                    }));
+                    resolve(result);
                 }
-            );
+            });
         });
     }
 
     // Eliminar asignación de materia a grado
-    async removeSubjectFromGrade(gradeName, subjectName) {
+    async removeSubjectFromGrade(gradeName, subjectName, teacherId = null, academicPeriodId = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
+            let query = 'DELETE FROM grade_subjects WHERE grade_name = ? AND subject_name = ?';
+            const params = [gradeName, subjectName];
+
+            if (teacherId !== null) {
+                query += ' AND teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            if (academicPeriodId !== null) {
+                query += ' AND academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
             this.db.run(
-                'DELETE FROM grade_subjects WHERE grade_name = ? AND subject_name = ?',
-                [gradeName, subjectName],
+                query,
+                params,
                 function(err) {
                     if (err) {
                         reject(err);
