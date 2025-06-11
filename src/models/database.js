@@ -1315,6 +1315,49 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
+    // Obtener evaluaciones por grado, materia y período académico
+    async getEvaluationsByGradeSubjectAndPeriod(gradeLevel, subjectArea, academicPeriodId) {
+        this.ensureConnection();
+
+        return new Promise((resolve, reject) => {
+            let query = `
+                SELECT
+                    a.*,
+                    COUNT(ag.id) as total_grades,
+                    AVG(CASE
+                        WHEN ag.points_earned IS NOT NULL AND a.max_points > 0
+                        THEN (ag.points_earned * 100.0 / a.max_points)
+                        ELSE NULL
+                    END) as avg_grade,
+                    (SELECT COUNT(*)
+                     FROM students s
+                     WHERE s.status = 'active'
+                       AND s.grade_level = a.grade_level
+                       AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                    ) as total_students
+                FROM assignments a
+                LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
+                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1`;
+
+            const params = [gradeLevel, subjectArea];
+
+            if (academicPeriodId) {
+                query += ' AND a.academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
+            query += ' GROUP BY a.id ORDER BY a.created_at DESC';
+
+            this.db.all(query, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+    }
+
     // Crear nueva evaluación
     async createEvaluation(evaluationData) {
         this.ensureConnection();

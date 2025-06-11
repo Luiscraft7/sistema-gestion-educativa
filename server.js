@@ -1732,21 +1732,52 @@ app.delete('/api/custom-subjects/bulk', async (req, res) => {
 // RUTAS API PARA EVALUACIONES - CORREGIDAS ✅
 // ========================================
 
-// Obtener evaluaciones por grado y materia
+// Obtener evaluaciones por grado y materia filtradas por período académico
 app.get('/api/evaluations', async (req, res) => {
     try {
-        const { grade, subject } = req.query;
-        
+        const { grade, subject, year, period_type, period_number } = req.query;
+
         if (!grade || !subject) {
             return res.status(400).json({
                 success: false,
                 message: 'Grado y materia son requeridos'
             });
         }
-        
-        console.log('📝 GET /api/evaluations:', { grade, subject });
-        
-        const evaluations = await database.getEvaluationsByGradeAndSubject(grade, subject);
+
+        let academicPeriodId = null;
+        if (year && period_type && period_number) {
+            const periodQuery = `
+                SELECT id FROM academic_periods
+                WHERE year = ? AND period_type = ? AND period_number = ?
+                LIMIT 1
+            `;
+
+            const periodRow = await new Promise((resolve, reject) => {
+                database.db.get(periodQuery, [year, period_type, period_number], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+
+            if (periodRow) {
+                academicPeriodId = periodRow.id;
+            } else {
+                const insertQuery = `
+                    INSERT INTO academic_periods (year, period_type, period_number, name, is_active)
+                    VALUES (?, ?, ?, ?, 1)
+                `;
+                const periodName = `${year} - ${period_number === '1' ? 'Primer' : period_number === '2' ? 'Segundo' : 'Tercer'} ${period_type === 'semester' ? 'Semestre' : 'Trimestre'}`;
+                const newPeriod = await new Promise((resolve, reject) => {
+                    database.db.run(insertQuery, [year, period_type, period_number, periodName], function(err) {
+                        if (err) reject(err); else resolve({ id: this.lastID });
+                    });
+                });
+                academicPeriodId = newPeriod.id;
+            }
+        }
+
+        console.log('📝 GET /api/evaluations:', { grade, subject, academicPeriodId });
+
+        const evaluations = await database.getEvaluationsByGradeSubjectAndPeriod(grade, subject, academicPeriodId);
         res.json({
             success: true,
             data: evaluations,
