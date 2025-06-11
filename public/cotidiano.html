@@ -924,6 +924,43 @@ Participa activamente en discusiones"
         let hasUnsavedChanges = false;
         let subIndicatorCounter = 3;
 
+        // Helper para peticiones autenticadas
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('sessionToken');
+
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+
+            const response = await fetch(url, mergedOptions);
+
+            if (response.status === 401) {
+                localStorage.removeItem('sessionToken');
+                localStorage.removeItem('teacherInfo');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            return response;
+        }
+
         // ========================================
         // INICIALIZACIÓN
         // ========================================
@@ -938,7 +975,7 @@ Participa activamente en discusiones"
             console.log('🔄 Iniciando carga de datos del sistema...');
             
             // Cargar grados
-            const gradesResponse = await fetch('/api/grades');
+            const gradesResponse = await authenticatedFetch('/api/grades');
             const gradesData = await gradesResponse.json();
             if (gradesData.success) {
                 const uniqueGrades = [];
@@ -1393,7 +1430,7 @@ Participa activamente en discusiones"
                     // USAR EL MISMO APPROACH QUE EVALUACIONES
                     console.log('📖 Cargando materias para grado:', currentGrado);
                     
-                    const response = await fetch(`/api/grade-subjects/${encodeURIComponent(currentGrado)}`);
+                    const response = await authenticatedFetch(`/api/grade-subjects/${encodeURIComponent(currentGrado)}`);
                     const result = await response.json();
                     
                     materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';

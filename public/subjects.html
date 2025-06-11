@@ -654,6 +654,43 @@
         let gradeAssignments = [];
         let editingSubjectId = null;
 
+        // Helper para peticiones autenticadas
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('sessionToken');
+
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+
+            const response = await fetch(url, mergedOptions);
+
+            if (response.status === 401) {
+                localStorage.removeItem('sessionToken');
+                localStorage.removeItem('teacherInfo');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            return response;
+        }
+
         // ========================================
         // INICIALIZACIÓN
         // ========================================
@@ -694,7 +731,7 @@
 
         async function loadGrades() {
             try {
-                const response = await fetch('/api/grades');
+                const response = await authenticatedFetch('/api/grades');
                 const result = await response.json();
                 
                 if (result.success) {
@@ -712,7 +749,7 @@
 
         async function loadGradeAssignments() {
             try {
-                const response = await fetch('/api/grade-subjects');
+                const response = await authenticatedFetch('/api/grade-subjects');
                 const result = await response.json();
                 
                 if (result.success) {
@@ -976,7 +1013,7 @@
 
                 console.log('📤 Enviando asignación:', { gradeName, subjects: selectedSubjects });
 
-                const response = await fetch('/api/grade-subjects/assign', {
+                const response = await authenticatedFetch('/api/grade-subjects/assign', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1084,7 +1121,7 @@
 
                 console.log('📤 Enviando asignación masiva:', { grades: selectedGrades, subjects: selectedSubjects });
 
-                const response = await fetch('/api/grade-subjects/assign-multiple', {
+                const response = await authenticatedFetch('/api/grade-subjects/assign-multiple', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1128,7 +1165,7 @@
             }
             
             try {
-                const response = await fetch(`/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}`, {
+                const response = await authenticatedFetch(`/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}`, {
                     method: 'DELETE'
                 });
                 
