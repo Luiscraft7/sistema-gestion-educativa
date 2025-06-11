@@ -1407,7 +1407,9 @@
             sessionStorage.removeItem('teacherData');
             sessionStorage.removeItem('adminSession');
             sessionStorage.removeItem('adminUser');
-            
+            // Eliminar token almacenado para prevenir accesos no autorizados
+            localStorage.removeItem('sessionToken');
+
             window.location.href = 'login.html';
         }
     }
