@@ -823,7 +823,7 @@
 
         async function loadSubjects() {
             try {
-                const response = await fetch('/api/custom-subjects');
+                const response = await authenticatedFetch('/api/custom-subjects');
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1011,7 +1011,7 @@
                 const url = editingSubjectId ? `/api/custom-subjects/${editingSubjectId}` : '/api/custom-subjects';
                 const method = editingSubjectId ? 'PUT' : 'POST';
 
-                const response = await fetch(url, {
+                const response = await authenticatedFetch(url, {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json'
@@ -1050,7 +1050,7 @@
             }
 
             try {
-                const response = await fetch(`/api/custom-subjects/${id}`, {
+                const response = await authenticatedFetch(`/api/custom-subjects/${id}`, {
                     method: 'DELETE'
                 });
 

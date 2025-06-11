@@ -1106,7 +1106,7 @@ Participa activamente en discusiones"
             }
 
             // Cargar materias
-            const subjectsResponse = await fetch('/api/custom-subjects');
+            const subjectsResponse = await authenticatedFetch('/api/custom-subjects');
             const subjectsData = await subjectsResponse.json();
             if (subjectsData.success) {
                 allSubjects = subjectsData.data;
@@ -1114,7 +1114,7 @@ Participa activamente en discusiones"
             }
 
             // Cargar estudiantes
-            const studentsResponse = await fetch('/api/students');
+            const studentsResponse = await authenticatedFetch('/api/students');
             const studentsData = await studentsResponse.json();
             if (studentsData.success) {
                 students = studentsData.data;
@@ -2726,7 +2726,7 @@ Participa activamente en discusiones"
                 saveButton.disabled = true;
                 saveButton.textContent = '💾 Guardando...';
                 
-                const response = await fetch('/api/cotidiano/evaluation', {
+                const response = await authenticatedFetch('/api/cotidiano/evaluation', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
