@@ -139,11 +139,14 @@ CREATE TABLE IF NOT EXISTS grades (
 -- Tabla de Materias Personalizadas - ✅ VACÍA PARA QUE USUARIO CONFIGURE
 CREATE TABLE IF NOT EXISTS custom_subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
+    teacher_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
     description TEXT,
     usage INTEGER DEFAULT 0,
     priority INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    UNIQUE(teacher_id, name)
 );
 
 -- Tabla de relación Grados-Materias [CON PERÍODO ACADÉMICO]
