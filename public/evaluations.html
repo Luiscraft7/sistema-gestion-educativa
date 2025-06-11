@@ -440,6 +440,103 @@
         }
         
         .message.show { display: block; }
+
+        /* INDICADOR SIMPLE DE PERÍODO ACADÉMICO */
+        .period-indicator-banner {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin: 15px 0 25px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .period-icon {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .period-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .period-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .period-info {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .period-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .period-badge .pulse {
+            color: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .period-indicator-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .period-text {
+                align-items: center;
+            }
+
+            .period-info {
+                font-size: 14px;
+            }
+        }
+
+        .period-indicator-banner.loading {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .period-indicator-banner.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .period-indicator-banner.outdated {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
         
         @media (max-width: 1200px) {
             .main-content {
@@ -490,6 +587,19 @@
             <div>
                 <h1>📝 Módulo de Evaluaciones</h1>
                 <p>Gestión y calificación de evaluaciones por grado y materia</p>
+                <div class="period-indicator-banner">
+                    <div class="period-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="period-text">
+                        <span class="period-label">Período Académico Activo:</span>
+                        <span class="period-info" id="activePeriodDisplay">2025 - Primer Semestre - Escuela Las Flores</span>
+                    </div>
+                    <div class="period-badge">
+                        <i class="fas fa-circle pulse"></i>
+                        <span>Activo</span>
+                    </div>
+                </div>
             </div>
             <div class="header-actions">
                 <button class="btn btn-success" onclick="exportGrades()" id="exportBtn" style="display: none;">
@@ -896,7 +1006,14 @@
         }
 
         async function loadStudents() {
-            const response = await fetch('/api/students');
+            const period = getCurrentAcademicPeriod();
+            const params = new URLSearchParams({
+                year: period.year,
+                period_type: period.periodType,
+                period_number: period.periodNumber
+            });
+            const response = await authenticatedFetch(`/api/students?${params.toString()}`);
+            if (!response) return;
             const result = await response.json();
             
             if (result.success) {
@@ -913,7 +1030,15 @@
 
         async function loadEvaluations() {
             try {
-                const response = await fetch(`/api/evaluations?grade=${currentGrade}&subject=${currentSubject}`);
+                const period = getCurrentAcademicPeriod();
+                const params = new URLSearchParams({
+                    grade: currentGrade,
+                    subject: currentSubject,
+                    year: period.year,
+                    period_type: period.periodType,
+                    period_number: period.periodNumber
+                });
+                const response = await fetch(`/api/evaluations?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1551,6 +1676,92 @@
         document.getElementById('editEvaluationModal').addEventListener('click', function(event) {
             if (event.target === this) closeEditEvaluationModal();
         });
+
+        // ===============================
+        // INDICADOR SIMPLE DE PERÍODO
+        // ===============================
+        class SimplePeriodIndicator {
+            constructor() { this.init(); }
+
+            init() {
+                this.updateDisplay();
+                this.setupEventListeners();
+                console.log('📅 Indicador simple de período inicializado');
+            }
+
+            setupEventListeners() {
+                window.addEventListener('academicPeriodChanged', () => {
+                    console.log('📅 Período cambió, actualizando indicador...');
+                    this.updateDisplay();
+                    this.reloadPageData();
+                });
+
+                window.addEventListener('reloadPeriodData', () => {
+                    console.log('🔄 Recargando datos por cambio de período...');
+                    this.updateDisplay();
+                    this.reloadPageData();
+                });
+            }
+
+            updateDisplay() {
+                const display = document.getElementById('activePeriodDisplay');
+                if (!display) return;
+                try {
+                    const currentPeriod = getCurrentAcademicPeriod();
+                    const teacherData = this.getTeacherInfo();
+                    const text = this.buildPeriodText(currentPeriod, teacherData);
+                    display.textContent = text;
+                    this.updateBannerState('active');
+                } catch (err) {
+                    console.error('Error actualizando indicador de período:', err);
+                    display.textContent = 'Error cargando período académico';
+                    this.updateBannerState('error');
+                }
+            }
+
+            getTeacherInfo() {
+                const data = sessionStorage.getItem('teacherData');
+                if (data) {
+                    try {
+                        const teacher = JSON.parse(data);
+                        return { name: teacher.name || teacher.full_name || 'Profesor', school: teacher.school || teacher.school_name || 'Mi Escuela' };
+                    } catch (e) { console.warn('Error parseando teacherData:', e); }
+                }
+                return { name: 'Profesor', school: 'Mi Escuela' };
+            }
+
+            buildPeriodText(period, teacher) {
+                const periodTypeName = period.periodType === 'semester' ? 'Semestre' : 'Trimestre';
+                const periodNumber = period.periodNumber === 1 ? 'Primer' : period.periodNumber === 2 ? 'Segundo' : 'Tercer';
+                return `${teacher.name} - ${period.year} - ${periodNumber} ${periodTypeName} - ${teacher.school}`;
+            }
+
+            updateBannerState(state) {
+                const banner = document.querySelector('.period-indicator-banner');
+                if (!banner) return;
+                banner.classList.remove('loading', 'error', 'outdated');
+                if (state !== 'active') banner.classList.add(state);
+            }
+
+            reloadPageData() {
+                if (typeof window.loadStudentsAndEvaluations === 'function') {
+                    console.log('🔄 Recargando evaluaciones y estudiantes...');
+                    window.loadStudentsAndEvaluations();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.simplePeriodIndicator = new SimplePeriodIndicator();
+        });
+
+        window.updatePeriodIndicator = function() {
+            if (window.simplePeriodIndicator) {
+                window.simplePeriodIndicator.updateDisplay();
+            }
+        };
+        window.loadStudentsAndEvaluations = loadStudentsAndEvaluations;
     </script>
+    <script src="js/global-period-selector.js"></script>
 </body>
 </html>
