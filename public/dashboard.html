@@ -1144,6 +1144,38 @@
     </div>
 
     <script>
+    // Helper para peticiones con autenticación
+    async function authenticatedFetch(url, options = {}) {
+        const token = localStorage.getItem('sessionToken');
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json'
+            }
+        };
+
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...(options.headers || {})
+            }
+        };
+
+        const response = await fetch(url, mergedOptions);
+
+        if (response.status === 401) {
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('teacherInfo');
+            window.location.href = '/login.html';
+            return Promise.reject(new Error('Unauthorized'));
+        }
+
+        return response;
+    }
+
     // Cargar y verificar sesión al cargar la página
     document.addEventListener('DOMContentLoaded', function() {
         // Aplicar animaciones con delay
@@ -1229,7 +1261,7 @@
                 }
             }
             
-            const studentsResponse = await fetch('/api/students');
+            const studentsResponse = await authenticatedFetch('/api/students');
             if (studentsResponse.ok) {
                 const studentsResult = await studentsResponse.json();
                 if (studentsResult.success) {
@@ -1258,7 +1290,7 @@
             // Cargar número de estudiantes
             document.getElementById('teacherStudentsCount').textContent = '⏳';
             
-            const studentsResponse = await fetch('/api/students');
+            const studentsResponse = await authenticatedFetch('/api/students');
             if (studentsResponse.ok) {
                 const studentsResult = await studentsResponse.json();
                 if (studentsResult.success) {

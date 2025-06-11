@@ -3,6 +3,38 @@
 // Para incluir en todas las páginas del sistema
 // ========================================
 
+// Helper para realizar peticiones autenticadas usando el token
+async function authenticatedFetch(url, options = {}) {
+    const token = localStorage.getItem('sessionToken');
+
+    const defaultOptions = {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        }
+    };
+
+    const mergedOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...(options.headers || {})
+        }
+    };
+
+    const response = await fetch(url, mergedOptions);
+
+    if (response.status === 401) {
+        localStorage.removeItem('sessionToken');
+        localStorage.removeItem('teacherInfo');
+        window.location.href = '/login.html';
+        return Promise.reject(new Error('Unauthorized'));
+    }
+
+    return response;
+}
+
 class GlobalPeriodSelector {
     constructor() {
         this.currentPeriod = this.loadCurrentPeriod();
@@ -295,7 +327,7 @@ async applyPeriodChange() {
 
             // VERIFICAR SI EL NUEVO PERÍODO ESTÁ VACÍO Y OFRECER COPIA
             try {
-                const checkStudentsResponse = await fetch(`/api/students?year=${newPeriod.year}&period_type=${newPeriod.periodType}&period_number=${newPeriod.periodNumber}`);
+                const checkStudentsResponse = await authenticatedFetch(`/api/students?year=${newPeriod.year}&period_type=${newPeriod.periodType}&period_number=${newPeriod.periodNumber}`);
                 const checkResult = await checkStudentsResponse.json();
                 
                 if (checkResult.success && checkResult.data.length === 0) {
@@ -334,7 +366,7 @@ async applyPeriodChange() {
                                     fromPeriodId = currentPeriod.periodId;
                                 }
                                 
-                                const copyResponse = await fetch('/api/students/copy-period', {
+                                const copyResponse = await authenticatedFetch('/api/students/copy-period', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
