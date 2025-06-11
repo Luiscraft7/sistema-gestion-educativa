@@ -849,7 +849,7 @@
             if (
                 adminSession !== 'true' ||
                 !adminUser ||
-                adminUser.toLowerCase() !== 'luiscraft'
+                adminUser.trim().toLowerCase() !== 'luiscraft'
             ) {
                 alert('🚫 Acceso denegado. Redirigiendo al login administrativo...');
                 window.location.href = 'admin-login.html';

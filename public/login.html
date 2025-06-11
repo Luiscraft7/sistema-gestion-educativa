@@ -536,7 +536,7 @@
                     if (adminResult.success) {
                         // Guardar sesión administrativa
                         sessionStorage.setItem('adminSession', 'true');
-                        sessionStorage.setItem('adminUser', email);
+                        sessionStorage.setItem('adminUser', email.trim());
                         
                         alert('👑 ¡Bienvenido Administrador!');
                         window.location.href = 'dashboard.html';

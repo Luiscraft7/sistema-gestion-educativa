@@ -79,7 +79,7 @@ function requireAdmin(req, res, next) {
     // Verificar si es admin (puedes ajustar esta lógica)
     const adminEmails = ['luiscraft']; // O usar una tabla de admins
 
-    if (req.teacher && adminEmails.includes(req.teacher.email.toLowerCase())) {
+    if (req.teacher && adminEmails.includes(req.teacher.email.trim().toLowerCase())) {
         req.isAdmin = true;
         next();
     } else {
@@ -3066,9 +3066,10 @@ app.get('/api/sea/consolidated', async (req, res) => {
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        
+
         // Verificar credenciales específicas del administrador
-        if (email && email.toLowerCase() === 'luiscraft' && password === 'Naturarte0603') {
+        const trimmedEmail = email ? email.trim().toLowerCase() : '';
+        if (trimmedEmail === 'luiscraft' && password === 'Naturarte0603') {
             // Actualizar último login
             await database.updateAdminLastLogin();
             

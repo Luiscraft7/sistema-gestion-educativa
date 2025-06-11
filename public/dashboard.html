@@ -1229,7 +1229,7 @@
         if (
             adminSession === 'true' &&
             adminUser &&
-            adminUser.toLowerCase() === 'luiscraft'
+            adminUser.trim().toLowerCase() === 'luiscraft'
         ) {
             updateHeaderWithAdmin(adminUser);
             return { type: 'admin', user: adminUser };
