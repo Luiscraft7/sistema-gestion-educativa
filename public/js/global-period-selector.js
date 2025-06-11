@@ -589,7 +589,22 @@ async applyPeriodChange() {
 
     getSchoolName(schoolId) {
         const school = this.schools.find(s => s.id == schoolId);
-        return school ? school.name : 'Escuela Desconocida';
+        if (school) {
+            return school.name;
+        }
+
+        // Fallback: usar la escuela del profesor si está disponible
+        const data = sessionStorage.getItem('teacherData');
+        if (data) {
+            try {
+                const teacher = JSON.parse(data);
+                return teacher.school || teacher.school_name || 'Escuela Desconocida';
+            } catch (error) {
+                console.warn('Error parseando teacherData:', error);
+            }
+        }
+
+        return 'Escuela Desconocida';
     }
 
     getPeriodNumberName(periodNumber) {
