@@ -1200,13 +1200,20 @@
         }
     });
 
-    // Configurar interfaz según tipo de usuario
+    // Configurar interfaz según tipo de usuario - FUNCIÓN CORREGIDA
     function setupUserInterface(userType) {
+        // Verificar que userType existe antes de proceder
+        if (!userType) {
+            console.log('⚠️ No se encontró tipo de usuario válido');
+            return;
+        }
+        
         if (userType === 'admin') {
             // Mostrar elementos solo para admin
             document.querySelectorAll('.admin-only').forEach(element => {
                 element.style.display = 'block';
             });
+            console.log('✅ Interfaz configurada para administrador');
         } else if (userType === 'teacher') {
             // Mostrar elementos solo para profesor
             document.querySelectorAll('.teacher-only').forEach(element => {
@@ -1217,10 +1224,11 @@
             setTimeout(() => {
                 loadIntegratedTeacherProfile();
             }, 100);
+            console.log('✅ Interfaz configurada para profesor');
         }
     }
 
-    // Verificar sesión (Admin O Profesor)
+    // Verificar sesión (Admin O Profesor) - FUNCIÓN CORREGIDA
     function checkUserSession() {
         // Primero verificar si es admin
         const adminSession = sessionStorage.getItem('adminSession');
@@ -1245,10 +1253,18 @@
             return { type: 'teacher', user: teacher };
         }
         
-        // No hay sesión válida
-        alert('🚫 Debes iniciar sesión para acceder al dashboard.');
-        window.location.href = 'login.html';
-        return false;
+        // PROBLEMA AQUÍ: No hay sesión válida - REMOVER REDIRECCIÓN AUTOMÁTICA
+        console.log('🚫 No hay sesión válida encontrada');
+        
+        // Solo mostrar alerta sin redireccionar inmediatamente
+        setTimeout(() => {
+            if (!sessionStorage.getItem('adminSession') && !sessionStorage.getItem('teacherSession')) {
+                alert('🚫 Debes iniciar sesión para acceder al dashboard.');
+                window.location.href = 'login.html';
+            }
+        }, 1000); // Dar tiempo para que se establezca la sesión
+        
+        return null;
     }
 
     // Cargar estadísticas - Solo para admin
