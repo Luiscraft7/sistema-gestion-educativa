@@ -767,9 +767,9 @@ app.get('/api/dashboard/stats', async (req, res) => {
 // ========================================
 
 // Obtener todos los grados
-app.get('/api/grades', async (req, res) => {
+app.get('/api/grades', authenticateTeacher, async (req, res) => {
     try {
-        const grades = await database.getAllGrades();
+        const grades = await database.getAllGrades(req.teacher.id);
         res.json({
             success: true,
             data: grades
@@ -785,9 +785,9 @@ app.get('/api/grades', async (req, res) => {
 });
 
 // Agregar nuevo grado
-app.post('/api/grades', async (req, res) => {
+app.post('/api/grades', authenticateTeacher, async (req, res) => {
     try {
-        const result = await database.addGrade(req.body);
+        const result = await database.addGrade({ ...req.body, teacher_id: req.teacher.id });
         res.json({
             success: true,
             data: result,
@@ -804,9 +804,9 @@ app.post('/api/grades', async (req, res) => {
 });
 
 // Eliminar grado
-app.delete('/api/grades/:id', async (req, res) => {
+app.delete('/api/grades/:id', authenticateTeacher, async (req, res) => {
     try {
-        const usageCheck = await database.checkGradeUsage(req.params.id);
+        const usageCheck = await database.checkGradeUsage(req.params.id, req.teacher.id);
         
         if (usageCheck.inUse) {
             return res.status(400).json({
@@ -817,7 +817,7 @@ app.delete('/api/grades/:id', async (req, res) => {
             });
         }
 
-        const result = await database.deleteGrade(req.params.id);
+        const result = await database.deleteGrade(req.params.id, req.teacher.id);
         res.json({
             success: true,
             data: result,
@@ -1301,7 +1301,7 @@ app.get('/api/attendance/lesson-count', async (req, res) => {
 // ========================================
 
 // Asignar múltiples materias a un grado
-app.post('/api/grade-subjects/assign', async (req, res) => {
+app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => {
     try {
         console.log('📚 POST /api/grade-subjects/assign:', req.body);
         
@@ -1314,7 +1314,7 @@ app.post('/api/grade-subjects/assign', async (req, res) => {
             });
         }
         
-        const result = await database.assignSubjectsToGrade(req.body);
+        const result = await database.assignSubjectsToGrade({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name });
         res.json({
             success: true,
             data: result,
@@ -1331,7 +1331,7 @@ app.post('/api/grade-subjects/assign', async (req, res) => {
 });
 
 // Asignar materias a múltiples grados
-app.post('/api/grade-subjects/assign-multiple', async (req, res) => {
+app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req, res) => {
     try {
         console.log('📚 POST /api/grade-subjects/assign-multiple:', req.body);
         
@@ -1345,7 +1345,7 @@ app.post('/api/grade-subjects/assign-multiple', async (req, res) => {
             });
         }
         
-        const result = await database.assignSubjectsToMultipleGrades(req.body);
+        const result = await database.assignSubjectsToMultipleGrades({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name });
         res.json({
             success: true,
             data: result,
@@ -1362,13 +1362,13 @@ app.post('/api/grade-subjects/assign-multiple', async (req, res) => {
 });
 
 // Obtener materias de un grado
-app.get('/api/grade-subjects/:gradeName', async (req, res) => {
+app.get('/api/grade-subjects/:gradeName', authenticateTeacher, async (req, res) => {
     try {
         const { gradeName } = req.params;
         
         console.log('📖 GET /api/grade-subjects/' + gradeName);
         
-        const subjects = await database.getSubjectsByGrade(gradeName);
+        const subjects = await database.getSubjectsByGrade(gradeName, req.teacher.id);
         res.json({
             success: true,
             data: subjects,
@@ -1386,11 +1386,11 @@ app.get('/api/grade-subjects/:gradeName', async (req, res) => {
 });
 
 // Obtener todos los grados con sus materias
-app.get('/api/grade-subjects', async (req, res) => {
+app.get('/api/grade-subjects', authenticateTeacher, async (req, res) => {
     try {
         console.log('📚 GET /api/grade-subjects');
         
-        const gradesWithSubjects = await database.getAllGradesWithSubjects();
+        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id);
         res.json({
             success: true,
             data: gradesWithSubjects,
@@ -1407,13 +1407,13 @@ app.get('/api/grade-subjects', async (req, res) => {
 });
 
 // Eliminar materia de un grado
-app.delete('/api/grade-subjects/:gradeName/:subjectName', async (req, res) => {
+app.delete('/api/grade-subjects/:gradeName/:subjectName', authenticateTeacher, async (req, res) => {
     try {
         const { gradeName, subjectName } = req.params;
         
         console.log(`🗑️ DELETE /api/grade-subjects/${gradeName}/${subjectName}`);
         
-        const result = await database.removeSubjectFromGrade(gradeName, subjectName);
+        const result = await database.removeSubjectFromGrade(gradeName, subjectName, req.teacher.id);
         res.json({
             success: true,
             data: result,
@@ -1434,7 +1434,7 @@ app.delete('/api/grade-subjects/:gradeName/:subjectName', async (req, res) => {
 // ========================================
 
 // Eliminar múltiples grados
-app.delete('/api/grades/bulk', async (req, res) => {
+app.delete('/api/grades/bulk', authenticateTeacher, async (req, res) => {
     try {
         const { gradeIds } = req.body;
         
@@ -1449,7 +1449,7 @@ app.delete('/api/grades/bulk', async (req, res) => {
         
         // Verificar uso de cada grado antes de eliminar
         const usageChecks = await Promise.all(
-            gradeIds.map(id => database.checkGradeUsage(id))
+            gradeIds.map(id => database.checkGradeUsage(id, req.teacher.id))
         );
         
         const inUseGrades = usageChecks.filter(check => check.inUse);
@@ -1463,7 +1463,7 @@ app.delete('/api/grades/bulk', async (req, res) => {
             });
         }
         
-        const result = await database.deleteMultipleGrades(gradeIds);
+        const result = await database.deleteMultipleGrades(gradeIds, req.teacher.id);
         res.json({
             success: true,
             data: result,

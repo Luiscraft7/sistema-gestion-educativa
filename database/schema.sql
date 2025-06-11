@@ -126,11 +126,14 @@ CREATE TABLE IF NOT EXISTS subjects (
 -- Tabla de Grados - ✅ VACÍA PARA QUE USUARIO CONFIGURE
 CREATE TABLE IF NOT EXISTS grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
+    teacher_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
     description TEXT,
     usage INTEGER DEFAULT 0,
     priority INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    UNIQUE(teacher_id, name)
 );
 
 -- Tabla de Materias Personalizadas - ✅ VACÍA PARA QUE USUARIO CONFIGURE
@@ -147,13 +150,15 @@ CREATE TABLE IF NOT EXISTS custom_subjects (
 CREATE TABLE IF NOT EXISTS grade_subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
+    teacher_id INTEGER NOT NULL,
     grade_name TEXT NOT NULL,
     subject_name TEXT NOT NULL,
     teacher_name TEXT,
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
-    UNIQUE(academic_period_id, grade_name, subject_name)
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    UNIQUE(academic_period_id, teacher_id, grade_name, subject_name)
 );
 
 -- ========================================
@@ -415,6 +420,10 @@ CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_grade_subject ON daily_i
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_student_date ON daily_evaluations(academic_period_id, teacher_id, student_id, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_grade_subject_date ON daily_evaluations(academic_period_id, teacher_id, grade_level, subject_area, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_evaluation ON daily_indicator_scores(daily_evaluation_id);
+
+-- Índices para Grados y Asignación de Materias
+CREATE INDEX IF NOT EXISTS idx_grades_teacher ON grades(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_grade_subjects_teacher ON grade_subjects(teacher_id);
 
 -- Índices para Sesiones y Admin
 CREATE INDEX IF NOT EXISTS idx_active_sessions_teacher ON active_sessions(teacher_id);
