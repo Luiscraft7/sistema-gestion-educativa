@@ -23,46 +23,38 @@
             overflow: hidden;
         }
         
-        /* Elementos decorativos de fondo */
+        /* Fondo elegante inspirado en welcome */
         body::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            animation: float 20s infinite linear;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.1) 0%, transparent 50%);
             z-index: 1;
         }
         
-        @keyframes float {
-            0% { transform: translateX(-50px) translateY(-50px); }
-            100% { transform: translateX(50px) translateY(50px); }
-        }
-        
-        /* Partículas flotantes */
-        .particle {
+        /* Elementos decorativos sutiles */
+        body::after {
+            content: '';
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            animation: particle-float 15s infinite linear;
-            z-index: 1;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: linear-gradient(45deg, transparent 49%, rgba(255, 255, 255, 0.02) 50%, transparent 51%);
+            background-size: 60px 60px;
+            animation: subtleMove 30s infinite linear;
+            z-index: 2;
         }
         
-        .particle:nth-child(1) { top: 20%; left: 20%; animation-delay: 0s; }
-        .particle:nth-child(2) { top: 40%; left: 80%; animation-delay: 3s; }
-        .particle:nth-child(3) { top: 80%; left: 40%; animation-delay: 6s; }
-        .particle:nth-child(4) { top: 60%; left: 10%; animation-delay: 9s; }
-        .particle:nth-child(5) { top: 10%; left: 70%; animation-delay: 12s; }
-        
-        @keyframes particle-float {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.6; }
-            25% { transform: translateY(-20px) translateX(10px) scale(1.2); opacity: 1; }
-            50% { transform: translateY(-10px) translateX(-10px) scale(0.8); opacity: 0.8; }
-            75% { transform: translateY(-30px) translateX(5px) scale(1.1); opacity: 0.9; }
+        @keyframes subtleMove {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-60px, -60px) rotate(360deg); }
         }
         
         .login-container {
@@ -198,7 +190,6 @@
             z-index: 2;
         }
         
-        /* ✅ CORREGIDO: Cambiar de input[type="email"] a input[type="text"] */
         input[type="text"], input[type="password"] {
             width: 100%;
             padding: 1rem 1rem 1rem 3rem;
@@ -396,21 +387,14 @@
     </style>
 </head>
 <body>
-    <!-- Partículas de fondo -->
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    
     <!-- Botón de regreso -->
     <a href="welcome.html" class="back-btn" title="Volver al inicio">
         <i class="fas fa-arrow-left"></i>
     </a>
-
+    
     <!-- Contenedor principal -->
     <div class="login-container">
-        <!-- Logo y marca -->
+        <!-- Logo y título -->
         <div class="logo">
             <div class="logo-icon">
                 <i class="fas fa-graduation-cap"></i>
@@ -424,9 +408,10 @@
             <h2>¡Bienvenido de vuelta!</h2>
             <p>Ingresa tus credenciales para acceder a tu cuenta</p>
         </div>
-
+        
         <!-- Formulario de login -->
         <form id="loginForm">
+            <!-- Campo de usuario/email -->
             <div class="form-group">
                 <div class="input-container">
                     <input type="text" id="email" name="email" placeholder="Usuario o Email" required>
@@ -434,6 +419,7 @@
                 </div>
             </div>
             
+            <!-- Campo de contraseña -->
             <div class="form-group">
                 <div class="input-container">
                     <input type="password" id="password" name="password" placeholder="Contraseña" required>
@@ -444,44 +430,34 @@
                 </div>
             </div>
             
+            <!-- Botón de login -->
             <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt" style="margin-right: 0.5rem;"></i>
+                <i class="fas fa-sign-in-alt"></i>
                 Iniciar Sesión
             </button>
         </form>
         
-        <!-- Indicador para admin -->
-        <div style="text-align: center; margin: 15px 0; color: #6b7280; font-size: 12px;">
-            👑 <em>Administradores: usar credenciales especiales</em>
-        </div>
-
-        <!-- Divisor -->
+        <!-- Divider -->
         <div class="divider">
-            <span>o explora la demo</span>
+            <span>👑 Administradores: usar credenciales especiales</span>
         </div>
         
-        <!-- Link demo -->
-        <a href="dashboard.html" class="demo-link">
-            <i class="fas fa-rocket" style="margin-right: 0.5rem;"></i>
-            Acceder al Dashboard Demo
-        </a>
-        
-        <!-- Links adicionales -->
+        <!-- Enlaces adicionales -->
         <div class="extra-links">
-            <a href="register.html">
-                <i class="fas fa-user-plus" style="margin-right: 0.3rem;"></i>
+            <a href="#" onclick="alert('Funcionalidad pendiente de implementar')">
+                <i class="fas fa-users"></i>
                 ¿No tienes cuenta? Regístrate aquí
             </a>
-            <a href="#" onclick="alert('Función en desarrollo')">
-                <i class="fas fa-key" style="margin-right: 0.3rem;"></i>
+            <a href="#" onclick="alert('Funcionalidad pendiente de implementar')">
+                <i class="fas fa-key"></i>
                 ¿Olvidaste tu contraseña?
             </a>
         </div>
     </div>
-
+    
     <!-- Footer -->
     <div class="footer">
-        <p>© 2025 Sistema Educativo - Transformando la educación digital</p>
+        © 2025 Sistema Educativo - Transformando la educación digital
     </div>
 
     <script>
@@ -506,9 +482,16 @@
             sessionStorage.removeItem('teacherSession');
             sessionStorage.removeItem('teacherData');
             localStorage.removeItem('sessionToken');
+            
+            // Animación de entrada para los campos
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach((input, index) => {
+                input.style.animationDelay = `${0.3 + index * 0.1}s`;
+                input.style.animation = 'slideIn 0.6s ease-out forwards';
+            });
         });
 
-        // Manejo del formulario INTEGRADO (Admin + Profesores) - VERSIÓN CORREGIDA
+        // Manejo del formulario INTEGRADO (Admin + Profesores)
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -538,49 +521,42 @@
                         sessionStorage.setItem('adminSession', 'true');
                         sessionStorage.setItem('adminUser', email.trim());
                         
-                        // MOSTRAR ALERTA Y REDIRECCIONAR CON DELAY
-                        alert('👑 ¡Bienvenido Administrador!');
-                        
-                        // AGREGAR DELAY PARA ASEGURAR QUE LA SESIÓN SE GUARDE
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 500); // 500ms de delay
-                        
-                        return; // Salir de la función
-                    } else {
-                        throw new Error(adminResult.message);
+                        alert('👑 ¡Bienvenido Administrador! Acceso total al sistema.');
+                        window.location.href = 'dashboard.html';
+                        return;
                     }
                 }
                 
-                // 👨‍🏫 SI NO ES ADMIN, VERIFICAR COMO PROFESOR
+                // 🧑‍🏫 SI NO ES ADMIN, INTENTAR LOGIN DE PROFESOR
                 const teacherResponse = await fetch('/api/teachers/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ 
+                        email: email.trim(), 
+                        password: password 
+                    })
                 });
                 
                 const teacherResult = await teacherResponse.json();
                 
                 if (teacherResult.success) {
-                    // Guardar sesión del profesor
+                    // Guardar datos del profesor y token
+                    localStorage.setItem('sessionToken', teacherResult.sessionToken);
+                    localStorage.setItem('teacherInfo', JSON.stringify(teacherResult.teacher));
                     sessionStorage.setItem('teacherSession', 'true');
                     sessionStorage.setItem('teacherData', JSON.stringify(teacherResult.teacher));
-                    localStorage.setItem('sessionToken', teacherResult.sessionToken);
                     
-                    alert(`🎓 ¡Bienvenido ${teacherResult.teacher.name}!`);
-                    
-                    // AGREGAR DELAY TAMBIÉN PARA PROFESORES
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 500); // 500ms de delay
-                    
-                } else {
-                    throw new Error(teacherResult.message);
+                    alert(`🎓 ¡Bienvenido ${teacherResult.teacher.full_name}! Accediendo al sistema...`);
+                    window.location.href = 'dashboard.html';
+                    return;
                 }
+                
+                // Si llegamos aquí, el login falló
+                throw new Error(teacherResult.message || 'Credenciales incorrectas');
                 
             } catch (error) {
                 console.error('Error en login:', error);
-                alert(`❌ Error: ${error.message}`);
+                alert('❌ Error: ' + error.message);
             } finally {
                 // Restaurar botón
                 btn.innerHTML = originalText;
@@ -588,37 +564,7 @@
             }
         });
 
-        // Modal personalizado para cuentas pendientes
-        function showPendingModal(message) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.7); display: flex; align-items: center;
-                justify-content: center; z-index: 1000;
-            `;
-            
-            modal.innerHTML = `
-                <div style="
-                    background: white; padding: 40px; border-radius: 15px;
-                    text-align: center; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-                ">
-                    <div style="font-size: 60px; margin-bottom: 20px;">⏳</div>
-                    <h2 style="color: #333; margin-bottom: 15px;">Cuenta Pendiente de Aprobación</h2>
-                    <p style="color: #666; margin-bottom: 25px; line-height: 1.5;">
-                        ${message}<br><br>
-                        <strong>Te contactaremos en menos de 24 horas</strong> para activar tu cuenta.
-                    </p>
-                    <button onclick="this.parentElement.parentElement.remove()" style="
-                        background: #3b82f6; color: white; border: none; padding: 12px 24px;
-                        border-radius: 8px; cursor: pointer; font-weight: 600;
-                    ">Entendido</button>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-
-        // Efectos y animaciones
+        // Efectos y animaciones adicionales
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('focus', function() {
                 this.parentElement.style.transform = 'scale(1.02)';
@@ -629,6 +575,7 @@
             });
         });
 
+        // Animación de carga de página
         window.addEventListener('load', function() {
             document.body.style.opacity = '0';
             document.body.style.transition = 'opacity 0.5s ease';
