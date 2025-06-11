@@ -97,17 +97,25 @@ class Database {
     // ========================================
     // FUNCIONES DE ESTUDIANTES
     // ========================================
-    async getAllStudents() {
+    async getAllStudents(academicPeriodId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const query = `
+            let query = `
                 SELECT * FROM students 
-                WHERE status = 'active' 
-                ORDER BY first_surname, second_surname, first_name
+                WHERE status = 'active'
             `;
+            const params = [];
             
-            this.db.all(query, [], (err, rows) => {
+            // Agregar filtro por período académico si se especifica
+            if (academicPeriodId) {
+                query += ` AND academic_period_id = ?`;
+                params.push(academicPeriodId);
+            }
+            
+            query += ` ORDER BY first_surname, second_surname, first_name`;
+            
+            this.db.all(query, params, (err, rows) => {
                 if (err) {
                     reject(err);
                 } else {

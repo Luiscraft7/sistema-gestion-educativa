@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const database = require('./src/models/database');
-let setPeriodInProgress = false;
+
 
 const app = express();
 const PORT = 3000;
@@ -59,15 +59,15 @@ app.get('/', (req, res) => {
 // RUTAS API PARA ESTUDIANTES
 // ========================================
 
+// REEMPLAZAR el primer endpoint /api/students en server.js
 // Obtener todos los estudiantes
 app.get('/api/students', async (req, res) => {
     try {
         const { year, period_type, period_number } = req.query;
         
-        let query = 'SELECT * FROM students WHERE status = ?';
-        let params = ['active'];
+        let academicPeriodId = null;
         
-        // Si se especifican parámetros de período, filtrar por período académico
+        // Si se especifican parámetros de período, encontrar el academic_period_id
         if (year && period_type && period_number) {
             console.log(`📅 Filtrando estudiantes por período: ${year} - ${period_type} ${period_number}`);
             
@@ -86,44 +86,42 @@ app.get('/api/students', async (req, res) => {
             });
             
             if (periodRow) {
-                query += ' AND academic_period_id = ?';
-                params.push(periodRow.id);
-                console.log(`📚 Usando período académico ID: ${periodRow.id}`);
+                academicPeriodId = periodRow.id;
+                console.log(`📚 Usando período académico ID: ${academicPeriodId}`);
             } else {
-                console.log(`⚠️ Período académico no encontrado: ${year}-${period_type}-${period_number}, mostrando todos los estudiantes`);
+                console.log(`⚠️ Período académico no encontrado: ${year}-${period_type}-${period_number}`);
+                return res.json({
+                    success: true,
+                    data: [],
+                    message: '0 estudiantes encontrados - período no existe',
+                    filter_applied: true,
+                    period_info: { year, period_type, period_number }
+                });
             }
         } else {
             console.log('📚 Sin filtro de período, mostrando todos los estudiantes activos');
         }
         
-        query += ' ORDER BY first_surname, second_surname, first_name';
+        // Obtener estudiantes usando la función corregida
+        const students = await database.getAllStudents(academicPeriodId);
         
-        database.db.all(query, params, (err, rows) => {
-            if (err) {
-                console.error('❌ Error obteniendo estudiantes:', err);
-                res.status(500).json({
-                    success: false,
-                    message: 'Error obteniendo estudiantes',
-                    error: err.message
-                });
-            } else {
-                console.log(`✅ Estudiantes encontrados: ${rows.length}`);
-                res.json({
-                    success: true,
-                    data: rows,
-                    message: `${rows.length} estudiantes encontrados`,
-                    filter_applied: !!(year && period_type && period_number),
-                    period_info: year && period_type && period_number ? {
-                        year: year,
-                        period_type: period_type,
-                        period_number: period_number
-                    } : null
-                });
-            }
+        console.log(`✅ Estudiantes encontrados: ${students.length}`);
+        
+        res.json({
+            success: true,
+            data: students,
+            message: `${students.length} estudiantes encontrados`,
+            filter_applied: !!(year && period_type && period_number),
+            period_info: year && period_type && period_number ? {
+                year: year,
+                period_type: period_type,
+                period_number: period_number,
+                academic_period_id: academicPeriodId
+            } : null
         });
         
     } catch (error) {
-        console.error('❌ Error en API de estudiantes:', error);
+        console.error('❌ Error obteniendo estudiantes:', error);
         res.status(500).json({
             success: false,
             message: 'Error obteniendo estudiantes',
@@ -3290,7 +3288,6 @@ app.post('/api/schools', async (req, res) => {
     }
 });
 
-
 // API para cambiar período globalmente (para el frontend)
 app.post('/api/academic-periods/set-current', async (req, res) => {
     try {
@@ -3303,17 +3300,6 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
                 message: 'Año, tipo de período y número son requeridos'
             });
         }
-
-        // Prevenir requests concurrentes
-        if (setPeriodInProgress) {
-            console.log('⚠️ Request de cambio de período ya en progreso, ignorando duplicado');
-            return res.status(429).json({
-                success: false,
-                message: 'Cambio de período ya en progreso'
-            });
-        }
-
-        setPeriodInProgress = true;
         
         // ========================================
         // PASO 1: BUSCAR SI YA EXISTE EL PERÍODO
@@ -3326,7 +3312,6 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
         database.db.get(findQuery, [year, period_type, period_number], (err, existingPeriod) => {
             if (err) {
                 console.error('❌ Error buscando período:', err);
-                setPeriodInProgress = false;
                 return res.status(500).json({
                     success: false,
                     message: 'Error buscando período',
@@ -3357,34 +3342,22 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
                     if (createErr) {
                         console.error('❌ Error creando período:', createErr);
                         
-                        // Verificar si es error de duplicado (race condition)
+                        // Si es error de duplicado, buscar el período existente
                         if (createErr.message.includes('UNIQUE constraint failed')) {
-                            console.log('🔄 Error de duplicado detectado, buscando período existente...');
-                            // Puede que se haya creado entre medio, buscar de nuevo
+                            console.log('🔄 Error de duplicado, buscando período existente...');
                             database.db.get(findQuery, [year, period_type, period_number], (findErr, foundPeriod) => {
-                                if (findErr) {
-                                    setPeriodInProgress = false;
+                                if (findErr || !foundPeriod) {
                                     return res.status(500).json({
                                         success: false,
                                         message: 'Error verificando período duplicado',
-                                        error: findErr.message
+                                        error: findErr?.message || 'Período no encontrado'
                                     });
                                 }
                                 
-                                if (foundPeriod) {
-                                    console.log('✅ Período encontrado después de error duplicado, activando ID:', foundPeriod.id);
-                                    activatePeriod(foundPeriod.id, { year, period_type, period_number });
-                                } else {
-                                    setPeriodInProgress = false;
-                                    return res.status(500).json({
-                                        success: false,
-                                        message: 'Error de duplicado pero período no encontrado',
-                                        error: createErr.message
-                                    });
-                                }
+                                console.log('✅ Período encontrado después de duplicado, activando ID:', foundPeriod.id);
+                                activatePeriod(foundPeriod.id, { year, period_type, period_number });
                             });
                         } else {
-                            setPeriodInProgress = false;
                             return res.status(500).json({
                                 success: false,
                                 message: 'Error creando período',
@@ -3395,7 +3368,6 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
                     }
                     
                     console.log('✅ Período creado exitosamente con ID:', this.lastID);
-                    // Activar el período recién creado
                     activatePeriod(this.lastID, { year, period_type, period_number });
                 });
             }
@@ -3413,7 +3385,6 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
             database.db.run(deactivateQuery, [], (deactivateErr) => {
                 if (deactivateErr) {
                     console.error('❌ Error desactivando períodos:', deactivateErr);
-                    setPeriodInProgress = false;
                     return res.status(500).json({
                         success: false,
                         message: 'Error desactivando períodos anteriores',
@@ -3427,8 +3398,6 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
                 const activateQuery = 'UPDATE academic_periods SET is_current = 1 WHERE id = ?';
                 
                 database.db.run(activateQuery, [periodId], function(activateErr) {
-                    setPeriodInProgress = false; // Liberar el lock
-                    
                     if (activateErr) {
                         console.error('❌ Error activando período:', activateErr);
                         return res.status(500).json({
@@ -3456,7 +3425,6 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
         }
         
     } catch (error) {
-        setPeriodInProgress = false; // Liberar el lock en caso de error
         console.error('❌ Error general estableciendo período actual:', error);
         res.status(500).json({
             success: false,
@@ -3465,6 +3433,7 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
         });
     }
 });
+
 
 // API para obtener datos del profesor logueado (simulado por ahora)
 app.get('/api/teachers/current', async (req, res) => {

@@ -237,6 +237,13 @@ class GlobalPeriodSelector {
             return;
         }
 
+        // Protección simple: verificar si el botón ya está deshabilitado
+        const applyBtn = document.getElementById('applyPeriodBtn');
+        if (applyBtn && applyBtn.disabled) {
+            console.log('⚠️ Cambio de período ya en progreso, ignorando click adicional');
+            return;
+        }
+
         const newPeriod = {
             schoolId: schoolSelector.value,
             year: parseInt(yearSelector.value),
@@ -246,15 +253,8 @@ class GlobalPeriodSelector {
 
         console.log('📅 Cambiando a período:', newPeriod);
 
-        // Prevenir múltiples clicks/requests
-        const applyBtn = document.getElementById('applyPeriodBtn');
-        if (applyBtn && applyBtn.disabled) {
-            console.log('⚠️ Cambio de período ya en progreso, ignorando...');
-            return;
-        }
-
         try {
-            // Mostrar loading
+            // Mostrar loading (esto deshabilitará el botón)
             this.setLoadingState(true);
 
             // Enviar cambio al servidor
@@ -289,7 +289,9 @@ class GlobalPeriodSelector {
                 
                 // Actualizar estado interno
                 this.currentPeriod = periodToSave;
+                await this.loadSchools();
                 this.updateCurrentPeriodIndicator();
+                
                 
                 // ========================================
                 // NOTIFICAR CAMBIOS
@@ -343,6 +345,7 @@ class GlobalPeriodSelector {
                 alert(`Error cambiando período: ${error.message}`);
             }
         } finally {
+            // SIEMPRE habilitar el botón al final
             this.setLoadingState(false);
         }
     }
