@@ -845,8 +845,12 @@
         function checkAdminAuthentication() {
             const adminSession = sessionStorage.getItem('adminSession');
             const adminUser = sessionStorage.getItem('adminUser');
-            
-            if (adminSession !== 'true' || adminUser !== 'Luiscraft') {
+
+            if (
+                adminSession !== 'true' ||
+                !adminUser ||
+                adminUser.toLowerCase() !== 'luiscraft'
+            ) {
                 alert('🚫 Acceso denegado. Redirigiendo al login administrativo...');
                 window.location.href = 'admin-login.html';
                 return false;

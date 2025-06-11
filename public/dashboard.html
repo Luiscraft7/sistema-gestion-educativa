@@ -1225,8 +1225,12 @@
         // Primero verificar si es admin
         const adminSession = sessionStorage.getItem('adminSession');
         const adminUser = sessionStorage.getItem('adminUser');
-        
-        if (adminSession === 'true' && adminUser === 'Luiscraft') {
+
+        if (
+            adminSession === 'true' &&
+            adminUser &&
+            adminUser.toLowerCase() === 'luiscraft'
+        ) {
             updateHeaderWithAdmin(adminUser);
             return { type: 'admin', user: adminUser };
         }

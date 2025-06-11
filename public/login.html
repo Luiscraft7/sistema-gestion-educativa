@@ -499,6 +499,15 @@
             }
         }
 
+        // Limpia cualquier sesión previa al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            sessionStorage.removeItem('adminSession');
+            sessionStorage.removeItem('adminUser');
+            sessionStorage.removeItem('teacherSession');
+            sessionStorage.removeItem('teacherData');
+            localStorage.removeItem('sessionToken');
+        });
+
         // Manejo del formulario INTEGRADO (Admin + Profesores)
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
