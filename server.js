@@ -3068,7 +3068,7 @@ app.post('/api/admin/login', async (req, res) => {
         const { email, password } = req.body;
         
         // Verificar credenciales específicas del administrador
-        if (email === 'Luiscraft' && password === 'Naturarte0603') {
+        if (email && email.toLowerCase() === 'luiscraft' && password === 'Naturarte0603') {
             // Actualizar último login
             await database.updateAdminLastLogin();
             

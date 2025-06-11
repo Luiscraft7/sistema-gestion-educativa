@@ -514,7 +514,7 @@
             
             try {
                 // 🔐 VERIFICAR SI ES ADMINISTRADOR PRIMERO
-                if (email === 'Luiscraft' && password === 'Naturarte0603') {
+                if (email.trim().toLowerCase() === 'luiscraft' && password === 'Naturarte0603') {
                     // Login de Administrador
                     const adminResponse = await fetch('/api/admin/login', {
                         method: 'POST',
