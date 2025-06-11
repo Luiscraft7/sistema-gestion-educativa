@@ -1019,9 +1019,9 @@ async deleteStudent(id, teacherId = null) {
     // ========================================
     // FUNCIONES DE ASISTENCIA
     // ========================================
-    async getAttendanceByDate(date, grade, subject = null) {
+    async getAttendanceByDate(date, grade, teacherId = null, academicPeriodId = null, subject = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             let query = `
                 SELECT a.*, s.first_name, s.first_surname, s.second_surname, s.student_id as student_code
@@ -1029,9 +1029,19 @@ async deleteStudent(id, teacherId = null) {
                 INNER JOIN students s ON a.student_id = s.id
                 WHERE a.date = ? AND a.grade_level = ? AND s.status = 'active'
             `;
-            
+
             const params = [date, grade];
-            
+
+            if (teacherId) {
+                query += ' AND a.teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            if (academicPeriodId) {
+                query += ' AND a.academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
             if (subject) {
                 query += ' AND a.subject_area = ?';
                 params.push(subject);
@@ -1051,18 +1061,21 @@ async deleteStudent(id, teacherId = null) {
 
     async saveAttendance(attendanceData) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             const checkQuery = `
-                SELECT id FROM attendance 
+                SELECT id FROM attendance
                 WHERE student_id = ? AND date = ? AND grade_level = ? AND subject_area = ?
+                    AND teacher_id = ? AND academic_period_id = ?
             `;
-            
+
             const checkParams = [
                 attendanceData.student_id,
                 attendanceData.date,
                 attendanceData.grade_level,
-                attendanceData.subject_area
+                attendanceData.subject_area,
+                attendanceData.teacher_id,
+                attendanceData.academic_period_id
             ];
             
             this.db.get(checkQuery, checkParams, (err, existingRecord) => {
@@ -1099,12 +1112,15 @@ async deleteStudent(id, teacherId = null) {
                     // Crear nuevo registro
                     const insertQuery = `
                         INSERT INTO attendance (
-                            student_id, date, status, arrival_time, justification,
+                            academic_period_id, teacher_id, student_id, date,
+                            status, arrival_time, justification,
                             notes, lesson_number, grade_level, subject_area
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
-                    
+
                     const insertParams = [
+                        attendanceData.academic_period_id,
+                        attendanceData.teacher_id,
                         attendanceData.student_id,
                         attendanceData.date,
                         attendanceData.status,
@@ -1128,13 +1144,23 @@ async deleteStudent(id, teacherId = null) {
         });
     }
 
-    async deleteAttendanceByDate(date, grade, subject = null) {
+    async deleteAttendanceByDate(date, grade, teacherId = null, academicPeriodId = null, subject = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             let query = 'DELETE FROM attendance WHERE date = ? AND grade_level = ?';
             const params = [date, grade];
-            
+
+            if (teacherId) {
+                query += ' AND teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            if (academicPeriodId) {
+                query += ' AND academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
             if (subject) {
                 query += ' AND subject_area = ?';
                 params.push(subject);
