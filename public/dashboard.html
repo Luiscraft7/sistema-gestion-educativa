@@ -1615,6 +1615,21 @@
     }
 
     // SISTEMA DE PERÍODOS ACADÉMICOS INTEGRADO
+    function getPeriodStorageKey() {
+        const data = sessionStorage.getItem('teacherData');
+        if (data) {
+            try {
+                const teacher = JSON.parse(data);
+                if (teacher.id) {
+                    return `currentAcademicPeriod_${teacher.id}`;
+                }
+            } catch (err) {
+                console.warn('Error parseando teacherData:', err);
+            }
+        }
+        return 'currentAcademicPeriod';
+    }
+
     class UnifiedPeriodSelector {
         constructor() {
             this.currentPeriod = this.loadCurrentPeriod();
@@ -1801,7 +1816,7 @@
     }
 
     loadCurrentPeriod() {
-        const saved = localStorage.getItem('currentAcademicPeriod');
+        const saved = localStorage.getItem(getPeriodStorageKey());
         if (saved) {
             return JSON.parse(saved);
         }
@@ -1816,7 +1831,7 @@
     }
 
     saveCurrentPeriod(period) {
-        localStorage.setItem('currentAcademicPeriod', JSON.stringify(period));
+        localStorage.setItem(getPeriodStorageKey(), JSON.stringify(period));
     }
 
     broadcastPeriodChange(newPeriod) {
@@ -1837,9 +1852,9 @@
 
     // Función global para obtener período actual
     window.getCurrentAcademicPeriod = () => {
-        return window.unifiedPeriodSelector ? 
-            window.unifiedPeriodSelector.getCurrentPeriod() : 
-            JSON.parse(localStorage.getItem('currentAcademicPeriod') || '{}');
+        return window.unifiedPeriodSelector ?
+            window.unifiedPeriodSelector.getCurrentPeriod() :
+            JSON.parse(localStorage.getItem(getPeriodStorageKey()) || '{}');
     };
 
     </script>

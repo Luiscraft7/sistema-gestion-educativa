@@ -1010,6 +1010,21 @@
         let selectedStudents = new Set();
         let editingStudentId = null;
         let availableGrades = [];
+
+        function getPeriodStorageKey() {
+            const data = sessionStorage.getItem('teacherData');
+            if (data) {
+                try {
+                    const teacher = JSON.parse(data);
+                    if (teacher.id) {
+                        return `currentAcademicPeriod_${teacher.id}`;
+                    }
+                } catch (err) {
+                    console.warn('Error parseando teacherData:', err);
+                }
+            }
+            return 'currentAcademicPeriod';
+        }
         
         // Variables para tabla masiva tipo Excel
         let bulkRowCounter = 0;
@@ -1105,13 +1120,11 @@
 
         // FUNCIÓN HELPER: Obtener período académico actual
         function getCurrentAcademicPeriod() {
-            // Intentar obtener del selector global del dashboard si existe
             if (window.unifiedPeriodSelector) {
                 return window.unifiedPeriodSelector.getCurrentPeriod();
             }
-            
-            // Fallback a localStorage
-            const saved = localStorage.getItem('currentAcademicPeriod');
+
+            const saved = localStorage.getItem(getPeriodStorageKey());
             if (saved) {
                 try {
                     return JSON.parse(saved);
@@ -2520,13 +2533,11 @@
         }
 
        getCurrentPeriod() {
-            // Intentar obtener del selector global del dashboard si existe
             if (window.unifiedPeriodSelector) {
                 return window.unifiedPeriodSelector.getCurrentPeriod();
             }
-            
-            // Fallback a localStorage
-            const saved = localStorage.getItem('currentAcademicPeriod');
+
+            const saved = localStorage.getItem(getPeriodStorageKey());
             if (saved) {
                 try {
                     return JSON.parse(saved);

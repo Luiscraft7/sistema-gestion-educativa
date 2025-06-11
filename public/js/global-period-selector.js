@@ -35,6 +35,22 @@ async function authenticatedFetch(url, options = {}) {
     return response;
 }
 
+// Obtener la clave de almacenamiento según el profesor actual
+function getPeriodStorageKey() {
+    const data = sessionStorage.getItem('teacherData');
+    if (data) {
+        try {
+            const teacher = JSON.parse(data);
+            if (teacher.id) {
+                return `currentAcademicPeriod_${teacher.id}`;
+            }
+        } catch (error) {
+            console.warn('Error parseando teacherData:', error);
+        }
+    }
+    return 'currentAcademicPeriod';
+}
+
 class GlobalPeriodSelector {
     constructor() {
         this.currentPeriod = this.loadCurrentPeriod();
@@ -561,7 +577,7 @@ async applyPeriodChange() {
     // ========================================
 
     loadCurrentPeriod() {
-        const saved = localStorage.getItem('currentAcademicPeriod');
+        const saved = localStorage.getItem(getPeriodStorageKey());
         if (saved) {
             try {
                 return JSON.parse(saved);
@@ -580,7 +596,7 @@ async applyPeriodChange() {
     }
 
     saveCurrentPeriod(period) {
-        localStorage.setItem('currentAcademicPeriod', JSON.stringify(period));
+        localStorage.setItem(getPeriodStorageKey(), JSON.stringify(period));
     }
 
     broadcastPeriodChange(newPeriod) {
@@ -669,7 +685,7 @@ window.getCurrentAcademicPeriod = function() {
     }
     
     // Fallback: leer de localStorage
-    const saved = localStorage.getItem('currentAcademicPeriod');
+    const saved = localStorage.getItem(getPeriodStorageKey());
     if (saved) {
         try {
             return JSON.parse(saved);
