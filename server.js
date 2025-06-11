@@ -1165,9 +1165,9 @@ app.get('/api/grade-scale', async (req, res) => {
 app.get('/api/attendance/stats/:studentId', async (req, res) => {
     try {
         const { studentId } = req.params;
-        const { grade, subject, totalLessons } = req.query;
+        const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id } = req.query;
         
-        console.log('📊 Calculando estadísticas MEP para:', { studentId, grade, subject, totalLessons });
+        console.log('📊 Calculando estadísticas MEP para:', { studentId, grade, subject, totalLessons, year, period_type, period_number, academic_period_id });
         
         if (!grade) {
             return res.status(400).json({
@@ -1192,11 +1192,26 @@ app.get('/api/attendance/stats/:studentId', async (req, res) => {
         // ✅ LLAMAR A LA FUNCIÓN CON MANEJO DE ERRORES MEJORADO
         console.log('🔄 Llamando a calculateMEPAttendanceGrade...');
         
+        let academicPeriodId = academic_period_id || null;
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
         const mepGrade = await database.calculateMEPAttendanceGrade(
-            parseInt(studentId), 
-            grade, 
-            subject || 'general', 
-            parseInt(totalLessons) || 200
+            parseInt(studentId),
+            grade,
+            subject || 'general',
+            parseInt(totalLessons) || 200,
+            academicPeriodId
         );
         
         console.log('✅ Estadísticas MEP calculadas exitosamente');
@@ -1225,9 +1240,9 @@ app.get('/api/attendance/stats/:studentId', async (req, res) => {
 // Obtener estadísticas de toda la clase
 app.get('/api/attendance/class-stats', async (req, res) => {
     try {
-        const { grade, subject, totalLessons } = req.query;
+        const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id } = req.query;
         
-        console.log('📊 Calculando estadísticas de clase para:', { grade, subject, totalLessons });
+        console.log('📊 Calculando estadísticas de clase para:', { grade, subject, totalLessons, year, period_type, period_number, academic_period_id });
         
         if (!grade) {
             return res.status(400).json({
@@ -1236,8 +1251,22 @@ app.get('/api/attendance/class-stats', async (req, res) => {
             });
         }
         
+        let academicPeriodId = academic_period_id || null;
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
         // Obtener estudiantes del grado
-        const students = await database.getAllStudents();
+        const students = await database.getAllStudents(academicPeriodId);
         const gradeStudents = students.filter(s => 
             s.grade_level === grade && 
             s.status === 'active' &&
@@ -1250,10 +1279,11 @@ app.get('/api/attendance/class-stats', async (req, res) => {
         const classStats = await Promise.all(
             gradeStudents.map(async (student) => {
                 const mepGrade = await database.calculateMEPAttendanceGrade(
-                    student.id, 
-                    grade, 
-                    subject || 'general', 
-                    parseInt(totalLessons) || 200
+                    student.id,
+                    grade,
+                    subject || 'general',
+                    parseInt(totalLessons) || 200,
+                    academicPeriodId
                 );
                 return {
                     ...student,
