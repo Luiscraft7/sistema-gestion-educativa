@@ -2048,21 +2048,27 @@ async deleteStudent(id, teacherId = null) {
     // ========================================
     // CÁLCULOS DE ESTADÍSTICAS MEP
     // ========================================
-    async calculateMEPAttendanceGrade(studentId, grade, subject = 'general', totalLessons = 200) {
+    async calculateMEPAttendanceGrade(studentId, grade, subject = 'general', totalLessons = 200, academicPeriodId = null) {
         this.ensureConnection();
         
         return new Promise(async (resolve, reject) => {  // ✅ Agregar async aquí
             try {
-                const query = `
-                    SELECT 
+                let query = `
+                    SELECT
                         status,
                         COUNT(*) as count
-                    FROM attendance 
-                    WHERE student_id = ? AND grade_level = ? AND subject_area = ?
-                    GROUP BY status
-                `;
-                
-                this.db.all(query, [studentId, grade, subject], async (err, rows) => {  // ✅ Agregar async aquí también
+                    FROM attendance
+                    WHERE student_id = ? AND grade_level = ? AND subject_area = ?`;
+                const params = [studentId, grade, subject];
+
+                if (academicPeriodId) {
+                    query += ' AND academic_period_id = ?';
+                    params.push(academicPeriodId);
+                }
+
+                query += ' GROUP BY status';
+
+                this.db.all(query, params, async (err, rows) => {  // ✅ Agregar async aquí también
                     if (err) {
                         reject(err);
                         return;

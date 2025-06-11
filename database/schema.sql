@@ -274,6 +274,16 @@ CREATE TABLE IF NOT EXISTS assignment_grades (
     UNIQUE(academic_period_id, teacher_id, assignment_id, student_id)
 );
 
+-- Configuración de escalas de calificación para asistencia
+CREATE TABLE IF NOT EXISTS grade_scale_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    max_scale REAL NOT NULL DEFAULT 5.0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(grade_level, subject_area)
+);
+
 -- ========================================
 -- MÓDULO DE ASISTENCIA [CON PERÍODO ACADÉMICO + PROFESOR]
 -- ========================================
@@ -414,6 +424,7 @@ CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher ON attendance(academic_
 CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_student_date ON attendance(academic_period_id, teacher_id, student_id, date);
 CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_date_grade ON attendance(academic_period_id, teacher_id, date, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_grade_subject ON lesson_config(academic_period_id, teacher_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_grade_scale_grade_subject ON grade_scale_config(grade_level, subject_area);
 
 -- Índices para Cotidiano Avanzado
 CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_grade_subject ON daily_indicators(teacher_id, grade_level, subject_area);
