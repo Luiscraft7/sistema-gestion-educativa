@@ -2035,7 +2035,7 @@ async deleteStudent(id, teacherId = null) {
         
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT de.*, dis.indicator_id, dis.score, dis.notes as score_notes
+                SELECT de.*, dis.daily_indicator_id AS indicator_id, dis.score, dis.notes as score_notes
                 FROM daily_evaluations de
                 LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                 WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
@@ -2071,7 +2071,7 @@ async deleteStudent(id, teacherId = null) {
                 FROM daily_evaluations de
                 LEFT JOIN students s ON de.student_id = s.id
                 LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
-                LEFT JOIN daily_indicators di ON dis.indicator_id = di.id
+                LEFT JOIN daily_indicators di ON dis.daily_indicator_id = di.id
                 WHERE de.grade_level = ? AND de.subject_area = ?
                 ORDER BY de.evaluation_date DESC, s.first_surname, di.indicator_name
             `;

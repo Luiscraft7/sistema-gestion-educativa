@@ -2456,7 +2456,7 @@ app.get('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
             const indicatorsWithScoresQuery = `
                 SELECT DISTINCT di.*
                 FROM daily_indicators di
-                INNER JOIN daily_indicator_scores dis ON di.id = dis.indicator_id
+                INNER JOIN daily_indicator_scores dis ON di.id = dis.daily_indicator_id
                 INNER JOIN daily_evaluations de ON dis.daily_evaluation_id = de.id
                 WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ? AND de.academic_period_id = ? AND de.teacher_id = ?
             `;
@@ -2516,14 +2516,14 @@ app.get('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
                     s.first_surname,
                     s.second_surname,
                     s.first_name,
-                    dis.indicator_id,
+                    dis.daily_indicator_id AS indicator_id,
                     dis.score,
                     dis.notes
                 FROM daily_evaluations de
                 LEFT JOIN students s ON de.student_id = s.id
                 LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                 WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ? AND de.academic_period_id = ? AND de.teacher_id = ?
-                ORDER BY s.first_surname, s.first_name, dis.indicator_id
+                ORDER BY s.first_surname, s.first_name, dis.daily_indicator_id
             `;
 
             const evaluations = await new Promise((resolve, reject) => {
@@ -2795,7 +2795,7 @@ app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
                             const scorePromise = new Promise((scoreResolve, scoreReject) => {
                                 const scoreQuery = `
                                     INSERT OR REPLACE INTO daily_indicator_scores 
-                                    (daily_evaluation_id, indicator_id, score, created_at)
+                                    (daily_evaluation_id, daily_indicator_id, score, created_at)
                                     VALUES (?, ?, ?, datetime('now'))
                                 `;
                                 database.db.run(scoreQuery, [evaluationId, indicatorId, score], function(scoreErr) {
@@ -2900,7 +2900,7 @@ app.get('/api/cotidiano/latest-indicators', authenticateTeacher, async (req, res
         const indicatorsWithScoresQuery = `
             SELECT DISTINCT di.*
             FROM daily_indicators di
-            INNER JOIN daily_indicator_scores dis ON di.id = dis.indicator_id
+            INNER JOIN daily_indicator_scores dis ON di.id = dis.daily_indicator_id
             INNER JOIN daily_evaluations de ON dis.daily_evaluation_id = de.id
             WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ? AND de.academic_period_id = ? AND de.teacher_id = ?
         `;
