@@ -139,14 +139,11 @@ CREATE TABLE IF NOT EXISTS grades (
 -- Tabla de Materias Personalizadas - ✅ VACÍA PARA QUE USUARIO CONFIGURE
 CREATE TABLE IF NOT EXISTS custom_subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    teacher_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
     description TEXT,
     usage INTEGER DEFAULT 0,
     priority INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(teacher_id, name)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de relación Grados-Materias [CON PERÍODO ACADÉMICO]
@@ -277,16 +274,6 @@ CREATE TABLE IF NOT EXISTS assignment_grades (
     UNIQUE(academic_period_id, teacher_id, assignment_id, student_id)
 );
 
--- Configuración de escalas de calificación para asistencia
-CREATE TABLE IF NOT EXISTS grade_scale_config (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    grade_level TEXT NOT NULL,
-    subject_area TEXT NOT NULL,
-    max_scale REAL NOT NULL DEFAULT 5.0,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(grade_level, subject_area)
-);
-
 -- ========================================
 -- MÓDULO DE ASISTENCIA [CON PERÍODO ACADÉMICO + PROFESOR]
 -- ========================================
@@ -354,21 +341,17 @@ CREATE TABLE IF NOT EXISTS attendance_periods (
 -- Tabla de Indicadores de Cotidiano
 CREATE TABLE IF NOT EXISTS daily_indicators (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    academic_period_id INTEGER DEFAULT 1,
     teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     indicator_name TEXT NOT NULL,
     indicator_description TEXT,
-    parent_indicator_id INTEGER,
     max_points REAL DEFAULT 10,
     weight REAL DEFAULT 1.0,
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_indicator_id) REFERENCES daily_indicators(id),
-    UNIQUE(academic_period_id, teacher_id, grade_level, subject_area, indicator_name)
+    UNIQUE(teacher_id, grade_level, subject_area, indicator_name)
 );
 
 -- Tabla de Evaluaciones de Cotidiano
@@ -431,11 +414,9 @@ CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher ON attendance(academic_
 CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_student_date ON attendance(academic_period_id, teacher_id, student_id, date);
 CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_date_grade ON attendance(academic_period_id, teacher_id, date, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_grade_subject ON lesson_config(academic_period_id, teacher_id, grade_level, subject_area);
-CREATE INDEX IF NOT EXISTS idx_grade_scale_grade_subject ON grade_scale_config(grade_level, subject_area);
 
 -- Índices para Cotidiano Avanzado
-CREATE INDEX IF NOT EXISTS idx_daily_indicators_period_teacher_grade_subject ON daily_indicators(academic_period_id, teacher_id, grade_level, subject_area);
-CREATE INDEX IF NOT EXISTS idx_daily_indicators_parent ON daily_indicators(parent_indicator_id);
+CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_grade_subject ON daily_indicators(teacher_id, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_student_date ON daily_evaluations(academic_period_id, teacher_id, student_id, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_grade_subject_date ON daily_evaluations(academic_period_id, teacher_id, grade_level, subject_area, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_evaluation ON daily_indicator_scores(daily_evaluation_id);
@@ -458,7 +439,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_log_admin ON admin_activity_log(admin_user)
 -- Insertar períodos iniciales para 2025
 INSERT OR IGNORE INTO academic_periods (year, period_type, period_number, name, is_active, is_current) VALUES 
 (2025, 'semester', 1, '2025 - Primer Semestre', 1, 1),
-(2025, 'semester', 2, '2025 - Segundo Semestre', 0, 0);
+(2025, 'semester', 2, '2025 - Segundo Semestre', 1, 0);
 
 -- Escuela de ejemplo (necesaria para funcionamiento)
 INSERT OR IGNORE INTO schools (id, name, address, phone, email) 

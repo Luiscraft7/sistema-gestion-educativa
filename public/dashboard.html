@@ -1853,15 +1853,26 @@
     loadCurrentPeriod() {
         const saved = localStorage.getItem(getPeriodStorageKey());
         if (saved) {
-            return JSON.parse(saved);
+            try {
+                const parsed = JSON.parse(saved);
+                // VALIDACIÓN: Si es una cuenta nueva, asegurar primer semestre
+                if (!parsed.periodNumber || parsed.periodNumber === 2) {
+                    console.log('🔧 Corrigiendo período a primer semestre para nueva cuenta');
+                    parsed.periodNumber = 1;
+                    this.saveCurrentPeriod(parsed);
+                }
+                return parsed;
+            } catch (error) {
+                console.error('Error parseando período guardado:', error);
+            }
         }
         
-        // Período por defecto
+        // Período por defecto SIEMPRE primer semestre
         return {
             schoolId: '1',
             year: 2025,
             periodType: 'semester',
-            periodNumber: 1
+            periodNumber: 1  // ← SIEMPRE primer semestre para nuevas cuentas
         };
     }
 
