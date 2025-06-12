@@ -1841,11 +1841,11 @@
         // ========================================
         // FUNCIONES DE ASISTENCIA - COMPLETAMENTE CORREGIDAS
         // ========================================
-        async function markAttendance(studentId, status) {
+        async function markAttendance(studentId, status, date = selectedDate) {
             try {
                 debugLog(`📝 Marcando asistencia:`, { studentId, status, grade: currentGrade, subject: currentSubject });
                 
-                const dateStr = selectedDate.toISOString().split('T')[0];
+                const dateStr = date.toISOString().split('T')[0];
                 const now = new Date();
                 
                 // ✅ CORREGIDO: Usar la materia del estudiante o 'general'
@@ -1920,6 +1920,8 @@
             }
             
             debugLog(`📋 Marcando todos como: ${status}`);
+
+            const dateSnapshot = new Date(selectedDate);
             
             try {
                 let successCount = 0;
@@ -1927,7 +1929,7 @@
                 
                 for (const student of students) {
                     try {
-                        await markAttendance(student.id, status);
+                        await markAttendance(student.id, status, dateSnapshot);
                         successCount++;
                         // Pequeña pausa para no sobrecargar el servidor
                         await new Promise(resolve => setTimeout(resolve, 100));
