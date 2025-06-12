@@ -1170,6 +1170,7 @@
         let students = [];
         let currentDate = new Date();
         let selectedDate = new Date();
+        let isBulkMarking = false;
         let currentGrade = '';
         let currentSubject = '';
         let currentStudentId = null;
@@ -1364,6 +1365,11 @@
         }
 
         function selectDate(date) {
+            if (isBulkMarking) {
+                showMessage('error', 'Espera a que termine el marcado masivo antes de cambiar la fecha');
+                return;
+            }
+
             debugLog('📅 Fecha seleccionada:', date.toISOString().split('T')[0]);
             
             if (date.getMonth() !== currentDate.getMonth() || date.getFullYear() !== currentDate.getFullYear()) {
@@ -1377,6 +1383,11 @@
         }
 
         function changeMonth(delta) {
+            if (isBulkMarking) {
+                showMessage('error', 'Espera a que termine el marcado masivo antes de cambiar la fecha');
+                return;
+            }
+
             const newMonth = currentDate.getMonth() + delta;
             const newYear = currentDate.getFullYear();
             
@@ -1910,6 +1921,11 @@
         }
 
         async function markAllStudents(status) {
+            if (isBulkMarking) {
+                showMessage('error', 'El marcado masivo ya está en progreso');
+                return;
+            }
+
             if (students.length === 0) {
                 showMessage('error', 'No hay estudiantes cargados');
                 return;
@@ -1922,7 +1938,9 @@
             debugLog(`📋 Marcando todos como: ${status}`);
 
             const dateSnapshot = new Date(selectedDate);
-            
+
+            isBulkMarking = true;
+
             try {
                 let successCount = 0;
                 let errorCount = 0;
@@ -1951,6 +1969,8 @@
             } catch (error) {
                 debugLog('❌ Error marcando todos:', error);
                 showMessage('error', 'Error marcando estudiantes');
+            } finally {
+                isBulkMarking = false;
             }
         }
 
