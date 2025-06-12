@@ -1113,8 +1113,18 @@ Participa activamente en discusiones"
                 console.log('✅ Materias cargadas:', allSubjects.length);
             }
 
-            // Cargar estudiantes
-            const studentsResponse = await authenticatedFetch('/api/students');
+            // Cargar estudiantes filtrados por período académico
+            const currentPeriod = getCurrentAcademicPeriod();
+            const studentParams = new URLSearchParams({
+                year: currentPeriod.year,
+                period_type: currentPeriod.periodType,
+                period_number: currentPeriod.periodNumber
+            });
+
+            const studentsUrl = `/api/students?${studentParams.toString()}`;
+            console.log('🔗 Consultando estudiantes:', studentsUrl);
+
+            const studentsResponse = await authenticatedFetch(studentsUrl);
             const studentsData = await studentsResponse.json();
             if (studentsData.success) {
                 students = studentsData.data;
