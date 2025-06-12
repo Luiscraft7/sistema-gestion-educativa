@@ -98,6 +98,17 @@ class Database {
                 await run('ALTER TABLE custom_subjects ADD COLUMN teacher_id INTEGER DEFAULT 0');
                 await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher ON custom_subjects(teacher_id)');
             }
+
+            // Ensure daily_indicators table has academic_period_id and teacher_id
+            const dailyInfo = await tableInfo('daily_indicators');
+            if (!dailyInfo.some(r => r.name === 'academic_period_id')) {
+                await run('ALTER TABLE daily_indicators ADD COLUMN academic_period_id INTEGER DEFAULT 1');
+            }
+            if (!dailyInfo.some(r => r.name === 'teacher_id')) {
+                await run('ALTER TABLE daily_indicators ADD COLUMN teacher_id INTEGER DEFAULT 0');
+            }
+            // Index for faster lookups by period and teacher
+            await run('CREATE INDEX IF NOT EXISTS idx_daily_indicators_period_teacher_grade_subject ON daily_indicators(academic_period_id, teacher_id, grade_level, subject_area)');
         } catch (err) {
             throw err;
         }
