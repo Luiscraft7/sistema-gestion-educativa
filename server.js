@@ -2967,7 +2967,8 @@ app.get('/api/cotidiano/latest-indicators', authenticateTeacher, async (req, res
 // Obtener historial de evaluaciones
 app.get('/api/cotidiano/history', authenticateTeacher, async (req, res) => {
     try {
-        const { grade, subject } = req.query;
+        const { grade, subject, academic_period_id } = req.query;
+        const teacher_id = req.query.teacher_id || req.teacher.id;
         
         if (!grade || !subject) {
             return res.status(400).json({ 
@@ -2976,7 +2977,12 @@ app.get('/api/cotidiano/history', authenticateTeacher, async (req, res) => {
             });
         }
         
-        const history = await database.getCotidianoHistory(grade, subject);
+        const history = await database.getCotidianoHistory(
+            grade,
+            subject,
+            academic_period_id ? parseInt(academic_period_id) : 1,
+            teacher_id ? parseInt(teacher_id) : undefined
+        );
         
         res.json({
             success: true,
