@@ -1363,6 +1363,8 @@ async deleteStudent(id, teacherId = null) {
                      WHERE s.status = 'active'
                        AND s.grade_level = a.grade_level
                        AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                       AND s.academic_period_id = a.academic_period_id
+                       AND s.teacher_id = a.teacher_id
                     ) as total_students
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
@@ -1775,10 +1777,12 @@ async deleteStudent(id, teacherId = null) {
                     COUNT(ag.id) as total_grades,
                     ROUND(AVG(ag.percentage), 1) as avg_percentage,
                     COUNT(DISTINCT ag.student_id) as students_graded,
-                    (SELECT COUNT(*) FROM students s 
-                     WHERE s.status = 'active' 
-                       AND s.grade_level = a.grade_level 
+                    (SELECT COUNT(*) FROM students s
+                     WHERE s.status = 'active'
+                       AND s.grade_level = a.grade_level
                        AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                       AND s.academic_period_id = a.academic_period_id
+                       AND s.teacher_id = a.teacher_id
                     ) as total_students
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
@@ -1866,17 +1870,21 @@ async deleteStudent(id, teacherId = null) {
                     a.subject_area,
                     COUNT(DISTINCT a.id) as total_evaluations,
                     COUNT(ag.id) as total_grades,
-                    (SELECT COUNT(*) FROM students s 
-                    WHERE s.status = 'active' 
-                    AND s.grade_level = a.grade_level 
+                    (SELECT COUNT(*) FROM students s
+                    WHERE s.status = 'active'
+                    AND s.grade_level = a.grade_level
                     AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                    AND s.academic_period_id = a.academic_period_id
+                    AND s.teacher_id = a.teacher_id
                     ) as total_students,
                     ROUND(
                         (COUNT(ag.id) * 100.0) / 
-                        NULLIF(COUNT(DISTINCT a.id) * (SELECT COUNT(*) FROM students s 
-                        WHERE s.status = 'active' 
-                        AND s.grade_level = a.grade_level 
-                        AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')), 0), 
+                        NULLIF(COUNT(DISTINCT a.id) * (SELECT COUNT(*) FROM students s
+                        WHERE s.status = 'active'
+                        AND s.grade_level = a.grade_level
+                        AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
+                        AND s.academic_period_id = a.academic_period_id
+                        AND s.teacher_id = a.teacher_id), 0),
                         1
                     ) as completion_percentage
                 FROM assignments a
