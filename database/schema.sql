@@ -354,17 +354,21 @@ CREATE TABLE IF NOT EXISTS attendance_periods (
 -- Tabla de Indicadores de Cotidiano
 CREATE TABLE IF NOT EXISTS daily_indicators (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    academic_period_id INTEGER DEFAULT 1,
     teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     indicator_name TEXT NOT NULL,
     indicator_description TEXT,
+    parent_indicator_id INTEGER,
     max_points REAL DEFAULT 10,
     weight REAL DEFAULT 1.0,
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(teacher_id, grade_level, subject_area, indicator_name)
+    FOREIGN KEY (parent_indicator_id) REFERENCES daily_indicators(id),
+    UNIQUE(academic_period_id, teacher_id, grade_level, subject_area, indicator_name)
 );
 
 -- Tabla de Evaluaciones de Cotidiano
@@ -430,7 +434,8 @@ CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_grade_subject ON les
 CREATE INDEX IF NOT EXISTS idx_grade_scale_grade_subject ON grade_scale_config(grade_level, subject_area);
 
 -- Índices para Cotidiano Avanzado
-CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_grade_subject ON daily_indicators(teacher_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_daily_indicators_period_teacher_grade_subject ON daily_indicators(academic_period_id, teacher_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_daily_indicators_parent ON daily_indicators(parent_indicator_id);
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_student_date ON daily_evaluations(academic_period_id, teacher_id, student_id, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_grade_subject_date ON daily_evaluations(academic_period_id, teacher_id, grade_level, subject_area, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_evaluation ON daily_indicator_scores(daily_evaluation_id);

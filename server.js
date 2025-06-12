@@ -2276,7 +2276,7 @@ async function startServer() {
 // Obtener indicadores por grado y materia
 app.get('/api/cotidiano/indicators', async (req, res) => {
     try {
-        const { grade, subject } = req.query;
+        const { grade, subject, academic_period_id, teacher_id } = req.query;
         
         if (!grade || !subject) {
             return res.status(400).json({ 
@@ -2285,7 +2285,12 @@ app.get('/api/cotidiano/indicators', async (req, res) => {
             });
         }
         
-        const indicators = await database.getIndicatorsByGradeAndSubject(grade, subject);
+        const indicators = await database.getIndicatorsByGradeAndSubject(
+            grade,
+            subject,
+            academic_period_id ? parseInt(academic_period_id) : 1,
+            teacher_id ? parseInt(teacher_id) : undefined
+        );
         
         res.json({
             success: true,
@@ -2306,7 +2311,7 @@ app.get('/api/cotidiano/indicators', async (req, res) => {
 // Crear nuevo indicador
 app.post('/api/cotidiano/indicators', async (req, res) => {
     try {
-        const { grade_level, subject_area, indicator_name, parent_indicator_id } = req.body;
+        const { academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id } = req.body;
         
         if (!grade_level || !subject_area || !indicator_name) {
             return res.status(400).json({ 
@@ -2315,7 +2320,14 @@ app.post('/api/cotidiano/indicators', async (req, res) => {
             });
         }
         
-        const result = await database.createIndicator(req.body);
+        const result = await database.createIndicator({
+            academic_period_id: academic_period_id ? parseInt(academic_period_id) : 1,
+            teacher_id,
+            grade_level,
+            subject_area,
+            indicator_name,
+            parent_indicator_id
+        });
         
         res.json({ 
             success: true,
@@ -2336,7 +2348,14 @@ app.post('/api/cotidiano/indicators', async (req, res) => {
 // Crear múltiples indicadores de una vez
 app.post('/api/cotidiano/indicators/bulk', async (req, res) => {
     try {
-        const result = await database.createBulkIndicators(req.body);
+        const { academic_period_id, teacher_id, grade_level, subject_area, indicators } = req.body;
+        const result = await database.createBulkIndicators({
+            academic_period_id: academic_period_id ? parseInt(academic_period_id) : 1,
+            teacher_id,
+            grade_level,
+            subject_area,
+            indicators
+        });
         
         res.json({ 
             success: result.summary.success > 0,
@@ -2394,7 +2413,7 @@ app.delete('/api/cotidiano/indicators/:id', async (req, res) => {
 // Cargar evaluación existente - CORREGIDO PARA FECHAS LIMPIAS
 app.get('/api/cotidiano/evaluation', async (req, res) => {
     try {
-        const { grade_level, subject_area, evaluation_date } = req.query;
+        const { academic_period_id, teacher_id, grade_level, subject_area, evaluation_date } = req.query;
         
         if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({
@@ -2403,18 +2422,18 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
             });
         }
         
-        console.log('📖 Cargando evaluación cotidiano:', { grade_level, subject_area, evaluation_date });
+        console.log('📖 Cargando evaluación cotidiano:', { academic_period_id, teacher_id, grade_level, subject_area, evaluation_date });
         
         database.ensureConnection();
         
         // 1. Verificar si existen evaluaciones para esta fecha específica
         const hasEvaluationsQuery = `
-            SELECT COUNT(*) as count FROM daily_evaluations 
-            WHERE grade_level = ? AND subject_area = ? AND evaluation_date = ?
+            SELECT COUNT(*) as count FROM daily_evaluations
+            WHERE grade_level = ? AND subject_area = ? AND evaluation_date = ? AND academic_period_id = ? AND teacher_id = ?
         `;
-        
+
         const hasEvaluations = await new Promise((resolve, reject) => {
-            database.db.get(hasEvaluationsQuery, [grade_level, subject_area, evaluation_date], (err, row) => {
+            database.db.get(hasEvaluationsQuery, [grade_level, subject_area, evaluation_date, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, row) => {
                 if (err) reject(err);
                 else resolve(row.count > 0);
             });
@@ -2431,15 +2450,15 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
             
             // PASO 1: Obtener indicadores con scores
             const indicatorsWithScoresQuery = `
-                SELECT DISTINCT di.* 
+                SELECT DISTINCT di.*
                 FROM daily_indicators di
                 INNER JOIN daily_indicator_scores dis ON di.id = dis.indicator_id
                 INNER JOIN daily_evaluations de ON dis.daily_evaluation_id = de.id
-                WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+                WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ? AND de.academic_period_id = ? AND de.teacher_id = ?
             `;
-            
+
             const indicatorsWithScores = await new Promise((resolve, reject) => {
-                database.db.all(indicatorsWithScoresQuery, [grade_level, subject_area, evaluation_date], (err, rows) => {
+                database.db.all(indicatorsWithScoresQuery, [grade_level, subject_area, evaluation_date, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
                 });
@@ -2461,12 +2480,12 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
             if (parentIds.length > 0) {
                 const placeholders = parentIds.map(() => '?').join(',');
                 const parentsQuery = `
-                    SELECT * FROM daily_indicators 
-                    WHERE id IN (${placeholders}) AND grade_level = ? AND subject_area = ?
+                    SELECT * FROM daily_indicators
+                    WHERE id IN (${placeholders}) AND grade_level = ? AND subject_area = ? AND academic_period_id = ? AND teacher_id = ?
                 `;
-                
+
                 parentIndicators = await new Promise((resolve, reject) => {
-                    database.db.all(parentsQuery, [...parentIds, grade_level, subject_area], (err, rows) => {
+                    database.db.all(parentsQuery, [...parentIds, grade_level, subject_area, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, rows) => {
                         if (err) reject(err);
                         else resolve(rows || []);
                     });
@@ -2487,7 +2506,7 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
             
             // PASO 5: Cargar calificaciones de estudiantes para esta fecha
             const evaluationsQuery = `
-                SELECT 
+                SELECT
                     de.id as evaluation_id,
                     de.student_id,
                     s.first_surname,
@@ -2499,12 +2518,12 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
                 FROM daily_evaluations de
                 LEFT JOIN students s ON de.student_id = s.id
                 LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
-                WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+                WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ? AND de.academic_period_id = ? AND de.teacher_id = ?
                 ORDER BY s.first_surname, s.first_name, dis.indicator_id
             `;
-            
+
             const evaluations = await new Promise((resolve, reject) => {
-                database.db.all(evaluationsQuery, [grade_level, subject_area, evaluation_date], (err, rows) => {
+                database.db.all(evaluationsQuery, [grade_level, subject_area, evaluation_date, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
                 });
@@ -2584,7 +2603,7 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
 // Guardar evaluación del cotidiano
 app.post('/api/cotidiano/evaluation', async (req, res) => {
     try {
-        const { grade_level, subject_area, evaluation_date, main_indicator, indicators, students } = req.body;
+        const { academic_period_id, teacher_id, grade_level, subject_area, evaluation_date, main_indicator, indicators, students } = req.body;
         
         if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({ 
@@ -2594,6 +2613,8 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
         }
         
         console.log('💾 Guardando evaluación cotidiano:', {
+            academic_period_id,
+            teacher_id,
             grade_level,
             subject_area,
             evaluation_date,
@@ -2609,11 +2630,21 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
         if (main_indicator) {
             const mainPromise = new Promise((resolve, reject) => {
                 const mainQuery = `
-                    INSERT OR REPLACE INTO daily_indicators 
-                    (id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
-                    VALUES (?, ?, ?, ?, NULL, datetime('now'))
+                    INSERT OR REPLACE INTO daily_indicators
+                    (id, academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, NULL, datetime('now'))
                 `;
-                database.db.run(mainQuery, [main_indicator.id, grade_level, subject_area, main_indicator.text], function(err) {
+                database.db.run(
+                    mainQuery,
+                    [
+                        main_indicator.id,
+                        academic_period_id ? parseInt(academic_period_id) : 1,
+                        teacher_id,
+                        grade_level,
+                        subject_area,
+                        main_indicator.text
+                    ],
+                    function(err) {
                     if (err) reject(err);
                     else resolve(this);
                 });
@@ -2625,15 +2656,27 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
             indicators.forEach(indicator => {
                 const promise = new Promise((resolve, reject) => {
                     const query = `
-                        INSERT OR REPLACE INTO daily_indicators 
-                        (id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
-                        VALUES (?, ?, ?, ?, ?, datetime('now'))
+                        INSERT OR REPLACE INTO daily_indicators
+                        (id, academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
                     `;
                     const parentId = indicator.isSubIndicator ? indicator.parentId : null;
-                    database.db.run(query, [indicator.id, grade_level, subject_area, indicator.text, parentId], function(err) {
+                    database.db.run(
+                        query,
+                        [
+                            indicator.id,
+                            academic_period_id ? parseInt(academic_period_id) : 1,
+                            teacher_id,
+                            grade_level,
+                            subject_area,
+                            indicator.text,
+                            parentId
+                        ],
+                        function(err) {
                         if (err) reject(err);
                         else resolve(this);
-                    });
+                        }
+                    );
                 });
                 indicatorPromises.push(promise);
             });
@@ -2715,12 +2758,22 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
                     
                     // Crear/actualizar evaluación del estudiante
                     const evalQuery = `
-                        INSERT OR REPLACE INTO daily_evaluations 
-                        (student_id, grade_level, subject_area, evaluation_date, created_at)
-                        VALUES (?, ?, ?, ?, datetime('now'))
+                        INSERT OR REPLACE INTO daily_evaluations
+                        (student_id, academic_period_id, teacher_id, grade_level, subject_area, evaluation_date, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
                     `;
-                    
-                    database.db.run(evalQuery, [foundStudent.id, grade_level, subject_area, evaluation_date], function(evalErr) {
+
+                    database.db.run(
+                        evalQuery,
+                        [
+                            foundStudent.id,
+                            academic_period_id ? parseInt(academic_period_id) : 1,
+                            teacher_id,
+                            grade_level,
+                            subject_area,
+                            evaluation_date
+                        ],
+                        function(evalErr) {
                         if (evalErr) {
                             console.error('❌ Error creando evaluación:', evalErr);
                             reject(evalErr);
@@ -2839,15 +2892,15 @@ app.get('/api/cotidiano/latest-indicators', async (req, res) => {
         
         // Obtener indicadores de esa fecha (con el mismo enfoque que el endpoint principal)
         const indicatorsWithScoresQuery = `
-            SELECT DISTINCT di.* 
+            SELECT DISTINCT di.*
             FROM daily_indicators di
             INNER JOIN daily_indicator_scores dis ON di.id = dis.indicator_id
             INNER JOIN daily_evaluations de ON dis.daily_evaluation_id = de.id
-            WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
+            WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ? AND de.academic_period_id = ? AND de.teacher_id = ?
         `;
-        
+
         const indicatorsWithScores = await new Promise((resolve, reject) => {
-            database.db.all(indicatorsWithScoresQuery, [grade_level, subject_area, latestDate], (err, rows) => {
+            database.db.all(indicatorsWithScoresQuery, [grade_level, subject_area, latestDate, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, rows) => {
                 if (err) reject(err);
                 else resolve(rows || []);
             });
@@ -2864,12 +2917,12 @@ app.get('/api/cotidiano/latest-indicators', async (req, res) => {
         if (parentIds.length > 0) {
             const placeholders = parentIds.map(() => '?').join(',');
             const parentsQuery = `
-                SELECT * FROM daily_indicators 
-                WHERE id IN (${placeholders}) AND grade_level = ? AND subject_area = ?
+                SELECT * FROM daily_indicators
+                WHERE id IN (${placeholders}) AND grade_level = ? AND subject_area = ? AND academic_period_id = ? AND teacher_id = ?
             `;
-            
+
             parentIndicators = await new Promise((resolve, reject) => {
-                database.db.all(parentsQuery, [...parentIds, grade_level, subject_area], (err, rows) => {
+                database.db.all(parentsQuery, [...parentIds, grade_level, subject_area, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
                 });
