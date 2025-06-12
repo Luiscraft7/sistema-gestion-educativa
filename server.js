@@ -3575,22 +3575,37 @@ app.post('/api/teachers/logout', async (req, res) => {
 // Obtener todos los períodos académicos
 app.get('/api/academic-periods', async (req, res) => {
     try {
-        const { year, active_only } = req.query;
-        
+        const { year, period_type, period_number, active_only } = req.query;
+
         let query = 'SELECT * FROM academic_periods';
-        let params = [];
-        
+        const conditions = [];
+        const params = [];
+
         if (year) {
-            query += ' WHERE year = ?';
+            conditions.push('year = ?');
             params.push(year);
         }
-        
-        if (active_only === 'true') {
-            query += (year ? ' AND' : ' WHERE') + ' is_active = 1';
+
+        if (period_type) {
+            conditions.push('period_type = ?');
+            params.push(period_type);
         }
-        
+
+        if (period_number) {
+            conditions.push('period_number = ?');
+            params.push(period_number);
+        }
+
+        if (active_only === 'true') {
+            conditions.push('is_active = 1');
+        }
+
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
+        }
+
         query += ' ORDER BY year DESC, period_number ASC';
-        
+
         database.db.all(query, params, (err, rows) => {
             if (err) {
                 res.status(500).json({
