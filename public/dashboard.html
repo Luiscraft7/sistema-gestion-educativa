@@ -1186,7 +1186,7 @@
         return response;
     }
     // Cargar y verificar sesión al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         const fadeElements = document.querySelectorAll('.fade-in');
 
         if (!sessionStorage.getItem('firstDashboardLoad')) {
@@ -1198,7 +1198,7 @@
             fadeElements.forEach(element => element.classList.remove('fade-in'));
         }
 
-        const sessionInfo = checkUserSession();
+        const sessionInfo = await checkUserSession();
         if (sessionInfo) {
             setupUserInterface(sessionInfo.type);
             if (sessionInfo.type === 'admin') {
@@ -1238,7 +1238,7 @@
     }
 
    // Verificar sesión (Admin O Profesor) - VERSIÓN CORREGIDA
-    function checkUserSession() {
+    async function checkUserSession() {
         console.log('🔍 Verificando sesión de usuario...');
         
         // Primero verificar si es admin
@@ -1259,18 +1259,47 @@
         
         // Si no es admin, verificar profesor
         const teacherSession = sessionStorage.getItem('teacherSession');
-        const teacherData = sessionStorage.getItem('teacherData');
-        
+        let teacherData = sessionStorage.getItem('teacherData');
+
         console.log('Teacher Session:', teacherSession, 'Teacher Data existe:', !!teacherData);
-        
-        if (teacherSession === 'true' && teacherData) {
-            try {
-                const teacher = JSON.parse(teacherData);
-                console.log('✅ Sesión de profesor válida encontrada');
-                updateHeaderWithTeacher(teacher);
-                return { type: 'teacher', user: teacher };
-            } catch (error) {
-                console.error('Error parseando datos del profesor:', error);
+
+        if (teacherSession === 'true') {
+            if (!teacherData) {
+                // Intentar recuperar desde localStorage o API
+                const storedInfo = localStorage.getItem('teacherInfo');
+                if (storedInfo) {
+                    teacherData = storedInfo;
+                    sessionStorage.setItem('teacherData', storedInfo);
+                } else {
+                    try {
+                        const response = await authenticatedFetch('/api/teachers/current');
+                        const result = await response.json();
+                        if (result.success) {
+                            teacherData = JSON.stringify({
+                                id: result.data.id,
+                                name: result.data.full_name,
+                                email: result.data.email,
+                                school: result.data.school_name,
+                                cedula: result.data.cedula
+                            });
+                            sessionStorage.setItem('teacherData', teacherData);
+                            localStorage.setItem('teacherInfo', teacherData);
+                        }
+                    } catch (fetchError) {
+                        console.error('Error recuperando datos del profesor:', fetchError);
+                    }
+                }
+            }
+
+            if (teacherData) {
+                try {
+                    const teacher = JSON.parse(teacherData);
+                    console.log('✅ Sesión de profesor válida encontrada');
+                    updateHeaderWithTeacher(teacher);
+                    return { type: 'teacher', user: teacher };
+                } catch (error) {
+                    console.error('Error parseando datos del profesor:', error);
+                }
             }
         }
         
