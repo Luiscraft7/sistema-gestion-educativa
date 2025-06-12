@@ -3000,12 +3000,30 @@ app.get('/api/cotidiano/history', authenticateTeacher, async (req, res) => {
 // ========================================
 
 // Endpoint para obtener lista de grados y materias disponibles para SEA
-app.get('/api/sea/grade-subjects', async (req, res) => {
+app.get('/api/sea/grade-subjects', authenticateTeacher, async (req, res) => {
     try {
         console.log('🎯 GET /api/sea/grade-subjects - Obteniendo combinaciones para SEA');
-        
-        // Obtener asignaciones usando la función existente
-        const gradesWithSubjects = await database.getAllGradesWithSubjects();
+
+        const { year, period_type, period_number, academic_period_id } = req.query;
+
+        let academicPeriodId = academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
+        // Obtener asignaciones usando la función existente filtrando por profesor y período
+        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id, academicPeriodId);
         console.log(`📚 Grados con materias encontrados: ${gradesWithSubjects.length}`);
         
         // Crear array de combinaciones
@@ -3071,9 +3089,9 @@ app.get('/api/sea/grade-subjects', async (req, res) => {
 });
 
 // Endpoint principal para datos consolidados del SEA
-app.get('/api/sea/consolidated', async (req, res) => {
+app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
     try {
-        const { grade, subject } = req.query;
+        const { grade, subject, year, period_type, period_number, academic_period_id } = req.query;
         
         if (!grade || !subject) {
             return res.status(400).json({
@@ -3084,18 +3102,35 @@ app.get('/api/sea/consolidated', async (req, res) => {
 
         console.log(`🎯 GET /api/sea/consolidated - Grado: ${grade}, Materia: ${subject}`);
 
+        let academicPeriodId = academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const currentPeriodQuery = 'SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1';
+            const currentPeriod = await new Promise((resolve, reject) => {
+                database.db.get(currentPeriodQuery, [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = currentPeriod ? currentPeriod.id : 1;
+        }
+
         database.ensureConnection();
 
         // 1. Obtener todas las evaluaciones activas del grado/materia
         const evaluations = await new Promise((resolve, reject) => {
             const evaluationsQuery = `
                 SELECT id, title, percentage, max_points, type, due_date
-                FROM assignments 
+                FROM assignments
                 WHERE grade_level = ? AND subject_area = ? AND is_active = 1
+                    AND teacher_id = ? AND academic_period_id = ?
                 ORDER BY created_at DESC
             `;
-            
-            database.db.all(evaluationsQuery, [grade, subject], (err, rows) => {
+
+            database.db.all(evaluationsQuery, [grade, subject, req.teacher.id, academicPeriodId], (err, rows) => {
                 if (err) {
                     console.error('❌ Error obteniendo evaluaciones:', err);
                     reject(err);
@@ -3110,12 +3145,13 @@ app.get('/api/sea/consolidated', async (req, res) => {
         const students = await new Promise((resolve, reject) => {
             const studentsQuery = `
                 SELECT id, first_name, first_surname, second_surname, student_id, cedula
-                FROM students 
+                FROM students
                 WHERE grade_level = ? AND status = 'active'
+                    AND teacher_id = ? AND academic_period_id = ?
                 ORDER BY first_surname, first_name
             `;
-            
-            database.db.all(studentsQuery, [grade], (err, rows) => {
+
+            database.db.all(studentsQuery, [grade, req.teacher.id, academicPeriodId], (err, rows) => {
                 if (err) {
                     console.error('❌ Error obteniendo estudiantes:', err);
                     reject(err);
@@ -3184,7 +3220,7 @@ app.get('/api/sea/consolidated', async (req, res) => {
                 const cotidianoResult = await new Promise((resolve, reject) => {
                     // Query para obtener TODAS las evaluaciones de cotidiano del estudiante
                     const cotidianoQuery = `
-                        SELECT 
+                        SELECT
                             de.evaluation_date,
                             COUNT(dis.score) as total_scores,
                             SUM(dis.score) as suma_scores,
@@ -3192,11 +3228,12 @@ app.get('/api/sea/consolidated', async (req, res) => {
                         FROM daily_evaluations de
                         LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                         WHERE de.student_id = ? AND de.grade_level = ? AND de.subject_area = ?
+                            AND de.teacher_id = ? AND de.academic_period_id = ?
                         GROUP BY de.evaluation_date
                         ORDER BY de.evaluation_date DESC
                     `;
-                    
-                    database.db.all(cotidianoQuery, [student.id, grade, subject], (err1, rows) => {
+
+                    database.db.all(cotidianoQuery, [student.id, grade, subject, req.teacher.id, academicPeriodId], (err1, rows) => {
                         if (err1) {
                             console.error(`❌ Error obteniendo cotidiano estudiante ${student.id}:`, err1);
                             resolve(null);
@@ -3242,7 +3279,7 @@ app.get('/api/sea/consolidated', async (req, res) => {
                         // Si no encuentra con materia exacta, buscar en cualquier materia del grado
                         console.log(`🔍 Buscando cotidiano ${student.first_surname} en cualquier materia de ${grade}...`);
                         const cotidianoQuery2 = `
-                            SELECT 
+                            SELECT
                                 de.evaluation_date,
                                 de.subject_area,
                                 COUNT(dis.score) as total_scores,
@@ -3250,11 +3287,12 @@ app.get('/api/sea/consolidated', async (req, res) => {
                             FROM daily_evaluations de
                             LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                             WHERE de.student_id = ? AND de.grade_level = ?
+                                AND de.teacher_id = ? AND de.academic_period_id = ?
                             GROUP BY de.evaluation_date, de.subject_area
                             ORDER BY de.evaluation_date DESC
                         `;
-                        
-                        database.db.all(cotidianoQuery2, [student.id, grade], (err2, rows2) => {
+
+                        database.db.all(cotidianoQuery2, [student.id, grade, req.teacher.id, academicPeriodId], (err2, rows2) => {
                             if (err2) {
                                 console.error(`❌ Error en búsqueda general cotidiano:`, err2);
                                 resolve(null);
@@ -3288,13 +3326,13 @@ app.get('/api/sea/consolidated', async (req, res) => {
                 let attendanceStats = null;
                 try {
                     // Primero intentar con la materia específica
-                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject);
+                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject, undefined, academicPeriodId);
                     console.log(`📊 Asistencia estudiante ${student.first_surname} (${subject}): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
                     
                     // Si no hay datos con la materia específica, intentar con 'general'
                     if (!attendanceStats || attendanceStats.total_records === 0) {
                         console.log(`🔍 Intentando asistencia general para ${student.first_surname}...`);
-                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general');
+                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general', undefined, academicPeriodId);
                         console.log(`📊 Asistencia estudiante ${student.first_surname} (general): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
                     }
                 } catch (error) {
