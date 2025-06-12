@@ -1162,7 +1162,7 @@ app.get('/api/grade-scale', authenticateTeacher, async (req, res) => {
 // ========================================
 
 // Obtener estadísticas de asistencia de un estudiante (MEJORADO)
-app.get('/api/attendance/stats/:studentId', async (req, res) => {
+app.get('/api/attendance/stats/:studentId', authenticateTeacher, async (req, res) => {
     try {
         const { studentId } = req.params;
         const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id } = req.query;
@@ -1239,7 +1239,7 @@ app.get('/api/attendance/stats/:studentId', async (req, res) => {
 });
 
 // Obtener estadísticas de toda la clase
-app.get('/api/attendance/class-stats', async (req, res) => {
+app.get('/api/attendance/class-stats', authenticateTeacher, async (req, res) => {
     try {
         const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id } = req.query;
         
