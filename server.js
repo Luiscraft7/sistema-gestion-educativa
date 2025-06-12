@@ -1094,10 +1094,10 @@ app.delete('/api/attendance', authenticateTeacher, async (req, res) => {
 });
 
 // Guardar escala máxima de notas
-app.put('/api/grade-scale', async (req, res) => {
+app.put('/api/grade-scale', authenticateTeacher, async (req, res) => {
     try {
         const { grade, subject, maxScale } = req.body;
-        
+
         if (!grade || !subject || maxScale === undefined) {
             return res.status(400).json({
                 success: false,
@@ -1112,7 +1112,7 @@ app.put('/api/grade-scale', async (req, res) => {
             });
         }
         
-        await database.saveGradeScale(grade, subject, maxScale);
+        await database.saveGradeScale(grade, subject, maxScale, req.teacher.id);
         
         res.json({
             success: true,
@@ -1129,7 +1129,7 @@ app.put('/api/grade-scale', async (req, res) => {
 });
 
 // Obtener escala máxima actual
-app.get('/api/grade-scale', async (req, res) => {
+app.get('/api/grade-scale', authenticateTeacher, async (req, res) => {
     try {
         const { grade, subject } = req.query;
         
@@ -1140,7 +1140,7 @@ app.get('/api/grade-scale', async (req, res) => {
             });
         }
         
-        const maxScale = await database.getGradeScale(grade, subject);
+        const maxScale = await database.getGradeScale(grade, subject, req.teacher.id);
         
         res.json({
             success: true,
@@ -1211,7 +1211,8 @@ app.get('/api/attendance/stats/:studentId', async (req, res) => {
             grade,
             subject || 'general',
             parseInt(totalLessons) || 200,
-            academicPeriodId
+            academicPeriodId,
+            req.teacher.id
         );
         
         console.log('✅ Estadísticas MEP calculadas exitosamente');
@@ -1283,7 +1284,8 @@ app.get('/api/attendance/class-stats', async (req, res) => {
                     grade,
                     subject || 'general',
                     parseInt(totalLessons) || 200,
-                    academicPeriodId
+                    academicPeriodId,
+                    req.teacher.id
                 );
                 return {
                     ...student,
@@ -3332,13 +3334,13 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                 let attendanceStats = null;
                 try {
                     // Primero intentar con la materia específica
-                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject, undefined, academicPeriodId);
+                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject, undefined, academicPeriodId, req.teacher.id);
                     console.log(`📊 Asistencia estudiante ${student.first_surname} (${subject}): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
                     
                     // Si no hay datos con la materia específica, intentar con 'general'
                     if (!attendanceStats || attendanceStats.total_records === 0) {
                         console.log(`🔍 Intentando asistencia general para ${student.first_surname}...`);
-                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general', undefined, academicPeriodId);
+                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general', undefined, academicPeriodId, req.teacher.id);
                         console.log(`📊 Asistencia estudiante ${student.first_surname} (general): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
                     }
                 } catch (error) {
