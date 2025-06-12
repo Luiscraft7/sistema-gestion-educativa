@@ -1887,17 +1887,22 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Obtener indicadores por grado y materia
-    async getIndicatorsByGradeAndSubject(grade, subject) {
+    async getIndicatorsByGradeAndSubject(grade, subject, academicPeriodId = 1, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT * FROM daily_indicators 
-                WHERE grade_level = ? AND subject_area = ? AND is_active = 1
-                ORDER BY parent_indicator_id IS NULL DESC, parent_indicator_id ASC, id ASC
+            let query = `
+                SELECT * FROM daily_indicators
+                WHERE grade_level = ? AND subject_area = ? AND academic_period_id = ?
             `;
-            
-            this.db.all(query, [grade, subject], (err, rows) => {
+            const params = [grade, subject, academicPeriodId];
+            if (teacherId) {
+                query += ' AND teacher_id = ?';
+                params.push(teacherId);
+            }
+            query += ' AND is_active = 1 ORDER BY parent_indicator_id IS NULL DESC, parent_indicator_id ASC, id ASC';
+
+            this.db.all(query, params, (err, rows) => {
                 if (err) {
                     console.error('Error fetching indicators:', err);
                     reject(err);
@@ -1913,14 +1918,14 @@ async deleteStudent(id, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { grade_level, subject_area, indicator_name, parent_indicator_id } = indicatorData;
-            
+            const { academic_period_id = 1, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id } = indicatorData;
+
             const query = `
-                INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO daily_indicators (academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id)
+                VALUES (?, ?, ?, ?, ?, ?)
             `;
-            
-            this.db.run(query, [grade_level, subject_area, indicator_name, parent_indicator_id || null], function(err) {
+
+            this.db.run(query, [academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id || null], function(err) {
                 if (err) {
                     console.error('Error creating indicator:', err);
                     reject(err);
@@ -1936,7 +1941,7 @@ async deleteStudent(id, teacherId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { grade_level, subject_area, indicators } = bulkData;
+            const { academic_period_id = 1, teacher_id, grade_level, subject_area, indicators } = bulkData;
             
             if (!indicators || !Array.isArray(indicators)) {
                 reject(new Error('Indicadores debe ser un array'));
@@ -1977,11 +1982,11 @@ async deleteStudent(id, teacherId = null) {
                 }
                 
                 const query = `
-                    INSERT INTO daily_indicators (grade_level, subject_area, indicator_name, parent_indicator_id)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO daily_indicators (academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 `;
-                
-                this.db.run(query, [grade_level, subject_area, indicator_name.trim(), parent_indicator_id || null], function(err) {
+
+                this.db.run(query, [academic_period_id, teacher_id, grade_level, subject_area, indicator_name.trim(), parent_indicator_id || null], function(err) {
                     if (err) {
                         results.push({
                             indicator_name: indicator_name,
