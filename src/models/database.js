@@ -1484,13 +1484,13 @@ async deleteStudent(id, teacherId = null) {
     // FUNCIONES DE CALIFICACIONES DE EVALUACIONES - CORREGIDAS ✅
     // ========================================
 
-    // Obtener calificaciones de una evaluación específica (CORREGIDA - muestra todos los estudiantes)
-    async getEvaluationGrades(evaluationId) {
+    // Obtener calificaciones de una evaluación específica filtradas por profesor
+    async getEvaluationGrades(evaluationId, teacherId = null) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
             // Primero obtener información de la evaluación
-            const evaluationQuery = 'SELECT grade_level, subject_area, title, max_points, percentage FROM assignments WHERE id = ?';
+            const evaluationQuery = 'SELECT grade_level, subject_area, teacher_id, title, max_points, percentage FROM assignments WHERE id = ?';
             
             this.db.get(evaluationQuery, [evaluationId], (err, evaluation) => {
                 if (err) {
@@ -1502,10 +1502,11 @@ async deleteStudent(id, teacherId = null) {
                     resolve([]);
                     return;
                 }
-                
-                // Obtener TODOS los estudiantes del grado/materia con sus calificaciones (si las tienen)
+
+                const teacherFilter = teacherId || evaluation.teacher_id;
+                // Obtener solo los estudiantes del profesor correspondiente con sus calificaciones (si las tienen)
                 const query = `
-                    SELECT 
+                    SELECT
                         s.id as student_id,
                         s.first_name,
                         s.first_surname,
@@ -1526,15 +1527,17 @@ async deleteStudent(id, teacherId = null) {
                         ? as task_percentage
                     FROM students s
                     LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ?
-                    WHERE s.status = 'active' 
+                    WHERE s.status = 'active'
+                        AND s.teacher_id = ?
                         AND s.grade_level = ?
                         AND (s.subject_area = ? OR s.subject_area IS NULL OR s.subject_area = '')
                     ORDER BY s.first_surname, s.second_surname, s.first_name
                 `;
-                
+
                 this.db.all(query, [
                     evaluationId, evaluation.title, evaluation.max_points, evaluation.percentage, // Para los campos SELECT
                     evaluationId, // Para el LEFT JOIN
+                    teacherFilter, // Para filtrar por profesor
                     evaluation.grade_level, // Para el WHERE
                     evaluation.subject_area // Para el WHERE
                 ], (err, rows) => {

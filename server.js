@@ -1891,12 +1891,12 @@ app.delete('/api/evaluations/:id', authenticateTeacher, async (req, res) => {
 // ========================================
 
 // Obtener calificaciones de una evaluación
-app.get('/api/evaluation-grades/:evaluationId', async (req, res) => {
+app.get('/api/evaluation-grades/:evaluationId', authenticateTeacher, async (req, res) => {
     try {
         const { evaluationId } = req.params;
         console.log('📊 GET /api/evaluation-grades/' + evaluationId);
-        
-        const grades = await database.getEvaluationGrades(evaluationId);
+
+        const grades = await database.getEvaluationGrades(evaluationId, req.teacher.id);
         res.json({
             success: true,
             data: grades,
@@ -2222,13 +2222,13 @@ app.get('/api/debug/subjects/:id', async (req, res) => {
 });
 
 // Debug: Ver qué devuelve getEvaluationGrades
-app.get('/api/debug/evaluation-grades/:evaluationId', async (req, res) => {
+app.get('/api/debug/evaluation-grades/:evaluationId', authenticateTeacher, async (req, res) => {
     try {
         const { evaluationId } = req.params;
         
         console.log('🐛 DEBUG: Obteniendo evaluation grades para evaluación', evaluationId);
         
-        const grades = await database.getEvaluationGrades(evaluationId);
+        const grades = await database.getEvaluationGrades(evaluationId, req.teacher.id);
         
         res.json({
             success: true,
