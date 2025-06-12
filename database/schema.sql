@@ -458,7 +458,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_log_admin ON admin_activity_log(admin_user)
 -- Insertar períodos iniciales para 2025
 INSERT OR IGNORE INTO academic_periods (year, period_type, period_number, name, is_active, is_current) VALUES 
 (2025, 'semester', 1, '2025 - Primer Semestre', 1, 1),
-(2025, 'semester', 2, '2025 - Segundo Semestre', 1, 0);
+(2025, 'semester', 2, '2025 - Segundo Semestre', 0, 0);
 
 -- Escuela de ejemplo (necesaria para funcionamiento)
 INSERT OR IGNORE INTO schools (id, name, address, phone, email) 
