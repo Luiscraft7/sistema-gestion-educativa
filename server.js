@@ -2274,9 +2274,10 @@ async function startServer() {
 // ========================================
 
 // Obtener indicadores por grado y materia
-app.get('/api/cotidiano/indicators', async (req, res) => {
+app.get('/api/cotidiano/indicators', authenticateTeacher, async (req, res) => {
     try {
-        const { grade, subject, academic_period_id, teacher_id } = req.query;
+        const { grade, subject, academic_period_id } = req.query;
+        const teacher_id = req.query.teacher_id || req.teacher.id;
         
         if (!grade || !subject) {
             return res.status(400).json({ 
@@ -2309,9 +2310,10 @@ app.get('/api/cotidiano/indicators', async (req, res) => {
 });
 
 // Crear nuevo indicador
-app.post('/api/cotidiano/indicators', async (req, res) => {
+app.post('/api/cotidiano/indicators', authenticateTeacher, async (req, res) => {
     try {
-        const { academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id } = req.body;
+        const { academic_period_id, grade_level, subject_area, indicator_name, parent_indicator_id } = req.body;
+        const teacher_id = req.body.teacher_id || req.teacher.id;
         
         if (!grade_level || !subject_area || !indicator_name) {
             return res.status(400).json({ 
@@ -2346,9 +2348,10 @@ app.post('/api/cotidiano/indicators', async (req, res) => {
 });
 
 // Crear múltiples indicadores de una vez
-app.post('/api/cotidiano/indicators/bulk', async (req, res) => {
+app.post('/api/cotidiano/indicators/bulk', authenticateTeacher, async (req, res) => {
     try {
-        const { academic_period_id, teacher_id, grade_level, subject_area, indicators } = req.body;
+        const { academic_period_id, grade_level, subject_area, indicators } = req.body;
+        const teacher_id = req.body.teacher_id || req.teacher.id;
         const result = await database.createBulkIndicators({
             academic_period_id: academic_period_id ? parseInt(academic_period_id) : 1,
             teacher_id,
@@ -2374,7 +2377,7 @@ app.post('/api/cotidiano/indicators/bulk', async (req, res) => {
 });
 
 // Eliminar indicador
-app.delete('/api/cotidiano/indicators/:id', async (req, res) => {
+app.delete('/api/cotidiano/indicators/:id', authenticateTeacher, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -2411,9 +2414,10 @@ app.delete('/api/cotidiano/indicators/:id', async (req, res) => {
 
 // Cargar evaluación existente - CORREGIDO COMPLETO FINAL
 // Cargar evaluación existente - CORREGIDO PARA FECHAS LIMPIAS
-app.get('/api/cotidiano/evaluation', async (req, res) => {
+app.get('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
     try {
-        const { academic_period_id, teacher_id, grade_level, subject_area, evaluation_date } = req.query;
+        const { academic_period_id, grade_level, subject_area, evaluation_date } = req.query;
+        const teacher_id = req.query.teacher_id || req.teacher.id;
         
         if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({
@@ -2601,9 +2605,10 @@ app.get('/api/cotidiano/evaluation', async (req, res) => {
 });
 
 // Guardar evaluación del cotidiano
-app.post('/api/cotidiano/evaluation', async (req, res) => {
+app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
     try {
-        const { academic_period_id, teacher_id, grade_level, subject_area, evaluation_date, main_indicator, indicators, students } = req.body;
+        const { academic_period_id, grade_level, subject_area, evaluation_date, main_indicator, indicators, students } = req.body;
+        const teacher_id = req.body.teacher_id || req.teacher.id;
         
         if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({ 
@@ -2850,9 +2855,10 @@ app.post('/api/cotidiano/evaluation', async (req, res) => {
 });
 
 // Nuevo endpoint: Obtener indicadores de fecha más reciente (opcional)
-app.get('/api/cotidiano/latest-indicators', async (req, res) => {
+app.get('/api/cotidiano/latest-indicators', authenticateTeacher, async (req, res) => {
     try {
-        const { grade_level, subject_area } = req.query;
+        const { grade_level, subject_area, academic_period_id } = req.query;
+        const teacher_id = req.query.teacher_id || req.teacher.id;
         
         if (!grade_level || !subject_area) {
             return res.status(400).json({
@@ -2867,15 +2873,15 @@ app.get('/api/cotidiano/latest-indicators', async (req, res) => {
         
         // Buscar la fecha más reciente con evaluaciones
         const latestDateQuery = `
-            SELECT evaluation_date 
-            FROM daily_evaluations 
-            WHERE grade_level = ? AND subject_area = ? 
-            ORDER BY evaluation_date DESC 
+            SELECT evaluation_date
+            FROM daily_evaluations
+            WHERE grade_level = ? AND subject_area = ? AND academic_period_id = ? AND teacher_id = ?
+            ORDER BY evaluation_date DESC
             LIMIT 1
         `;
-        
+
         const latestDate = await new Promise((resolve, reject) => {
-            database.db.get(latestDateQuery, [grade_level, subject_area], (err, row) => {
+            database.db.get(latestDateQuery, [grade_level, subject_area, academic_period_id ? parseInt(academic_period_id) : 1, teacher_id], (err, row) => {
                 if (err) reject(err);
                 else resolve(row ? row.evaluation_date : null);
             });
@@ -2959,7 +2965,7 @@ app.get('/api/cotidiano/latest-indicators', async (req, res) => {
 });
 
 // Obtener historial de evaluaciones
-app.get('/api/cotidiano/history', async (req, res) => {
+app.get('/api/cotidiano/history', authenticateTeacher, async (req, res) => {
     try {
         const { grade, subject } = req.query;
         
