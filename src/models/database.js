@@ -2056,12 +2056,12 @@ async deleteStudent(id, teacherId = null) {
     }
 
     // Obtener historial de evaluaciones CORREGIDO
-    async getCotidianoHistory(grade, subject) {
+    async getCotidianoHistory(grade, subject, academicPeriodId = 1, teacherId) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
+            let query = `
+                SELECT
                     de.evaluation_date,
                     de.grade_level,
                     de.subject_area,
@@ -2075,11 +2075,17 @@ async deleteStudent(id, teacherId = null) {
                 LEFT JOIN students s ON de.student_id = s.id
                 LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                 LEFT JOIN daily_indicators di ON dis.daily_indicator_id = di.id
-                WHERE de.grade_level = ? AND de.subject_area = ?
-                ORDER BY de.evaluation_date DESC, s.first_surname, di.indicator_name
+                WHERE de.grade_level = ? AND de.subject_area = ? AND de.academic_period_id = ?
             `;
-            
-            this.db.all(query, [grade, subject], (err, rows) => {
+
+            const params = [grade, subject, academicPeriodId];
+            if (teacherId) {
+                query += ' AND de.teacher_id = ?';
+                params.push(teacherId);
+            }
+            query += ' ORDER BY de.evaluation_date DESC, s.first_surname, di.indicator_name';
+
+            this.db.all(query, params, (err, rows) => {
                 if (err) {
                     console.error('❌ Error obteniendo historial cotidiano:', err);
                     reject(err);
