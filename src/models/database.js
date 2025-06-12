@@ -99,6 +99,33 @@ class Database {
                 await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher ON custom_subjects(teacher_id)');
             }
 
+            const subjectIndexes = await new Promise((resolve, reject) => {
+                this.db.all('PRAGMA index_list(custom_subjects);', (err, rows) => err ? reject(err) : resolve(rows));
+            });
+            const hasTeacherNameIndex = subjectIndexes.some(i => i.name === 'idx_custom_subjects_teacher_name' && i.unique);
+            const hasNameOnlyUnique = subjectIndexes.some(i => i.name === 'sqlite_autoindex_custom_subjects_1');
+
+            if (hasNameOnlyUnique && !hasTeacherNameIndex) {
+                await run('ALTER TABLE custom_subjects RENAME TO tmp_custom_subjects');
+                await run(`CREATE TABLE custom_subjects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    teacher_id INTEGER DEFAULT 0,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    usage INTEGER DEFAULT 0,
+                    priority INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+                    UNIQUE(teacher_id, name)
+                )`);
+                await run(`INSERT INTO custom_subjects (id, teacher_id, name, description, usage, priority, created_at)
+                            SELECT id, teacher_id, name, description, usage, priority, created_at FROM tmp_custom_subjects`);
+                await run('DROP TABLE tmp_custom_subjects');
+                await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher ON custom_subjects(teacher_id)');
+            } else if (!hasTeacherNameIndex) {
+                await run('CREATE UNIQUE INDEX IF NOT EXISTS idx_custom_subjects_teacher_name ON custom_subjects(teacher_id, name)');
+            }
+
             // Ensure daily_indicators table has academic_period_id, teacher_id and parent_indicator_id
             const dailyInfo = await tableInfo('daily_indicators');
             if (!dailyInfo.some(r => r.name === 'academic_period_id')) {
