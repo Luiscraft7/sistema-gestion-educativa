@@ -317,6 +317,25 @@ CREATE TABLE IF NOT EXISTS lesson_config (
     UNIQUE(academic_period_id, teacher_id, grade_level, subject_area)
 );
 
+-- ========================================
+-- TABLA DE CONFIGURACIÓN DE ESCALAS DE CALIFICACIÓN
+-- ========================================
+
+-- Tabla de Configuración de Escalas de Calificación [CON PERÍODO ACADÉMICO + PROFESOR]
+CREATE TABLE IF NOT EXISTS grade_scale_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    academic_period_id INTEGER DEFAULT 1,
+    teacher_id INTEGER NOT NULL, -- ✅ SEPARACIÓN POR PROFESOR
+    grade_level TEXT NOT NULL,
+    subject_area TEXT NOT NULL,
+    max_scale REAL DEFAULT 5.0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    UNIQUE(academic_period_id, teacher_id, grade_level, subject_area)
+);
+
 -- Tabla de Períodos de Asistencia [CON PERÍODO ACADÉMICO + PROFESOR]
 CREATE TABLE IF NOT EXISTS attendance_periods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -415,6 +434,9 @@ CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_student_date ON attenda
 CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_date_grade ON attendance(academic_period_id, teacher_id, date, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_grade_subject ON lesson_config(academic_period_id, teacher_id, grade_level, subject_area);
 
+-- Índice para Configuración de Escalas
+CREATE INDEX IF NOT EXISTS idx_grade_scale_period_teacher_grade_subject ON grade_scale_config(academic_period_id, teacher_id, grade_level, subject_area);
+
 -- Índices para Cotidiano Avanzado
 CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_grade_subject ON daily_indicators(teacher_id, grade_level, subject_area);
 CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_student_date ON daily_evaluations(academic_period_id, teacher_id, student_id, evaluation_date);
@@ -448,4 +470,3 @@ VALUES (1, 'Mi Escuela', 'Dirección de la Escuela', '0000-0000', 'contacto@mies
 -- Insertar administrador único
 INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
 VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);
-
