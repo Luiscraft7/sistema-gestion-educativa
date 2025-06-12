@@ -53,7 +53,7 @@ function getPeriodStorageKey() {
 
 class GlobalPeriodSelector {
     constructor() {
-        this.currentPeriod = this.loadCurrentPeriod();
+        this.currentPeriod = null;
         this.schools = [];
         this.availablePeriods = [];
         this.isInitialized = false;
@@ -61,6 +61,23 @@ class GlobalPeriodSelector {
 
     async init() {
         try {
+            this.currentPeriod = this.loadCurrentPeriod();
+
+            if (!this.currentPeriod) {
+                const apiPeriod = await this.getCurrentPeriodFromAPI();
+                if (apiPeriod) {
+                    this.currentPeriod = apiPeriod;
+                    this.saveCurrentPeriod(apiPeriod);
+                } else {
+                    this.currentPeriod = {
+                        schoolId: '1',
+                        year: 2025,
+                        periodType: 'semester',
+                        periodNumber: 1
+                    };
+                }
+            }
+
             await this.loadSchools();
             await this.loadAvailablePeriods();
             this.setupEventListeners();
@@ -323,7 +340,7 @@ async applyPeriodChange() {
         this.setLoadingState(true);
 
         // Obtener período actual para comparación
-        const currentPeriod = this.loadCurrentPeriod();
+        const currentPeriod = this.currentPeriod || this.loadCurrentPeriod();
         
         // Establecer nuevo período en servidor
         const response = await fetch('/api/academic-periods/set-current', {
@@ -585,14 +602,8 @@ async applyPeriodChange() {
                 console.error('Error parseando período guardado:', error);
             }
         }
-        
-        // Período por defecto
-        return {
-            schoolId: '1',
-            year: 2025,
-            periodType: 'semester',
-            periodNumber: 1
-        };
+
+        return null;
     }
 
     saveCurrentPeriod(period) {
@@ -694,13 +705,7 @@ window.getCurrentAcademicPeriod = function() {
         }
     }
     
-    // Período por defecto
-    return {
-        schoolId: '1',
-        year: 2025,
-        periodType: 'semester',
-        periodNumber: 1
-    };
+    return null;
 };
 
 // Función para forzar recarga de datos basado en período actual
