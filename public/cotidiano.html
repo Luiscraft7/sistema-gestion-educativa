@@ -819,7 +819,7 @@
                 </div>
                 <div class="control-group">
                     <label>Fecha</label>
-                    <input type="date" id="fecha" value="2025-06-07" onchange="cambiarFecha()">
+                    <input type="date" id="fecha" onchange="cambiarFecha()">
                 </div>
                 <div class="control-group">
                     <label>Acciones</label>
@@ -1030,9 +1030,9 @@ Participa activamente en discusiones"
         let allSubjects = []; // Se carga desde la API
         let gradeSubjects = {}; // Se carga desde la API
         let calificaciones = {}; // {grado: {materia: {fecha: {estudiante: {indicador: nota}}}}}
-        let currentGrado = '';
-        let currentMateria = '';
-        let currentDate = '2025-06-07';
+        let currentGrado = localStorage.getItem('cotidianoGrado') || '';
+        let currentMateria = localStorage.getItem('cotidianoMateria') || '';
+        let currentDate = localStorage.getItem('cotidianoFecha') || new Date().toISOString().split('T')[0];
         let hasUnsavedChanges = false;
         let subIndicatorCounter = 3;
 
@@ -1128,6 +1128,29 @@ Participa activamente en discusiones"
                 showLoading();
                 console.log('🚀 Inicializando sistema...');
                 await loadSystemData();
+
+                // Establecer fecha actual en el selector
+                const fechaInput = document.getElementById('fecha');
+                if (fechaInput) {
+                    fechaInput.value = currentDate;
+                }
+
+                // Restaurar selección de grado y materia si existen
+                if (currentGrado) {
+                    const gradoSelect = document.getElementById('grado');
+                    if (gradoSelect) {
+                        gradoSelect.value = currentGrado;
+                        await cambiarGrado();
+                    }
+                    if (currentMateria) {
+                        const materiaSelect = document.getElementById('materia');
+                        if (materiaSelect) {
+                            materiaSelect.value = currentMateria;
+                            cambiarMateria();
+                        }
+                    }
+                }
+
                 updateStatusIndicator();
                 console.log('✅ Sistema inicializado correctamente');
                 hideLoading();
@@ -1530,8 +1553,9 @@ Participa activamente en discusiones"
         async function cambiarGrado() {
             const gradoSelect = document.getElementById('grado');
             const materiaSelect = document.getElementById('materia');
-            
+
             currentGrado = gradoSelect.value;
+            localStorage.setItem('cotidianoGrado', currentGrado);
             console.log('🎓 Grado seleccionado:', currentGrado);
             
             if (currentGrado) {
@@ -1591,6 +1615,7 @@ Participa activamente en discusiones"
         function cambiarMateria() {
             const materiaSelect = document.getElementById('materia');
             currentMateria = materiaSelect.value;
+            localStorage.setItem('cotidianoMateria', currentMateria);
             
             console.log('📖 Materia seleccionada:', currentMateria);
             console.log('📋 Estado actual - Grado:', currentGrado, 'Materia:', currentMateria);
@@ -1627,6 +1652,7 @@ Participa activamente en discusiones"
             
             // Actualizar fecha actual
             currentDate = nuevaFecha;
+            localStorage.setItem('cotidianoFecha', currentDate);
             
             console.log(`📅 Cambio de fecha: ${fechaAnterior} → ${currentDate}`);
             
@@ -2830,7 +2856,9 @@ Participa activamente en discusiones"
                         
                         fechasOrdenadas.forEach(fecha => {
                             const info = fechasInfo[fecha];
-                            mensaje += `📅 ${fecha}\n`;
+                            const [yy, mm, dd] = fecha.split('-');
+                            const fechaMostrar = `${dd}/${mm}/${yy}`;
+                            mensaje += `📅 ${fechaMostrar}\n`;
                             mensaje += `   👥 ${info.estudiantes.size} estudiantes evaluados\n`;
                             mensaje += `   📝 ${info.indicadores.size} indicadores\n`;
                             mensaje += `   📊 ${info.totalCalificaciones} calificaciones registradas\n\n`;
