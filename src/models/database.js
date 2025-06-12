@@ -1505,7 +1505,7 @@ async deleteStudent(id, teacherId = null) {
 
         return new Promise((resolve, reject) => {
             // Primero obtener información de la evaluación
-            const evaluationQuery = 'SELECT grade_level, subject_area, teacher_id, title, max_points, percentage FROM assignments WHERE id = ?';
+            const evaluationQuery = 'SELECT academic_period_id, grade_level, subject_area, teacher_id, title, max_points, percentage FROM assignments WHERE id = ?';
             
             this.db.get(evaluationQuery, [evaluationId], (err, evaluation) => {
                 if (err) {
@@ -1519,7 +1519,7 @@ async deleteStudent(id, teacherId = null) {
                 }
 
                 const teacherFilter = teacherId || evaluation.teacher_id;
-                // Obtener solo los estudiantes del profesor correspondiente con sus calificaciones (si las tienen)
+                // Obtener solo los estudiantes del profesor y período correspondientes con sus calificaciones (si las tienen)
                 const query = `
                     SELECT
                         s.id as student_id,
@@ -1544,6 +1544,7 @@ async deleteStudent(id, teacherId = null) {
                     LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ?
                     WHERE s.status = 'active'
                         AND s.teacher_id = ?
+                        AND s.academic_period_id = ?
                         AND s.grade_level = ?
                         AND (s.subject_area = ? OR s.subject_area IS NULL OR s.subject_area = '')
                     ORDER BY s.first_surname, s.second_surname, s.first_name
@@ -1553,6 +1554,7 @@ async deleteStudent(id, teacherId = null) {
                     evaluationId, evaluation.title, evaluation.max_points, evaluation.percentage, // Para los campos SELECT
                     evaluationId, // Para el LEFT JOIN
                     teacherFilter, // Para filtrar por profesor
+                    evaluation.academic_period_id, // Filtrar por período
                     evaluation.grade_level, // Para el WHERE
                     evaluation.subject_area // Para el WHERE
                 ], (err, rows) => {
