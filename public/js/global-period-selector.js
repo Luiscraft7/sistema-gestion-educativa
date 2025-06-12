@@ -376,10 +376,10 @@ async applyPeriodChange() {
                         
                         const confirmCopy = confirm(
                             `El ${periodNumber} ${periodTypeName} ${newPeriod.year} está vacío.\n\n` +
-                            `¿Deseas copiar la lista de estudiantes del período anterior como base?\n\n` +
-                            `📋 Esto copiará solo la información básica de los estudiantes\n` +
-                            `📚 Cada período mantendrá sus datos completamente independientes\n` +
-                            `✅ Los cambios en un período NO afectarán al otro\n\n` +
+                            `¿Deseas copiar únicamente la lista base de estudiantes del período anterior?\n\n` +
+                            `📋 SOLO se copiarán los datos personales de cada estudiante.\n` +
+                            `📚 Las asistencias, calificaciones y demás registros NO se copiarán.\n` +
+                            `✅ Cada período mantendrá sus datos completamente independientes.\n\n` +
                             `¿Continuar con la copia?`
                         );
                         
