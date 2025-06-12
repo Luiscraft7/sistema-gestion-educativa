@@ -1196,7 +1196,7 @@ Participa activamente en discusiones"
         try {
             console.log('📖 Cargando datos desde servidor:', { currentGrado, currentMateria, currentDate });
             
-            const response = await fetch(`/api/cotidiano/evaluation?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&evaluation_date=${currentDate}`);
+            const response = await authenticatedFetch(`/api/cotidiano/evaluation?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&evaluation_date=${currentDate}`);
             const result = await response.json();
             
             console.log('📥 Respuesta completa del servidor:', result);
@@ -2097,7 +2097,7 @@ Participa activamente en discusiones"
             try {
                 console.log('🔄 Buscando indicadores de fechas previas...');
                 
-                const response = await fetch(`/api/cotidiano/latest-indicators?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}`);
+                const response = await authenticatedFetch(`/api/cotidiano/latest-indicators?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.indicators && result.data.indicators.length > 0) {
@@ -2777,7 +2777,7 @@ Participa activamente en discusiones"
             try {
                 console.log('📚 Consultando historial desde servidor...');
                 
-                const response = await fetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrado)}&subject=${encodeURIComponent(currentMateria)}`);
+                const response = await authenticatedFetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrado)}&subject=${encodeURIComponent(currentMateria)}`);
                 const result = await response.json();
                 
                 console.log('📥 Respuesta del historial:', result);
