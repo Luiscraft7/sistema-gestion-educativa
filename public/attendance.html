@@ -1268,13 +1268,16 @@
             }
         }
 
-        function showMessage(type, message) {
+        function showMessage(type, message, callback) {
             const messageEl = document.getElementById(type + 'Message');
             messageEl.textContent = message;
             messageEl.classList.add('show');
-            
+
             setTimeout(() => {
                 messageEl.classList.remove('show');
+                if (typeof callback === 'function') {
+                    callback();
+                }
             }, 5000);
         }
 
@@ -1959,18 +1962,24 @@
                 
                 const statusText = getStatusText(status);
                 if (errorCount === 0) {
-                    showMessage('success', `✅ ${successCount} estudiantes marcados como "${statusText}"`);
+                    showMessage(
+                        'success',
+                        `✅ ${successCount} estudiantes marcados como "${statusText}"`,
+                        () => { isBulkMarking = false; }
+                    );
                 } else {
-                    showMessage('error', `⚠️ ${successCount} exitosos, ${errorCount} errores`);
+                    showMessage(
+                        'error',
+                        `⚠️ ${successCount} exitosos, ${errorCount} errores`,
+                        () => { isBulkMarking = false; }
+                    );
                 }
                 
                 debugLog(`📊 Resultado: ${successCount} exitosos, ${errorCount} errores`);
                 
             } catch (error) {
                 debugLog('❌ Error marcando todos:', error);
-                showMessage('error', 'Error marcando estudiantes');
-            } finally {
-                isBulkMarking = false;
+                showMessage('error', 'Error marcando estudiantes', () => { isBulkMarking = false; });
             }
         }
 
