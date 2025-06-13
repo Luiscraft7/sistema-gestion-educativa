@@ -1956,13 +1956,14 @@ app.get('/api/evaluations', authenticateTeacher, async (req, res) => {
             }
         }
 
-        console.log('📝 GET /api/evaluations:', { grade, subject, academicPeriodId, teacher: req.teacher.id });
+        console.log('📝 GET /api/evaluations:', { grade, subject, academicPeriodId, teacher: req.teacher.id, school: req.teacher.school_id });
 
         const evaluations = await database.getEvaluationsByGradeSubjectAndPeriod(
             grade,
             subject,
             academicPeriodId,
-            req.teacher.id
+            req.teacher.id,
+            req.teacher.school_id
         );
         res.json({
             success: true,
@@ -2006,7 +2007,8 @@ app.post('/api/evaluations', authenticateTeacher, async (req, res) => {
             ...req.body,
             teacher_id: req.teacher.id,
             teacher_name: req.body.teacher_name || req.teacher.name,
-            academic_period_id: academicPeriodId
+            academic_period_id: academicPeriodId,
+            school_id: req.teacher.school_id
         });
         res.json({
             success: true,
