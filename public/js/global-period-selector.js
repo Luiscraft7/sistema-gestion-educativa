@@ -55,6 +55,7 @@ class GlobalPeriodSelector {
     constructor() {
         this.currentPeriod = null;
         this.schools = [];
+        this.years = [];
         this.availablePeriods = [];
         this.isInitialized = false;
     }
@@ -79,6 +80,7 @@ class GlobalPeriodSelector {
             }
 
             await this.loadSchools();
+            await this.loadYears();
             await this.loadAvailablePeriods();
             this.setupEventListeners();
             this.updateUI();
@@ -125,6 +127,22 @@ class GlobalPeriodSelector {
             });
         } catch (createError) {
             console.log('Escuela por defecto ya existe');
+        }
+    }
+
+    async loadYears() {
+        try {
+            const resp = await fetch('/api/years');
+            const result = await resp.json();
+            if (result.success) {
+                this.years = result.data;
+                console.log('✅ Años cargados:', this.years.length);
+            } else {
+                this.years = [];
+            }
+        } catch (error) {
+            console.error('Error cargando años:', error);
+            this.years = [];
         }
     }
 }
@@ -202,6 +220,27 @@ class GlobalPeriodSelector {
             });
         }
 
+        const addYearBtn = document.getElementById('addYearBtn');
+        if (addYearBtn) {
+            addYearBtn.addEventListener('click', () => {
+                this.promptAndAddYear();
+            });
+        }
+
+        const deleteYearBtn = document.getElementById('deleteYearBtn');
+        if (deleteYearBtn) {
+            deleteYearBtn.addEventListener('click', () => {
+                this.deleteCurrentYear();
+            });
+        }
+
+        const deleteSchoolBtn = document.getElementById('deleteSchoolBtn');
+        if (deleteSchoolBtn) {
+            deleteSchoolBtn.addEventListener('click', () => {
+                this.deleteCurrentSchool();
+            });
+        }
+
         // Marcar cambios en cualquier selector
         ['schoolSelector', 'yearSelector', 'periodTypeSelector', 'periodSelector'].forEach(id => {
             const element = document.getElementById(id);
@@ -259,11 +298,25 @@ class GlobalPeriodSelector {
         // Las nuevas escuelas se agregan mediante el botón correspondiente
     }
 
+    updateYearOptions() {
+        const yearSelector = document.getElementById('yearSelector');
+        if (!yearSelector) return;
+
+        yearSelector.innerHTML = '';
+        this.years.forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            yearSelector.appendChild(opt);
+        });
+    }
+
     updateUI() {
         if (!this.currentPeriod) return;
 
-        // Actualizar selectores de escuelas
+        // Actualizar opciones de escuelas y años
         this.updateSchoolOptions();
+        this.updateYearOptions();
 
         // Actualizar selectores con período actual
         const schoolSelector = document.getElementById('schoolSelector');
@@ -668,6 +721,71 @@ async applyPeriodChange() {
     async refreshSchools() {
         await this.loadSchools();
         this.updateSchoolOptions();
+    }
+
+    async refreshYears() {
+        await this.loadYears();
+        this.updateYearOptions();
+    }
+
+    async promptAndAddYear() {
+        const year = prompt('Nuevo año:');
+        if (!year || isNaN(parseInt(year))) return;
+        try {
+            const resp = await fetch('/api/years', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ year: parseInt(year) })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                await this.refreshYears();
+                this.markAsChanged();
+            } else {
+                alert(result.message || 'No se pudo crear el año');
+            }
+        } catch (err) {
+            console.error('Error agregando año:', err);
+        }
+    }
+
+    async deleteCurrentYear() {
+        const yearSelector = document.getElementById('yearSelector');
+        if (!yearSelector) return;
+        const year = yearSelector.value;
+        if (!confirm(`¿Eliminar el año ${year}?`)) return;
+        try {
+            const resp = await fetch(`/api/years/${year}`, { method: 'DELETE' });
+            const result = await resp.json();
+            if (result.success) {
+                await this.refreshYears();
+                this.markAsChanged();
+            } else {
+                alert(result.message || 'No se pudo eliminar el año');
+            }
+        } catch (err) {
+            console.error('Error eliminando año:', err);
+        }
+    }
+
+    async deleteCurrentSchool() {
+        const schoolSelector = document.getElementById('schoolSelector');
+        if (!schoolSelector) return;
+        const id = schoolSelector.value;
+        const name = this.getSchoolName(id);
+        if (!confirm(`¿Eliminar la escuela ${name}?`)) return;
+        try {
+            const resp = await fetch(`/api/schools/${id}`, { method: 'DELETE' });
+            const result = await resp.json();
+            if (result.success) {
+                await this.refreshSchools();
+                this.markAsChanged();
+            } else {
+                alert(result.message || 'No se pudo eliminar la escuela');
+            }
+        } catch (err) {
+            console.error('Error eliminando escuela:', err);
+        }
     }
 
     async promptAndAddSchool() {

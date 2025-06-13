@@ -3863,6 +3863,115 @@ app.post('/api/schools', async (req, res) => {
     }
 });
 
+// Eliminar escuela
+app.delete('/api/schools/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        database.db.run('DELETE FROM schools WHERE id = ?', [id], function(err) {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error eliminando escuela',
+                    error: err.message
+                });
+            }
+
+            if (this.changes === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Escuela no encontrada'
+                });
+            }
+
+            res.json({
+                success: true,
+                message: 'Escuela eliminada'
+            });
+        });
+    } catch (error) {
+        console.error('Error eliminando escuela:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error eliminando escuela',
+            error: error.message
+        });
+    }
+});
+
+// Obtener años disponibles
+app.get('/api/years', async (req, res) => {
+    try {
+        const query = 'SELECT DISTINCT year FROM academic_periods ORDER BY year ASC';
+        database.db.all(query, [], (err, rows) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error obteniendo años',
+                    error: err.message
+                });
+            }
+            const years = rows.map(r => r.year);
+            res.json({ success: true, data: years, message: `${years.length} años encontrados` });
+        });
+    } catch (error) {
+        console.error('Error obteniendo años:', error);
+        res.status(500).json({ success: false, message: 'Error obteniendo años', error: error.message });
+    }
+});
+
+// Crear nuevo año (dos semestres por defecto)
+app.post('/api/years', async (req, res) => {
+    try {
+        const { year } = req.body;
+        if (!year) {
+            return res.status(400).json({ success: false, message: 'Año requerido' });
+        }
+
+        const checkQuery = 'SELECT 1 FROM academic_periods WHERE year = ? LIMIT 1';
+        database.db.get(checkQuery, [year], (err, row) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Error verificando año', error: err.message });
+            }
+            if (row) {
+                return res.status(400).json({ success: false, message: 'El año ya existe' });
+            }
+
+            const insert = database.db.prepare('INSERT INTO academic_periods (year, period_type, period_number, name, is_active) VALUES (?, ?, ?, ?, 1)');
+            insert.run([year, 'semester', 1, `${year} - Primer Semestre`]);
+            insert.run([year, 'semester', 2, `${year} - Segundo Semestre`], function(err2) {
+                insert.finalize();
+                if (err2) {
+                    return res.status(500).json({ success: false, message: 'Error creando año', error: err2.message });
+                }
+                res.json({ success: true, data: { year }, message: 'Año creado exitosamente' });
+            });
+        });
+    } catch (error) {
+        console.error('Error creando año:', error);
+        res.status(500).json({ success: false, message: 'Error creando año', error: error.message });
+    }
+});
+
+// Eliminar año completo
+app.delete('/api/years/:year', async (req, res) => {
+    try {
+        const { year } = req.params;
+        database.db.run('DELETE FROM academic_periods WHERE year = ?', [year], function(err) {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Error eliminando año', error: err.message });
+            }
+            if (this.changes === 0) {
+                return res.status(404).json({ success: false, message: 'Año no encontrado' });
+            }
+            res.json({ success: true, message: 'Año eliminado', deleted: this.changes });
+        });
+    } catch (error) {
+        console.error('Error eliminando año:', error);
+        res.status(500).json({ success: false, message: 'Error eliminando año', error: error.message });
+    }
+});
+
 // API para cambiar período globalmente (para el frontend)
 app.post('/api/academic-periods/set-current', async (req, res) => {
     try {

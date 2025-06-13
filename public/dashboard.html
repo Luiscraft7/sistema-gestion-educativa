@@ -414,6 +414,26 @@
             transform: translateY(-2px) scale(1.02);
         }
 
+        .delete-btn {
+            margin-top: 4px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+
         .apply-period-btn:hover, .cancel-period-btn:hover {
             transform: translateY(-2px) scale(1.02);
         }
@@ -934,15 +954,16 @@
                                     <option value="1">Mi Escuela Principal</option>
                                 </select>
                                 <button id="addSchoolBtn" class="add-school-btn"><i class="fas fa-plus"></i> Agregar Escuela</button>
+                                <button id="deleteSchoolBtn" class="delete-btn"><i class="fas fa-trash"></i></button>
                             </div>
 
                             <div class="period-field">
                                 <label><i class="fas fa-calendar-alt"></i> Año</label>
                                 <select id="yearSelector" class="period-input">
-                                    <option value="2024">2024</option>
-                                    <option value="2025" selected>2025</option>
-                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
                                 </select>
+                                <button id="addYearBtn" class="add-school-btn"><i class="fas fa-plus"></i></button>
+                                <button id="deleteYearBtn" class="delete-btn"><i class="fas fa-trash"></i></button>
                             </div>
 
                             <div class="period-field">
