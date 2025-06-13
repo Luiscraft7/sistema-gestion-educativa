@@ -94,40 +94,55 @@ class GlobalPeriodSelector {
     // ========================================
 
     async loadSchools() {
-    try {
-        const response = await fetch('/api/schools');
-        const result = await response.json();
-        
-        if (result.success && result.data && result.data.length > 0) {
-            this.schools = result.data;
-            console.log('✅ Escuelas cargadas:', this.schools.length);
-        } else {
-            throw new Error('No se encontraron escuelas');
+        // Intentar obtener las escuelas desde los datos del profesor
+        const stored = sessionStorage.getItem('teacherData');
+        if (stored) {
+            try {
+                const teacher = JSON.parse(stored);
+                if (teacher.schools && Array.isArray(teacher.schools) && teacher.schools.length > 0) {
+                    this.schools = teacher.schools.map(s => ({ id: s.school_id, name: s.school_name }));
+                    console.log('✅ Escuelas del profesor cargadas:', this.schools.length);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Error parseando teacherData para escuelas:', err);
+            }
         }
-    } catch (error) {
-        console.error('❌ Error cargando escuelas:', error);
-        // CORRECCIÓN: Asegurar que siempre haya al menos una escuela
-        this.schools = [
-            { id: 1, name: 'Mi Escuela Principal' }
-        ];
-        
-        // Crear escuela por defecto si no existe
+
         try {
-            await fetch('/api/schools', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: 'Mi Escuela Principal',
-                    address: 'Dirección de la Escuela',
-                    phone: '0000-0000',
-                    email: 'contacto@miescuela.cr'
-                })
-            });
-        } catch (createError) {
-            console.log('Escuela por defecto ya existe');
+            const response = await fetch('/api/schools');
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.length > 0) {
+                this.schools = result.data;
+                console.log('✅ Escuelas cargadas:', this.schools.length);
+            } else {
+                throw new Error('No se encontraron escuelas');
+            }
+        } catch (error) {
+            console.error('❌ Error cargando escuelas:', error);
+            // Asegurar al menos una escuela por defecto
+            this.schools = [
+                { id: 1, name: 'Mi Escuela Principal' }
+            ];
+
+            // Crear escuela por defecto si no existe
+            try {
+                await fetch('/api/schools', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Mi Escuela Principal',
+                        address: 'Dirección de la Escuela',
+                        phone: '0000-0000',
+                        email: 'contacto@miescuela.cr'
+                    })
+                });
+            } catch (createError) {
+                console.log('Escuela por defecto ya existe');
+            }
         }
     }
-}
 
     async loadAvailablePeriods() {
         try {
