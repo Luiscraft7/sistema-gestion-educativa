@@ -3140,20 +3140,25 @@ async toggleTeacherStatus(teacherId, action) {
 
 async updateTeacherPayment(teacherId, isPaid) {
     this.ensureConnection();
-    
+
     return new Promise((resolve, reject) => {
+        const paymentDate = isPaid ? new Date().toISOString() : null;
         const query = `
-            UPDATE teachers 
-            SET is_paid = ?, updated_at = CURRENT_TIMESTAMP
+            UPDATE teachers
+            SET is_paid = ?,
+                payment_date = ?,
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         `;
-        
-        this.db.run(query, [isPaid ? 1 : 0, teacherId], function(err) {
+
+        this.db.run(query, [isPaid ? 1 : 0, paymentDate, teacherId], function(err) {
             if (err) {
                 reject(err);
             } else {
                 resolve({
                     id: teacherId,
+                    is_paid: isPaid,
+                    payment_date: paymentDate,
                     changes: this.changes
                 });
             }
@@ -3289,62 +3294,26 @@ async getSchoolById(schoolId) {
 // Actualizar último login del profesor
 async updateTeacherLastLogin(teacherId) {
     this.ensureConnection();
-    
+
     return new Promise((resolve, reject) => {
+        const timestamp = new Date().toISOString();
         const query = `
-            UPDATE teachers 
-            SET last_login = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+            UPDATE teachers
+            SET last_login = ?,
+                updated_at = ?
             WHERE id = ?
         `;
-        
-        this.db.run(query, [teacherId], function(err) {
+
+        this.db.run(query, [timestamp, timestamp, teacherId], function(err) {
             if (err) {
                 console.error('❌ Error actualizando último login:', err);
                 reject(err);
             } else {
-                resolve({ teacherId: teacherId, changes: this.changes });
+                resolve({ teacherId: teacherId, last_login: timestamp, changes: this.changes });
             }
         });
     });
 }
-// Actualizar estado de pago de profesor
-async updateTeacherPayment(teacherId, isPaid) {
-    return new Promise((resolve, reject) => {
-        const sql = `UPDATE teachers SET is_paid = ?, payment_date = ? WHERE id = ?`;
-        const paymentDate = isPaid ? new Date().toISOString() : null;
-        
-        this.db.run(sql, [isPaid ? 1 : 0, paymentDate, teacherId], function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({
-                    id: teacherId,
-                    is_paid: isPaid,
-                    changes: this.changes
-                });
-            }
-        });
-    });
-}
-
-// Actualizar último login (ya existe pero asegúrate que esté)
-async updateTeacherLastLogin(teacherId) {
-    return new Promise((resolve, reject) => {
-        const sql = `UPDATE teachers SET last_login = ? WHERE id = ?`;
-        
-        this.db.run(sql, [new Date().toISOString(), teacherId], function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({ id: teacherId, last_login: new Date().toISOString() });
-            }
-        });
-    });
-}
-
-
-
-
 // ========================================
 // FUNCIONES DE GESTIÓN DE SESIONES ACTIVAS
 // ========================================
@@ -3530,39 +3499,6 @@ async clearUserPreviousSessions(teacherId) {
         });
     });
 }
-
-// NUEVA FUNCIÓN: Actualizar perfil del profesor
-    async updateTeacherProfile(teacherId, profileData) {
-        this.ensureConnection();
-        
-        return new Promise((resolve, reject) => {
-            const query = `
-                UPDATE teachers 
-                SET full_name = ?, school_name = ?, updated_at = CURRENT_TIMESTAMP 
-                WHERE id = ?
-            `;
-            
-            const values = [
-                profileData.full_name,
-                profileData.school_name,
-                teacherId
-            ];
-            
-            this.db.run(query, values, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ 
-                        id: teacherId, 
-                        changes: this.changes,
-                        full_name: profileData.full_name,
-                        school_name: profileData.school_name
-                    });
-                }
-            });
-        });
-    }
-
 
 // NUEVA FUNCIÓN: Actualizar perfil del profesor
     async updateTeacherProfile(teacherId, profileData) {
