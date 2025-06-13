@@ -2795,8 +2795,18 @@ app.get('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
 // Guardar evaluación del cotidiano
 app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
     try {
-        const { academic_period_id, grade_level, subject_area, evaluation_date, main_indicator, indicators, students } = req.body;
+        const {
+            academic_period_id,
+            grade_level,
+            subject_area,
+            evaluation_date,
+            main_indicator,
+            indicators,
+            students,
+            school_id
+        } = req.body;
         const teacher_id = req.body.teacher_id || req.teacher.id;
+        const schoolId = school_id || req.teacher.school_id;
         
         if (!grade_level || !subject_area || !evaluation_date) {
             return res.status(400).json({ 
@@ -2824,8 +2834,8 @@ app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
             const mainPromise = new Promise((resolve, reject) => {
                 const mainQuery = `
                     INSERT OR REPLACE INTO daily_indicators
-                    (id, academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, NULL, datetime('now'))
+                    (id, academic_period_id, teacher_id, school_id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NULL, datetime('now'))
                 `;
                 database.db.run(
                     mainQuery,
@@ -2833,6 +2843,7 @@ app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
                         main_indicator.id,
                         academic_period_id ? parseInt(academic_period_id) : 1,
                         teacher_id,
+                        schoolId,
                         grade_level,
                         subject_area,
                         main_indicator.text
@@ -2850,8 +2861,8 @@ app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
                 const promise = new Promise((resolve, reject) => {
                     const query = `
                         INSERT OR REPLACE INTO daily_indicators
-                        (id, academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                        (id, academic_period_id, teacher_id, school_id, grade_level, subject_area, indicator_name, parent_indicator_id, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                     `;
                     const parentId = indicator.isSubIndicator ? indicator.parentId : null;
                     database.db.run(
@@ -2860,6 +2871,7 @@ app.post('/api/cotidiano/evaluation', authenticateTeacher, async (req, res) => {
                             indicator.id,
                             academic_period_id ? parseInt(academic_period_id) : 1,
                             teacher_id,
+                            schoolId,
                             grade_level,
                             subject_area,
                             indicator.text,
