@@ -1035,6 +1035,7 @@ Participa activamente en discusiones"
         let currentDate = localStorage.getItem('cotidianoFecha') || new Date().toISOString().split('T')[0];
         let hasUnsavedChanges = false;
         let subIndicatorCounter = 3;
+        let porcentajeTotalConfig = localStorage.getItem('cotidianoPorcentajeTotal') || '65';
 
         // Helper para peticiones autenticadas
         async function authenticatedFetch(url, options = {}) {
@@ -1144,6 +1145,12 @@ Participa activamente en discusiones"
                 const fechaInput = document.getElementById('fecha');
                 if (fechaInput) {
                     fechaInput.value = currentDate;
+                }
+
+                // Establecer porcentaje total guardado
+                const porcentajeInput = document.getElementById('porcentajeTotal');
+                if (porcentajeInput) {
+                    porcentajeInput.value = porcentajeTotalConfig;
                 }
 
                 // Restaurar selección de grado y materia si existen
@@ -2605,6 +2612,8 @@ Participa activamente en discusiones"
         }
         function aplicarConfiguracion() {
             const porcentaje = document.getElementById('porcentajeTotal').value;
+            localStorage.setItem('cotidianoPorcentajeTotal', porcentaje);
+            porcentajeTotalConfig = porcentaje;
             
             // Filtrar estudiantes por grado actual y recalcular sumas
             const studentsInGrade = students.filter(student => {
