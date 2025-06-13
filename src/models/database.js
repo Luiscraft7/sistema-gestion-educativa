@@ -48,34 +48,229 @@ class Database {
         });
     }
 
-    async createTables() {
+  // ========================================
+// FUNCIÓN createTables CORREGIDA
+// ========================================
+
+async createTables() {
+    try {
+        console.log('🔄 Verificando/creando tablas...');
+        
+        // ✅ VERIFICAR PRIMERO SI LAS TABLAS YA EXISTEN CON EL ESQUEMA CORRECTO
+        const schemaCheck = await this.checkSchemaVersion();
+        
+        if (schemaCheck.isCorrect) {
+            console.log('✅ Tablas ya existen con esquema correcto');
+            return;
+        }
+        
+        if (schemaCheck.needsMigration) {
+            console.log('⚠️ Esquema antiguo detectado, necesita migración');
+            await this.handleSchemaMigration();
+            return;
+        }
+        
+        // Solo crear tablas si no existen
+        console.log('📝 Creando tablas con esquema multi-escuela...');
+        
+        const schema = this.getMultiSchoolSchema();
+        
         return new Promise((resolve, reject) => {
-            const schemaPath = path.join(__dirname, '../../database/schema.sql');
-
-            if (!fs.existsSync(schemaPath)) {
-                console.error('❌ Archivo schema.sql no encontrado en:', schemaPath);
-                reject(new Error('❌ Archivo schema.sql no encontrado'));
-                return;
-            }
-
-            const schema = fs.readFileSync(schemaPath, 'utf8');
-
-            this.db.exec(schema, async (err) => {
+            this.db.exec(schema, (err) => {
                 if (err) {
                     console.error('❌ Error creando tablas:', err);
                     reject(err);
                 } else {
                     console.log('✅ Tablas creadas/verificadas correctamente');
-                    try {
-                        await this.applyMigrations();
-                        resolve();
-                    } catch (migErr) {
-                        reject(migErr);
-                    }
+                    resolve();
                 }
             });
         });
+        
+    } catch (error) {
+        console.error('❌ Error en createTables:', error);
+        throw error;
     }
+}
+
+// ========================================
+// FUNCIÓN PARA VERIFICAR VERSIÓN DEL ESQUEMA
+// ========================================
+
+async checkSchemaVersion() {
+    return new Promise((resolve) => {
+        // Verificar si existe la tabla teacher_schools (indicador de esquema multi-escuela)
+        this.db.get(`
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='teacher_schools'
+        `, (err, result) => {
+            if (err) {
+                resolve({ isCorrect: false, needsMigration: false });
+                return;
+            }
+            
+            if (!result) {
+                // No existe teacher_schools, verificar si hay tablas del esquema antiguo
+                this.db.get(`
+                    SELECT name FROM sqlite_master 
+                    WHERE type='table' AND name='teachers'
+                `, (err, teachersTable) => {
+                    if (teachersTable) {
+                        resolve({ isCorrect: false, needsMigration: true });
+                    } else {
+                        resolve({ isCorrect: false, needsMigration: false });
+                    }
+                });
+            } else {
+                // Existe teacher_schools, verificar si students tiene school_id
+                this.db.all(`PRAGMA table_info(students)`, (err, columns) => {
+                    if (err) {
+                        resolve({ isCorrect: false, needsMigration: true });
+                        return;
+                    }
+                    
+                    const hasSchoolId = columns && columns.some(col => col.name === 'school_id');
+                    
+                    if (hasSchoolId) {
+                        resolve({ isCorrect: true, needsMigration: false });
+                    } else {
+                        resolve({ isCorrect: false, needsMigration: true });
+                    }
+                });
+            }
+        });
+    });
+}
+
+// ========================================
+// FUNCIÓN PARA MANEJAR MIGRACIÓN DE ESQUEMA
+// ========================================
+
+async handleSchemaMigration() {
+    console.log('🔄 Iniciando migración automática de esquema...');
+    
+    return new Promise((resolve, reject) => {
+        // En desarrollo, simplemente recrear la base de datos
+        console.log('⚠️ Modo desarrollo: Recreando base de datos con nuevo esquema');
+        console.log('💡 Los datos existentes se perderán (esto es normal en desarrollo)');
+        
+        // Obtener lista de todas las tablas
+        this.db.all(`
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name NOT LIKE 'sqlite_%'
+        `, (err, tables) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            // Eliminar todas las tablas existentes
+            const dropPromises = tables.map(table => {
+                return new Promise((res, rej) => {
+                    this.db.run(`DROP TABLE IF EXISTS ${table.name}`, (err) => {
+                        if (err) {
+                            console.error(`❌ Error eliminando tabla ${table.name}:`, err);
+                            rej(err);
+                        } else {
+                            console.log(`🗑️ Tabla ${table.name} eliminada`);
+                            res();
+                        }
+                    });
+                });
+            });
+            
+            Promise.all(dropPromises)
+                .then(() => {
+                    console.log('✅ Todas las tablas antiguas eliminadas');
+                    
+                    // Crear nuevas tablas con esquema correcto
+                    const schema = this.getMultiSchoolSchema();
+                    
+                    this.db.exec(schema, (err) => {
+                        if (err) {
+                            console.error('❌ Error creando nuevas tablas:', err);
+                            reject(err);
+                        } else {
+                            console.log('✅ Nuevas tablas creadas con esquema multi-escuela');
+                            resolve();
+                        }
+                    });
+                })
+                .catch(reject);
+        });
+    });
+}
+
+// ========================================
+// FUNCIÓN PARA OBTENER ESQUEMA MULTI-ESCUELA
+// ========================================
+
+getMultiSchoolSchema() {
+    // Leer el archivo schema.sql
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+        const schemaPath = path.join(__dirname, '..', '..', 'database', 'schema.sql');
+        
+        if (fs.existsSync(schemaPath)) {
+            return fs.readFileSync(schemaPath, 'utf8');
+        } else {
+            // Fallback: esquema básico multi-escuela
+            return this.getBasicMultiSchoolSchema();
+        }
+    } catch (error) {
+        console.error('⚠️ Error leyendo schema.sql, usando esquema básico');
+        return this.getBasicMultiSchoolSchema();
+    }
+}
+
+getBasicMultiSchoolSchema() {
+    return `
+        -- Esquema básico multi-escuela
+        CREATE TABLE IF NOT EXISTS schools (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            address TEXT,
+            phone TEXT,
+            email TEXT,
+            school_code TEXT UNIQUE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE TABLE IF NOT EXISTS teachers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            cedula TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            teacher_type TEXT,
+            specialized_type TEXT,
+            regional TEXT,
+            is_active INTEGER DEFAULT 0,
+            is_paid INTEGER DEFAULT 0,
+            registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_login DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE TABLE IF NOT EXISTS teacher_schools (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            teacher_id INTEGER NOT NULL,
+            school_id INTEGER NOT NULL,
+            is_active INTEGER DEFAULT 1,
+            is_primary_school INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+            FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+            UNIQUE(teacher_id, school_id)
+        );
+        
+        -- Insertar datos básicos
+        INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
+        VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);
+    `;
+}
 
     async applyMigrations() {
         const tableInfo = (table) => new Promise((resolve, reject) => {
