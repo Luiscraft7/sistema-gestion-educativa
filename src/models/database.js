@@ -1651,7 +1651,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     }
 
     // Obtener evaluaciones por grado, materia y período académico
-    async getEvaluationsByGradeSubjectAndPeriod(gradeLevel, subjectArea, academicPeriodId, teacherId) {
+    async getEvaluationsByGradeSubjectAndPeriod(gradeLevel, subjectArea, academicPeriodId, teacherId, schoolId) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
@@ -1671,6 +1671,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                        AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
                        AND s.academic_period_id = a.academic_period_id
                        AND s.teacher_id = a.teacher_id
+                       AND s.school_id = a.school_id
                     ) as total_students
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
@@ -1686,6 +1687,11 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
             if (teacherId) {
                 query += ' AND a.teacher_id = ?';
                 params.push(teacherId);
+            }
+
+            if (schoolId) {
+                query += ' AND a.school_id = ?';
+                params.push(schoolId);
             }
 
             query += ' GROUP BY a.id ORDER BY a.created_at DESC';
@@ -1709,6 +1715,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 INSERT INTO assignments (
                     academic_period_id,
                     teacher_id,
+                    school_id,
                     title,
                     description,
                     due_date,
@@ -1718,12 +1725,13 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                     subject_area,
                     teacher_name,
                     type
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             
             const values = [
                 evaluationData.academic_period_id || 1,
                 evaluationData.teacher_id,
+                evaluationData.school_id,
                 evaluationData.title,
                 evaluationData.description || null,
                 evaluationData.due_date || null,
@@ -1813,7 +1821,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
 
         return new Promise((resolve, reject) => {
             // Primero obtener información de la evaluación
-            const evaluationQuery = 'SELECT academic_period_id, grade_level, subject_area, teacher_id, title, max_points, percentage FROM assignments WHERE id = ?';
+            const evaluationQuery = 'SELECT academic_period_id, grade_level, subject_area, teacher_id, school_id, title, max_points, percentage FROM assignments WHERE id = ?';
             
             this.db.get(evaluationQuery, [evaluationId], (err, evaluation) => {
                 if (err) {
@@ -1849,22 +1857,25 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                         ? as max_points,
                         ? as task_percentage
                     FROM students s
-                    LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ?
+                    LEFT JOIN assignment_grades ag ON s.id = ag.student_id AND ag.assignment_id = ? AND ag.school_id = ?
                     WHERE s.status = 'active'
                         AND s.teacher_id = ?
                         AND s.academic_period_id = ?
                         AND s.grade_level = ?
                         AND (s.subject_area = ? OR s.subject_area IS NULL OR s.subject_area = '')
+                        AND s.school_id = ?
                     ORDER BY s.first_surname, s.second_surname, s.first_name
                 `;
 
                 this.db.all(query, [
                     evaluationId, evaluation.title, evaluation.max_points, evaluation.percentage, // Para los campos SELECT
                     evaluationId, // Para el LEFT JOIN
+                    evaluation.school_id, // LEFT JOIN school filter
                     teacherFilter, // Para filtrar por profesor
                     evaluation.academic_period_id, // Filtrar por período
                     evaluation.grade_level, // Para el WHERE
-                    evaluation.subject_area // Para el WHERE
+                    evaluation.subject_area, // Para el WHERE
+                    evaluation.school_id // Para el WHERE por escuela
                 ], (err, rows) => {
                     if (err) {
                         console.error('❌ Error en getEvaluationGrades:', err);
@@ -1902,7 +1913,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 
                 grades.forEach((grade, index) => {
                     // Obtener información de la evaluación para agregar datos faltantes
-                    db.get('SELECT academic_period_id, teacher_id, max_points FROM assignments WHERE id = ?', [grade.assignment_id], (err, row) => {
+                    db.get('SELECT academic_period_id, teacher_id, school_id, max_points FROM assignments WHERE id = ?', [grade.assignment_id], (err, row) => {
                         if (err || !row) {
                             console.error(`❌ Error obteniendo datos de la evaluación ${grade.assignment_id}:`, err ? err.message : 'no encontrada');
                             completedOperations++;
@@ -1913,7 +1924,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
 
                         const query = `
                             INSERT OR REPLACE INTO assignment_grades (
-                                academic_period_id, teacher_id, assignment_id, student_id,
+                                academic_period_id, teacher_id, school_id, assignment_id, student_id,
                                 points_earned, grade, percentage, is_submitted, is_late,
                                 notes, feedback, updated_at
                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -1926,6 +1937,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                         const values = [
                             row.academic_period_id,
                             row.teacher_id,
+                            row.school_id,
                             grade.assignment_id,
                             grade.student_id,
                             grade.points_earned || 0,
