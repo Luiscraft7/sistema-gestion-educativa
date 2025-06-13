@@ -1115,7 +1115,7 @@ app.delete('/api/custom-subjects/:id', authenticateTeacher, async (req, res) => 
 // Obtener asistencia por fecha y grado
 app.get('/api/attendance', authenticateTeacher, async (req, res) => {
     try {
-        const { date, grade, subject, year, period_type, period_number } = req.query;
+        const { date, grade, subject, year, period_type, period_number, school_id } = req.query;
 
         console.log('📊 GET /api/attendance:', { date, grade, subject });
 
@@ -1143,7 +1143,8 @@ app.get('/api/attendance', authenticateTeacher, async (req, res) => {
             academicPeriodId = currentPeriod ? currentPeriod.id : 1;
         }
 
-        const attendance = await database.getAttendanceByDate(date, grade, req.teacher.id, academicPeriodId, subject);
+        const schoolId = school_id || req.teacher.school_id;
+        const attendance = await database.getAttendanceByDate(date, grade, req.teacher.id, academicPeriodId, subject, schoolId);
         res.json({
             success: true,
             data: attendance,
@@ -1164,7 +1165,7 @@ app.post('/api/attendance', authenticateTeacher, async (req, res) => {
     try {
         console.log('📝 POST /api/attendance:', req.body);
 
-        const { year, period_type, period_number } = req.body;
+        const { year, period_type, period_number, school_id } = req.body;
 
         let academicPeriodId = req.body.academic_period_id || null;
 
@@ -1183,10 +1184,12 @@ app.post('/api/attendance', authenticateTeacher, async (req, res) => {
             academicPeriodId = currentPeriod ? currentPeriod.id : 1;
         }
 
+        const schoolId = school_id || req.teacher.school_id;
         const result = await database.saveAttendance({
             ...req.body,
             teacher_id: req.teacher.id,
-            academic_period_id: academicPeriodId
+            academic_period_id: academicPeriodId,
+            school_id: schoolId
         });
         res.json({
             success: true,
@@ -1206,7 +1209,7 @@ app.post('/api/attendance', authenticateTeacher, async (req, res) => {
 // Eliminar asistencia de un día específico
 app.delete('/api/attendance', authenticateTeacher, async (req, res) => {
     try {
-        const { date, grade, subject, year, period_type, period_number } = req.query;
+        const { date, grade, subject, year, period_type, period_number, school_id } = req.query;
 
         console.log('🗑️ DELETE /api/attendance:', { date, grade, subject });
         
@@ -1234,7 +1237,8 @@ app.delete('/api/attendance', authenticateTeacher, async (req, res) => {
             academicPeriodId = currentPeriod ? currentPeriod.id : 1;
         }
 
-        const result = await database.deleteAttendanceByDate(date, grade, req.teacher.id, academicPeriodId, subject);
+        const schoolId = school_id || req.teacher.school_id;
+        const result = await database.deleteAttendanceByDate(date, grade, req.teacher.id, academicPeriodId, subject, schoolId);
         res.json({
             success: true,
             data: result,
@@ -1322,7 +1326,7 @@ app.get('/api/grade-scale', authenticateTeacher, async (req, res) => {
 app.get('/api/attendance/stats/:studentId', authenticateTeacher, async (req, res) => {
     try {
         const { studentId } = req.params;
-        const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id } = req.query;
+        const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id, school_id } = req.query;
         
         console.log('📊 Calculando estadísticas MEP para:', { studentId, grade, subject, totalLessons, year, period_type, period_number, academic_period_id });
         
@@ -1424,9 +1428,10 @@ app.get('/api/attendance/class-stats', authenticateTeacher, async (req, res) => 
         }
 
         // Obtener estudiantes del grado
-        const students = await database.getAllStudents(academicPeriodId);
-        const gradeStudents = students.filter(s => 
-            s.grade_level === grade && 
+        const schoolId = school_id || req.teacher.school_id;
+        const students = await database.getAllStudents(academicPeriodId, null, schoolId);
+        const gradeStudents = students.filter(s =>
+            s.grade_level === grade &&
             s.status === 'active' &&
             (!subject || s.subject_area === subject)
         );
@@ -1530,7 +1535,7 @@ app.post('/api/lesson-config', async (req, res) => {
 // Contar lecciones reales dadas
 app.get('/api/attendance/lesson-count', async (req, res) => {
     try {
-        const { grade } = req.query;
+        const { grade, year, period_type, period_number, academic_period_id, school_id } = req.query;
         
         if (!grade) {
             return res.status(400).json({
@@ -1540,16 +1545,33 @@ app.get('/api/attendance/lesson-count', async (req, res) => {
         }
         
         database.ensureConnection();
-        
-        const query = `
+
+        let query = `
             SELECT COUNT(DISTINCT date) as total_lessons
-            FROM attendance 
-            WHERE grade_level = ? 
+            FROM attendance
+            WHERE grade_level = ?
             AND status IN ('present', 'late_justified', 'late_unjustified', 'absent_justified', 'absent_unjustified')
         `;
-        
+
+        const params = [grade];
+
+        let academicPeriodId = academic_period_id || null;
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (academicPeriodId) {
+            query += ' AND academic_period_id = ?';
+            params.push(academicPeriodId);
+        }
+
+        if (school_id) {
+            query += ' AND school_id = ?';
+            params.push(parseInt(school_id));
+        }
+
         const result = await new Promise((resolve, reject) => {
-            database.db.get(query, [grade], (err, row) => {
+            database.db.get(query, params, (err, row) => {
                 if (err) reject(err);
                 else resolve(row || { total_lessons: 0 });
             });

@@ -1579,7 +1579,7 @@
             try {
                 // Contar días únicos con asistencia registrada para este grado
                 const period = getCurrentAcademicPeriod();
-                const response = await authenticatedFetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`);
+                const response = await authenticatedFetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1662,7 +1662,7 @@
                 debugLog('📊 Cargando asistencia para:', { date: dateStr, grade: currentGrade, subject: currentSubject });
                 
                 const period = getCurrentAcademicPeriod();
-                let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
+                let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 // Ya no añadimos el parámetro subject porque no usamos filtro de materias
                 
                 const response = await authenticatedFetch(url);
@@ -1876,6 +1876,7 @@
                     arrival_time: status.includes('late') ? now.toTimeString().substr(0, 5) : null,
                     justification: null,
                     notes: null,
+                    school_id: period.schoolId,
                     year: period.year,
                     period_type: period.periodType,
                     period_number: period.periodNumber
@@ -1991,7 +1992,7 @@
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
                 const period = getCurrentAcademicPeriod();
-                let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
+                let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 if (currentSubject) {
                     url += `&subject=${encodeURIComponent(currentSubject)}`;
                 }
@@ -2055,7 +2056,8 @@
                     totalLessons: totalLessons.toString(),
                     year: period.year,
                     period_type: period.periodType,
-                    period_number: period.periodNumber
+                    period_number: period.periodNumber,
+                    school_id: period.schoolId
                 });
                 
                 const url = `/api/attendance/stats/${studentId}?${params.toString()}`;
@@ -2254,6 +2256,7 @@
                     justification: document.getElementById('justificationText').value || null,
                     grade_level: currentGrade,
                     subject_area: subjectArea,
+                    school_id: period.schoolId,
                     year: period.year,
                     period_type: period.periodType,
                     period_number: period.periodNumber
@@ -2439,7 +2442,7 @@
                 showMessage('success', '📊 Calculando estadísticas MEP...');
                 
                 const period = getCurrentAcademicPeriod();
-                const response = await authenticatedFetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`);
+                const response = await authenticatedFetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`);
                 const result = await response.json();
                 
                 if (result.success) {
