@@ -92,21 +92,6 @@ async function authenticateTeacher(req, res, next) {
     }
 }
 
-// Middleware solo para admin
-function requireAdmin(req, res, next) {
-    // Verificar si es admin (puedes ajustar esta lógica)
-    const adminEmails = ['luiscraft']; // O usar una tabla de admins
-
-    if (req.teacher && adminEmails.includes(req.teacher.email.trim().toLowerCase())) {
-        req.isAdmin = true;
-        next();
-    } else {
-        res.status(403).json({
-            success: false,
-            message: 'Acceso requiere privilegios de administrador'
-        });
-    }
-}
 
 // Función para generar tokens únicos de sesión
 function generateSessionToken() {
