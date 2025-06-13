@@ -1627,7 +1627,7 @@ app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => 
             });
         }
         
-        const result = await database.assignSubjectsToGrade({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId });
+        const result = await database.assignSubjectsToGrade({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId, schoolId: req.teacher.school_id });
         res.json({
             success: true,
             data: result,
@@ -1675,7 +1675,7 @@ app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req,
             });
         }
         
-        const result = await database.assignSubjectsToMultipleGrades({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId });
+        const result = await database.assignSubjectsToMultipleGrades({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId, schoolId: req.teacher.school_id });
         res.json({
             success: true,
             data: result,
