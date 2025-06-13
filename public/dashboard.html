@@ -1515,12 +1515,20 @@
     function updateCurrentPeriodDisplay() {
         const currentPeriod = getCurrentAcademicPeriod();
         const indicator = document.getElementById('currentPeriodText');
-        
+        const schoolLabel = document.getElementById('teacherProfileSchool');
+        const schoolSelector = document.getElementById('schoolSelector');
+
         if (indicator && currentPeriod) {
             const periodTypeName = currentPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre';
-            const periodNumber = currentPeriod.periodNumber === 1 ? 'Primer' : 
+            const periodNumber = currentPeriod.periodNumber === 1 ? 'Primer' :
                                 currentPeriod.periodNumber === 2 ? 'Segundo' : 'Tercer';
-            
+            if (schoolLabel && schoolSelector) {
+                const option = schoolSelector.querySelector(`option[value="${currentPeriod.schoolId}"]`);
+                if (option) {
+                    schoolLabel.textContent = option.textContent;
+                }
+            }
+
             indicator.textContent = `${currentPeriod.year} - ${periodNumber} ${periodTypeName}`;
         }
     }
@@ -1900,6 +1908,7 @@
     // Inicializar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', () => {
         window.unifiedPeriodSelector = new UnifiedPeriodSelector();
+        window.addEventListener('academicPeriodChanged', updateCurrentPeriodDisplay);
     });
 
     // Función global para obtener período actual
