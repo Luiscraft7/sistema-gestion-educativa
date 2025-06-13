@@ -195,6 +195,13 @@ class GlobalPeriodSelector {
             });
         }
 
+        const addBtn = document.getElementById('addSchoolBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.promptAndAddSchool();
+            });
+        }
+
         // Marcar cambios en cualquier selector
         ['schoolSelector', 'yearSelector', 'periodTypeSelector', 'periodSelector'].forEach(id => {
             const element = document.getElementById(id);
@@ -249,17 +256,7 @@ class GlobalPeriodSelector {
             schoolSelector.appendChild(option);
         });
 
-        // Agregar opciones para agregar más escuelas (máximo 3)
-        const schoolCount = this.schools.length;
-        if (schoolCount < 3) {
-            for (let i = schoolCount + 1; i <= 3; i++) {
-                const option = document.createElement('option');
-                option.value = `add_${i}`;
-                option.textContent = `+ Agregar ${i === 2 ? 'Segunda' : 'Tercera'} Escuela`;
-                option.disabled = true;
-                schoolSelector.appendChild(option);
-            }
-        }
+        // Las nuevas escuelas se agregan mediante el botón correspondiente
     }
 
     updateUI() {
@@ -671,6 +668,28 @@ async applyPeriodChange() {
     async refreshSchools() {
         await this.loadSchools();
         this.updateSchoolOptions();
+    }
+
+    async promptAndAddSchool() {
+        const name = prompt('Nombre de la nueva escuela:');
+        if (!name || !name.trim()) return;
+
+        try {
+            const response = await fetch('/api/schools', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name.trim() })
+            });
+            const result = await response.json();
+            if (result.success) {
+                await this.refreshSchools();
+                this.markAsChanged();
+            } else {
+                alert('No se pudo crear la escuela');
+            }
+        } catch (error) {
+            console.error('Error agregando escuela:', error);
+        }
     }
 }
 
