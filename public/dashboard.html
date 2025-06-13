@@ -1015,6 +1015,36 @@
                             <span class="info-value" id="teacherSince">-</span>
                         </div>
                     </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Escuela 2</span>
+                            <span class="info-value" id="teacherSchool2">-</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Escuela 3</span>
+                            <span class="info-value" id="teacherSchool3">-</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Año</span>
+                            <span class="info-value" id="teacherYear">-</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Panel de edición rápida (oculto por defecto) -->
@@ -1031,6 +1061,14 @@
                         <div class="edit-field">
                             <label><i class="fas fa-school"></i> Nombre de la Escuela:</label>
                             <input type="text" id="quickEditSchool" class="quick-edit-input" placeholder="Ingresa el nombre de tu escuela">
+                        </div>
+                        <div class="edit-field">
+                            <label><i class="fas fa-school"></i> Escuela 2 (opcional):</label>
+                            <input type="text" id="quickEditSchool2" class="quick-edit-input" placeholder="Segunda escuela opcional">
+                        </div>
+                        <div class="edit-field">
+                            <label><i class="fas fa-school"></i> Escuela 3 (opcional):</label>
+                            <input type="text" id="quickEditSchool3" class="quick-edit-input" placeholder="Tercera escuela opcional">
                         </div>
                     </div>
                     <div class="edit-actions">
@@ -1280,6 +1318,8 @@
                                 name: result.data.full_name,
                                 email: result.data.email,
                                 school: result.data.school_name,
+                                school2: '',
+                                school3: '',
                                 cedula: result.data.cedula
                             });
                             sessionStorage.setItem('teacherData', teacherData);
@@ -1410,10 +1450,14 @@
             document.getElementById('teacherEmail').textContent = teacher.email || 'No especificado';
             document.getElementById('teacherType').textContent = teacher.teacher_type || 'No especificado';
             document.getElementById('teacherRegional').textContent = teacher.regional || 'No especificado';
-            
+            document.getElementById('teacherSchool2').textContent = teacher.school2 || '-';
+            document.getElementById('teacherSchool3').textContent = teacher.school3 || '-';
+
             // Llenar campos de edición
             document.getElementById('quickEditName').value = teacher.name || '';
             document.getElementById('quickEditSchool').value = teacher.school || teacher.school_name || '';
+            document.getElementById('quickEditSchool2').value = teacher.school2 || '';
+            document.getElementById('quickEditSchool3').value = teacher.school3 || '';
             
             // Actualizar período actual
             updateCurrentPeriodDisplay();
@@ -1457,7 +1501,9 @@
         
         const updatedData = {
             name: document.getElementById('quickEditName').value.trim(),
-            school_name: document.getElementById('quickEditSchool').value.trim()
+            school_name: document.getElementById('quickEditSchool').value.trim(),
+            school2: document.getElementById('quickEditSchool2').value.trim(),
+            school3: document.getElementById('quickEditSchool3').value.trim()
         };
         
         if (!updatedData.name || !updatedData.school_name) {
@@ -1477,7 +1523,10 @@
             if (result.success) {
                 teacherData.name = updatedData.name;
                 teacherData.school = updatedData.school_name;
+                teacherData.school2 = updatedData.school2;
+                teacherData.school3 = updatedData.school3;
                 sessionStorage.setItem('teacherData', JSON.stringify(teacherData));
+                localStorage.setItem('teacherInfo', JSON.stringify(teacherData));
                 
                 loadIntegratedTeacherProfile();
                 loadTeacherStats();
@@ -1505,10 +1554,12 @@
         
         if (indicator && currentPeriod) {
             const periodTypeName = currentPeriod.periodType === 'semester' ? 'Semestre' : 'Trimestre';
-            const periodNumber = currentPeriod.periodNumber === 1 ? 'Primer' : 
+            const periodNumber = currentPeriod.periodNumber === 1 ? 'Primer' :
                                 currentPeriod.periodNumber === 2 ? 'Segundo' : 'Tercer';
-            
+
             indicator.textContent = `${currentPeriod.year} - ${periodNumber} ${periodTypeName}`;
+            const yearInfo = document.getElementById('teacherYear');
+            if (yearInfo) yearInfo.textContent = currentPeriod.year;
         }
     }
 
