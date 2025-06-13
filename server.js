@@ -948,7 +948,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
 // Obtener todos los grados
 app.get('/api/grades', authenticateTeacher, async (req, res) => {
     try {
-        const grades = await database.getAllGrades(req.teacher.id);
+        const grades = await database.getAllGrades(req.teacher.id, req.teacher.school_id);
         res.json({
             success: true,
             data: grades
@@ -1044,7 +1044,7 @@ app.get('/api/subjects', async (req, res) => {
 // Obtener todas las materias personalizadas (hardcoded)
 app.get('/api/custom-subjects', authenticateTeacher, async (req, res) => {
     try {
-        const subjects = await database.getAllCustomSubjects(req.teacher.id);
+        const subjects = await database.getAllCustomSubjects(req.teacher.id, req.teacher.school_id);
         res.json({
             success: true,
             data: subjects
@@ -1062,7 +1062,7 @@ app.get('/api/custom-subjects', authenticateTeacher, async (req, res) => {
 // Agregar nueva materia personalizada
 app.post('/api/custom-subjects', authenticateTeacher, async (req, res) => {
     try {
-        const result = await database.addCustomSubject(req.body, req.teacher.id);
+        const result = await database.addCustomSubject(req.body, req.teacher.id, req.teacher.school_id);
         res.json({
             success: true,
             data: result,
@@ -1081,7 +1081,7 @@ app.post('/api/custom-subjects', authenticateTeacher, async (req, res) => {
 // Eliminar materia personalizada
 app.delete('/api/custom-subjects/:id', authenticateTeacher, async (req, res) => {
     try {
-        const usageCheck = await database.checkSubjectUsage(req.params.id, req.teacher.id);
+        const usageCheck = await database.checkSubjectUsage(req.params.id, req.teacher.id, req.teacher.school_id);
         
         if (usageCheck.inUse) {
             return res.status(400).json({
@@ -1092,7 +1092,7 @@ app.delete('/api/custom-subjects/:id', authenticateTeacher, async (req, res) => 
             });
         }
 
-        const result = await database.deleteCustomSubject(req.params.id, req.teacher.id);
+        const result = await database.deleteCustomSubject(req.params.id, req.teacher.id, req.teacher.school_id);
         res.json({
             success: true,
             data: result,
@@ -1601,7 +1601,11 @@ app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => 
     try {
         console.log('📚 POST /api/grade-subjects/assign:', req.body);
         
-        const { gradeName, subjects, teacherName, year, period_type, period_number } = req.body;
+        const { gradeName, subjects, teacherName } = req.body;
+        const year = req.body.year || req.query.year;
+        const period_type = req.body.period_type || req.query.period_type;
+        const period_number = req.body.period_number || req.query.period_number;
+        const school_id = req.body.school_id || req.query.school_id;
 
         let academicPeriodId = req.body.academic_period_id || null;
 
@@ -1627,7 +1631,14 @@ app.post('/api/grade-subjects/assign', authenticateTeacher, async (req, res) => 
             });
         }
         
-        const result = await database.assignSubjectsToGrade({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId });
+        const schoolId = school_id || req.teacher.school_id;
+        const result = await database.assignSubjectsToGrade({
+            ...req.body,
+            teacherId: req.teacher.id,
+            teacherName: teacherName || req.teacher.name,
+            academicPeriodId,
+            schoolId
+        });
         res.json({
             success: true,
             data: result,
@@ -1648,7 +1659,11 @@ app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req,
     try {
         console.log('📚 POST /api/grade-subjects/assign-multiple:', req.body);
 
-        const { grades, subjects, teacherName, year, period_type, period_number } = req.body;
+        const { grades, subjects, teacherName } = req.body;
+        const year = req.body.year || req.query.year;
+        const period_type = req.body.period_type || req.query.period_type;
+        const period_number = req.body.period_number || req.query.period_number;
+        const school_id = req.body.school_id || req.query.school_id;
 
         let academicPeriodId = req.body.academic_period_id || null;
 
@@ -1675,7 +1690,14 @@ app.post('/api/grade-subjects/assign-multiple', authenticateTeacher, async (req,
             });
         }
         
-        const result = await database.assignSubjectsToMultipleGrades({ ...req.body, teacherId: req.teacher.id, teacherName: teacherName || req.teacher.name, academicPeriodId });
+        const schoolId = school_id || req.teacher.school_id;
+        const result = await database.assignSubjectsToMultipleGrades({
+            ...req.body,
+            teacherId: req.teacher.id,
+            teacherName: teacherName || req.teacher.name,
+            academicPeriodId,
+            schoolId
+        });
         res.json({
             success: true,
             data: result,
@@ -1715,7 +1737,7 @@ app.get('/api/grade-subjects/:gradeName', authenticateTeacher, async (req, res) 
         }
 
         console.log('📖 GET /api/grade-subjects/' + gradeName);
-        const subjects = await database.getSubjectsByGrade(gradeName, req.teacher.id, academicPeriodId);
+        const subjects = await database.getSubjectsByGrade(gradeName, req.teacher.id, academicPeriodId, req.teacher.school_id);
         res.json({
             success: true,
             data: subjects,
@@ -1756,7 +1778,7 @@ app.get('/api/grade-subjects', authenticateTeacher, async (req, res) => {
             academicPeriodId = currentPeriod ? currentPeriod.id : 1;
         }
 
-        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id, academicPeriodId);
+        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id, academicPeriodId, req.teacher.school_id);
         res.json({
             success: true,
             data: gradesWithSubjects,
@@ -1797,7 +1819,7 @@ app.delete('/api/grade-subjects/:gradeName/:subjectName', authenticateTeacher, a
 
         console.log(`🗑️ DELETE /api/grade-subjects/${gradeName}/${subjectName}`);
 
-        const result = await database.removeSubjectFromGrade(gradeName, subjectName, req.teacher.id, academicPeriodId);
+        const result = await database.removeSubjectFromGrade(gradeName, subjectName, req.teacher.id, academicPeriodId, req.teacher.school_id);
         res.json({
             success: true,
             data: result,
@@ -1879,7 +1901,7 @@ app.delete('/api/custom-subjects/bulk', authenticateTeacher, async (req, res) =>
         
         // Verificar uso de cada materia antes de eliminar
         const usageChecks = await Promise.all(
-            subjectIds.map(id => database.checkSubjectUsage(id, req.teacher.id))
+            subjectIds.map(id => database.checkSubjectUsage(id, req.teacher.id, req.teacher.school_id))
         );
         
         const inUseSubjects = usageChecks.filter(check => check.inUse);
@@ -1893,7 +1915,7 @@ app.delete('/api/custom-subjects/bulk', authenticateTeacher, async (req, res) =>
             });
         }
         
-        const result = await database.deleteMultipleSubjects(subjectIds, req.teacher.id);
+        const result = await database.deleteMultipleSubjects(subjectIds, req.teacher.id, req.teacher.school_id);
         res.json({
             success: true,
             data: result,
@@ -3210,7 +3232,7 @@ app.get('/api/sea/grade-subjects', authenticateTeacher, async (req, res) => {
         }
 
         // Obtener asignaciones usando la función existente filtrando por profesor y período
-        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id, academicPeriodId);
+        const gradesWithSubjects = await database.getAllGradesWithSubjects(req.teacher.id, academicPeriodId, req.teacher.school_id);
         console.log(`📚 Grados con materias encontrados: ${gradesWithSubjects.length}`);
         
         // Crear array de combinaciones
@@ -3241,7 +3263,7 @@ app.get('/api/sea/grade-subjects', authenticateTeacher, async (req, res) => {
             console.log('⚠️ No se encontraron combinaciones grado-materia para SEA');
             
             // Verificar si al menos hay grados
-            const grades = await database.getAllGrades();
+            const grades = await database.getAllGrades(req.teacher.id, req.teacher.school_id);
             console.log(`📚 Grados en sistema: ${grades?.length || 0}`);
             
             res.json({
