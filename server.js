@@ -1414,7 +1414,16 @@ app.get('/api/attendance/stats/:studentId', authenticateTeacher, async (req, res
 // Obtener estadísticas de toda la clase
 app.get('/api/attendance/class-stats', authenticateTeacher, async (req, res) => {
     try {
-        const { grade, subject, totalLessons, year, period_type, period_number, academic_period_id } = req.query;
+        const {
+            grade,
+            subject,
+            totalLessons,
+            year,
+            period_type,
+            period_number,
+            academic_period_id,
+            school_id
+        } = req.query;
         
         console.log('📊 Calculando estadísticas de clase para:', { grade, subject, totalLessons, year, period_type, period_number, academic_period_id });
         
