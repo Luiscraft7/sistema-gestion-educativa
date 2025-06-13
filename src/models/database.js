@@ -35,10 +35,13 @@ class Database {
                         reject(err);
                     } else {
                         console.log('✅ Conectado a la base de datos SQLite');
-                        this.createTables().then(() => {
-                            this.isInitialized = true;
-                            resolve();
-                        }).catch(reject);
+                        this.createTables()
+                            .then(() => this.applyMigrations())
+                            .then(() => {
+                                this.isInitialized = true;
+                                resolve();
+                            })
+                            .catch(reject);
                     }
                 });
             } catch (error) {
