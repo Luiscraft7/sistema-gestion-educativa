@@ -3710,7 +3710,7 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
         }
 
         // 4. Obtener configuración de pesos (valores que suman hacia 100)
-        const weightConfig = await database.getSEAWeightConfig(academicPeriodId, req.teacher.id, req.teacher.school_id);
+        // (ya se obtuvo al inicio de la función)
 
         console.log(`✅ SEA procesado: ${studentsWithSEA.length} estudiantes completados`);
 
