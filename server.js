@@ -2129,12 +2129,35 @@ app.post('/api/evaluation-grades', async (req, res) => {
 // RUTAS PARA DASHBOARD DE EVALUACIONES - CORREGIDAS ✅
 // ========================================
 
-// Resumen general de evaluaciones
-app.get('/api/evaluations/summary', async (req, res) => {
+// Resumen de evaluaciones filtrado
+app.get('/api/evaluations/summary', authenticateTeacher, async (req, res) => {
     try {
-        console.log('📊 GET /api/evaluations/summary');
-        
-        const summary = await database.getEvaluationsSummary();
+        const { grade, subject, year, period_type, period_number, academic_period_id } = req.query;
+
+        console.log('📊 GET /api/evaluations/summary', {
+            grade,
+            subject,
+            year,
+            period_type,
+            period_number,
+            academic_period_id,
+            teacher: req.teacher.id,
+            school: req.teacher.school_id
+        });
+
+        let academicPeriodId = academic_period_id || null;
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        const summary = await database.getEvaluationsSummary(
+            grade || null,
+            subject || null,
+            academicPeriodId,
+            req.teacher.id,
+            req.teacher.school_id
+        );
+
         res.json({
             success: true,
             data: summary

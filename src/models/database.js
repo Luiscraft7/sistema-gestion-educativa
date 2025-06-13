@@ -2048,13 +2048,19 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     }
 
-    // Obtener resumen de evaluaciones por grado y materia
-    async getEvaluationsSummary(gradeLevel, subjectArea) {
+    // Obtener resumen de evaluaciones filtrado
+    async getEvaluationsSummary(
+        gradeLevel = null,
+        subjectArea = null,
+        academicPeriodId = null,
+        teacherId = null,
+        schoolId = null
+    ) {
         this.ensureConnection();
-        
+
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
+            let query = `
+                SELECT
                     COUNT(DISTINCT a.id) as total_evaluations,
                     COUNT(ag.id) as total_submissions,
                     AVG(ag.percentage) as avg_class_percentage,
@@ -2062,20 +2068,48 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                     COUNT(DISTINCT ag.student_id) as students_with_grades
                 FROM assignments a
                 LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
-                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
-            `;
-            
-            this.db.get(query, [gradeLevel, subjectArea], (err, row) => {
+                WHERE a.is_active = 1`;
+
+            const params = [];
+
+            if (gradeLevel !== null) {
+                query += ' AND a.grade_level = ?';
+                params.push(gradeLevel);
+            }
+
+            if (subjectArea !== null) {
+                query += ' AND a.subject_area = ?';
+                params.push(subjectArea);
+            }
+
+            if (academicPeriodId !== null) {
+                query += ' AND a.academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
+            if (teacherId !== null) {
+                query += ' AND a.teacher_id = ?';
+                params.push(teacherId);
+            }
+
+            if (schoolId !== null) {
+                query += ' AND a.school_id = ?';
+                params.push(schoolId);
+            }
+
+            this.db.get(query, params, (err, row) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(row || {
-                        total_evaluations: 0,
-                        total_submissions: 0,
-                        avg_class_percentage: 0,
-                        total_weight_configured: 0,
-                        students_with_grades: 0
-                    });
+                    resolve(
+                        row || {
+                            total_evaluations: 0,
+                            total_submissions: 0,
+                            avg_class_percentage: 0,
+                            total_weight_configured: 0,
+                            students_with_grades: 0
+                        }
+                    );
                 }
             });
         });
