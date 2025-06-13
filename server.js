@@ -1373,7 +1373,8 @@ app.get('/api/attendance/stats/:studentId', authenticateTeacher, async (req, res
             subject || 'general',
             parseInt(totalLessons) || 200,
             academicPeriodId,
-            req.teacher.id
+            req.teacher.id,
+            req.teacher.school_id
         );
         
         console.log('✅ Estadísticas MEP calculadas exitosamente');
@@ -1447,7 +1448,8 @@ app.get('/api/attendance/class-stats', authenticateTeacher, async (req, res) => 
                     subject || 'general',
                     parseInt(totalLessons) || 200,
                     academicPeriodId,
-                    req.teacher.id
+                    req.teacher.id,
+                    req.teacher.school_id
                 );
                 return {
                     ...student,
@@ -3361,11 +3363,11 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                 SELECT id, title, percentage, max_points, type, due_date
                 FROM assignments
                 WHERE grade_level = ? AND subject_area = ? AND is_active = 1
-                    AND teacher_id = ? AND academic_period_id = ?
+                    AND teacher_id = ? AND academic_period_id = ? AND school_id = ?
                 ORDER BY created_at DESC
             `;
 
-            database.db.all(evaluationsQuery, [grade, subject, req.teacher.id, academicPeriodId], (err, rows) => {
+            database.db.all(evaluationsQuery, [grade, subject, req.teacher.id, academicPeriodId, req.teacher.school_id], (err, rows) => {
                 if (err) {
                     console.error('❌ Error obteniendo evaluaciones:', err);
                     reject(err);
@@ -3382,11 +3384,11 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                 SELECT id, first_name, first_surname, second_surname, student_id, cedula
                 FROM students
                 WHERE grade_level = ? AND status = 'active'
-                    AND teacher_id = ? AND academic_period_id = ?
+                    AND teacher_id = ? AND academic_period_id = ? AND school_id = ?
                 ORDER BY first_surname, first_name
             `;
 
-            database.db.all(studentsQuery, [grade, req.teacher.id, academicPeriodId], (err, rows) => {
+            database.db.all(studentsQuery, [grade, req.teacher.id, academicPeriodId, req.teacher.school_id], (err, rows) => {
                 if (err) {
                     console.error('❌ Error obteniendo estudiantes:', err);
                     reject(err);
@@ -3463,12 +3465,12 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                         FROM daily_evaluations de
                         LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                         WHERE de.student_id = ? AND de.grade_level = ? AND de.subject_area = ?
-                            AND de.teacher_id = ? AND de.academic_period_id = ?
+                            AND de.teacher_id = ? AND de.academic_period_id = ? AND de.school_id = ?
                         GROUP BY de.evaluation_date
                         ORDER BY de.evaluation_date DESC
                     `;
 
-                    database.db.all(cotidianoQuery, [student.id, grade, subject, req.teacher.id, academicPeriodId], (err1, rows) => {
+                    database.db.all(cotidianoQuery, [student.id, grade, subject, req.teacher.id, academicPeriodId, req.teacher.school_id], (err1, rows) => {
                         if (err1) {
                             console.error(`❌ Error obteniendo cotidiano estudiante ${student.id}:`, err1);
                             resolve(null);
@@ -3522,12 +3524,12 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                             FROM daily_evaluations de
                             LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                             WHERE de.student_id = ? AND de.grade_level = ?
-                                AND de.teacher_id = ? AND de.academic_period_id = ?
+                                AND de.teacher_id = ? AND de.academic_period_id = ? AND de.school_id = ?
                             GROUP BY de.evaluation_date, de.subject_area
                             ORDER BY de.evaluation_date DESC
                         `;
 
-                        database.db.all(cotidianoQuery2, [student.id, grade, req.teacher.id, academicPeriodId], (err2, rows2) => {
+                        database.db.all(cotidianoQuery2, [student.id, grade, req.teacher.id, academicPeriodId, req.teacher.school_id], (err2, rows2) => {
                             if (err2) {
                                 console.error(`❌ Error en búsqueda general cotidiano:`, err2);
                                 resolve(null);
@@ -3561,13 +3563,13 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                 let attendanceStats = null;
                 try {
                     // Primero intentar con la materia específica
-                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject, undefined, academicPeriodId, req.teacher.id);
+                    attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, subject, undefined, academicPeriodId, req.teacher.id, req.teacher.school_id);
                     console.log(`📊 Asistencia estudiante ${student.first_surname} (${subject}): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
                     
                     // Si no hay datos con la materia específica, intentar con 'general'
                     if (!attendanceStats || attendanceStats.total_records === 0) {
                         console.log(`🔍 Intentando asistencia general para ${student.first_surname}...`);
-                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general', undefined, academicPeriodId, req.teacher.id);
+                        attendanceStats = await database.calculateMEPAttendanceGrade(student.id, grade, 'general', undefined, academicPeriodId, req.teacher.id, req.teacher.school_id);
                         console.log(`📊 Asistencia estudiante ${student.first_surname} (general): ${attendanceStats?.nota_asistencia || 'Sin datos'}`);
                     }
                 } catch (error) {

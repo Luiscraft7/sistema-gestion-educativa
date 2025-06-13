@@ -2544,7 +2544,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     // ========================================
     // CÁLCULOS DE ESTADÍSTICAS MEP
     // ========================================
-    async calculateMEPAttendanceGrade(studentId, grade, subject = 'general', totalLessons = 200, academicPeriodId = null, teacherId = null) {
+    async calculateMEPAttendanceGrade(studentId, grade, subject = 'general', totalLessons = 200, academicPeriodId = null, teacherId = null, schoolId = null) {
         this.ensureConnection();
         
         return new Promise(async (resolve, reject) => {  // ✅ Agregar async aquí
@@ -2560,6 +2560,16 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 if (academicPeriodId) {
                     query += ' AND academic_period_id = ?';
                     params.push(academicPeriodId);
+                }
+
+                if (teacherId) {
+                    query += ' AND teacher_id = ?';
+                    params.push(teacherId);
+                }
+
+                if (schoolId) {
+                    query += ' AND school_id = ?';
+                    params.push(schoolId);
                 }
 
                 query += ' GROUP BY status';
