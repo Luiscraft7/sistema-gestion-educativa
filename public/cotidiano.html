@@ -1118,7 +1118,8 @@ Participa activamente en discusiones"
             const studentParams = new URLSearchParams({
                 year: currentPeriod.year,
                 period_type: currentPeriod.periodType,
-                period_number: currentPeriod.periodNumber
+                period_number: currentPeriod.periodNumber,
+                school_id: currentPeriod.schoolId
             });
 
             const studentsUrl = `/api/students?${studentParams.toString()}`;
@@ -1230,7 +1231,7 @@ Participa activamente en discusiones"
             console.log('📖 Cargando datos desde servidor:', { currentGrado, currentMateria, currentDate });
 
             const period = getCurrentAcademicPeriod();
-            const response = await authenticatedFetch(`/api/cotidiano/evaluation?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&evaluation_date=${currentDate}&academic_period_id=${period.periodId}`);
+            const response = await authenticatedFetch(`/api/cotidiano/evaluation?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&evaluation_date=${currentDate}&academic_period_id=${period.periodId}&school_id=${period.schoolId}`);
             const result = await response.json();
             
             console.log('📥 Respuesta completa del servidor:', result);
@@ -2135,7 +2136,7 @@ Participa activamente en discusiones"
                 console.log('🔄 Buscando indicadores de fechas previas...');
                 
                 const period = getCurrentAcademicPeriod();
-                const response = await authenticatedFetch(`/api/cotidiano/latest-indicators?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&academic_period_id=${period.periodId}`);
+                const response = await authenticatedFetch(`/api/cotidiano/latest-indicators?grade_level=${encodeURIComponent(currentGrado)}&subject_area=${encodeURIComponent(currentMateria)}&academic_period_id=${period.periodId}&school_id=${period.schoolId}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.indicators && result.data.indicators.length > 0) {
@@ -2750,6 +2751,7 @@ Participa activamente en discusiones"
             const period = getCurrentAcademicPeriod();
             const dataToSend = {
                 academic_period_id: period.periodId,
+                school_id: period.schoolId,
                 grade_level: currentGrado,
                 subject_area: currentMateria,
                 evaluation_date: currentDate,
@@ -2818,7 +2820,7 @@ Participa activamente en discusiones"
                 console.log('📚 Consultando historial desde servidor...');
                 
                 const period = getCurrentAcademicPeriod();
-                const response = await authenticatedFetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrado)}&subject=${encodeURIComponent(currentMateria)}&academic_period_id=${period.periodId}`);
+                const response = await authenticatedFetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrado)}&subject=${encodeURIComponent(currentMateria)}&academic_period_id=${period.periodId}&school_id=${period.schoolId}`);
                 const result = await response.json();
                 
                 console.log('📥 Respuesta del historial:', result);
