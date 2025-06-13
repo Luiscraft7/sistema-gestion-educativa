@@ -1927,7 +1927,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                                 academic_period_id, teacher_id, school_id, assignment_id, student_id,
                                 points_earned, grade, percentage, is_submitted, is_late,
                                 notes, feedback, updated_at
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                         `;
 
                         const percentage = row.max_points && row.max_points > 0
