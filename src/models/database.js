@@ -1078,8 +1078,9 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
 
                 subjects.forEach((subject) => {
                     db.run(
-                        `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, school_id, grade_name, subject_name, teacher_name, is_active)`
-                        VALUES (?, ?, ?, ?, ?, ?, 1)`,
+                        `INSERT OR REPLACE INTO grade_subjects (
+                            academic_period_id, teacher_id, school_id, grade_name, subject_name, teacher_name, is_active
+                        ) VALUES (?, ?, ?, ?, ?, ?, 1)`,
                         [academicPeriodId || 1, teacherId, schoolId, gradeName, subject, teacherName || null],
 
                         function(err) {
@@ -1142,8 +1143,9 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 grades.forEach((gradeName) => {
                     subjects.forEach((subject) => {
                         db.run(
-                            `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, school_id, grade_name, subject_name, teacher_name, is_active)`
-                            VALUES (?, ?, ?, ?, ?, ?, 1)`,
+                            `INSERT OR REPLACE INTO grade_subjects (
+                                academic_period_id, teacher_id, school_id, grade_name, subject_name, teacher_name, is_active
+                            ) VALUES (?, ?, ?, ?, ?, ?, 1)`,
                             [academicPeriodId || 1, teacherId, schoolId, gradeName, subject, teacherName || null],
 
                             function(err) {
