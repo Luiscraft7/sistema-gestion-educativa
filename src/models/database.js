@@ -2504,15 +2504,15 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
 
     // Guardar escala máxima para grado/materia
     // Guardar escala máxima para grado/materia con separación por profesor y período
-    saveGradeScale(gradeLevel, subjectArea, maxScale, teacherId, academicPeriodId = 1) {
+    saveGradeScale(gradeLevel, subjectArea, maxScale, teacherId, schoolId, academicPeriodId = 1) {
         return new Promise((resolve, reject) => {
             const query = `
                 INSERT OR REPLACE INTO grade_scale_config
-                (academic_period_id, teacher_id, grade_level, subject_area, max_scale, updated_at)
-                VALUES (?, ?, ?, ?, ?, datetime('now'))
+                (academic_period_id, teacher_id, school_id, grade_level, subject_area, max_scale, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
             `;
 
-            this.db.run(query, [academicPeriodId, teacherId, gradeLevel, subjectArea, maxScale], function(err) {
+            this.db.run(query, [academicPeriodId, teacherId, schoolId, gradeLevel, subjectArea, maxScale], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -2523,15 +2523,15 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     }
 
     // Obtener escala máxima considerando profesor y período
-    getGradeScale(gradeLevel, subjectArea, teacherId, academicPeriodId = 1) {
+    getGradeScale(gradeLevel, subjectArea, teacherId, schoolId, academicPeriodId = 1) {
         return new Promise((resolve, reject) => {
             const query = `
                 SELECT max_scale
                 FROM grade_scale_config
-                WHERE academic_period_id = ? AND teacher_id = ? AND grade_level = ? AND subject_area = ?
+                WHERE academic_period_id = ? AND teacher_id = ? AND school_id = ? AND grade_level = ? AND subject_area = ?
             `;
 
-            this.db.get(query, [academicPeriodId, teacherId, gradeLevel, subjectArea], (err, row) => {
+            this.db.get(query, [academicPeriodId, teacherId, schoolId, gradeLevel, subjectArea], (err, row) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -2623,6 +2623,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                             grade,
                             subject || 'general',
                             teacherId,
+                            schoolId,
                             academicPeriodId || 1
                         );
                         const notaAsistencia = (nota0_10 / 10) * maxScale;

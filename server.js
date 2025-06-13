@@ -1273,7 +1273,13 @@ app.put('/api/grade-scale', authenticateTeacher, async (req, res) => {
             });
         }
         
-        await database.saveGradeScale(grade, subject, maxScale, req.teacher.id);
+        await database.saveGradeScale(
+            grade,
+            subject,
+            maxScale,
+            req.teacher.id,
+            req.teacher.school_id
+        );
         
         res.json({
             success: true,
@@ -1301,7 +1307,12 @@ app.get('/api/grade-scale', authenticateTeacher, async (req, res) => {
             });
         }
         
-        const maxScale = await database.getGradeScale(grade, subject, req.teacher.id);
+        const maxScale = await database.getGradeScale(
+            grade,
+            subject,
+            req.teacher.id,
+            req.teacher.school_id
+        );
         
         res.json({
             success: true,
