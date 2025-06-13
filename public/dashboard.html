@@ -394,6 +394,26 @@
             box-shadow: 0 6px 20px rgba(107, 114, 128, 0.3);
         }
 
+        .add-school-btn {
+            margin-top: 4px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .add-school-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+
         .apply-period-btn:hover, .cancel-period-btn:hover {
             transform: translateY(-2px) scale(1.02);
         }
@@ -912,9 +932,8 @@
                                 <label><i class="fas fa-school"></i> Escuela</label>
                                 <select id="schoolSelector" class="period-select">
                                     <option value="1">Mi Escuela Principal</option>
-                                    <option value="2" disabled>+ Agregar Segunda Escuela</option>
-                                    <option value="3" disabled>+ Agregar Tercera Escuela</option>
                                 </select>
+                                <button id="addSchoolBtn" class="add-school-btn"><i class="fas fa-plus"></i> Agregar Escuela</button>
                             </div>
 
                             <div class="period-field">
@@ -1016,25 +1035,6 @@
                         </div>
                     </div>
 
-                    <div class="info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-school"></i>
-                        </div>
-                        <div class="info-content">
-                            <span class="info-label">Escuela 2</span>
-                            <span class="info-value" id="teacherSchool2">-</span>
-                        </div>
-                    </div>
-
-                    <div class="info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-school"></i>
-                        </div>
-                        <div class="info-content">
-                            <span class="info-label">Escuela 3</span>
-                            <span class="info-value" id="teacherSchool3">-</span>
-                        </div>
-                    </div>
 
                     <div class="info-card">
                         <div class="info-icon">
@@ -1061,14 +1061,6 @@
                         <div class="edit-field">
                             <label><i class="fas fa-school"></i> Nombre de la Escuela:</label>
                             <input type="text" id="quickEditSchool" class="quick-edit-input" placeholder="Ingresa el nombre de tu escuela">
-                        </div>
-                        <div class="edit-field">
-                            <label><i class="fas fa-school"></i> Escuela 2 (opcional):</label>
-                            <input type="text" id="quickEditSchool2" class="quick-edit-input" placeholder="Segunda escuela opcional">
-                        </div>
-                        <div class="edit-field">
-                            <label><i class="fas fa-school"></i> Escuela 3 (opcional):</label>
-                            <input type="text" id="quickEditSchool3" class="quick-edit-input" placeholder="Tercera escuela opcional">
                         </div>
                     </div>
                     <div class="edit-actions">
@@ -1318,8 +1310,6 @@
                                 name: result.data.full_name,
                                 email: result.data.email,
                                 school: result.data.school_name,
-                                school2: '',
-                                school3: '',
                                 cedula: result.data.cedula
                             });
                             sessionStorage.setItem('teacherData', teacherData);
@@ -1436,13 +1426,8 @@
             
             // NUEVO: Actualizar selector de escuelas con la escuela del profesor
             const schoolSelector = document.getElementById('schoolSelector');
-            if (schoolSelector) {
-                const schoolName = teacher.school || teacher.school_name || 'Mi Escuela';
-                schoolSelector.innerHTML = `
-                    <option value="teacher_school" selected>${schoolName}</option>
-                    <option value="add_2" disabled>+ Agregar Segunda Escuela</option>
-                    <option value="add_3" disabled>+ Agregar Tercera Escuela</option>
-                `;
+            if (schoolSelector && window.globalPeriodSelector) {
+                window.globalPeriodSelector.refreshSchools();
             }
             
             // Información en las tarjetas (código existente...)
@@ -1450,14 +1435,10 @@
             document.getElementById('teacherEmail').textContent = teacher.email || 'No especificado';
             document.getElementById('teacherType').textContent = teacher.teacher_type || 'No especificado';
             document.getElementById('teacherRegional').textContent = teacher.regional || 'No especificado';
-            document.getElementById('teacherSchool2').textContent = teacher.school2 || '-';
-            document.getElementById('teacherSchool3').textContent = teacher.school3 || '-';
 
             // Llenar campos de edición
             document.getElementById('quickEditName').value = teacher.name || '';
             document.getElementById('quickEditSchool').value = teacher.school || teacher.school_name || '';
-            document.getElementById('quickEditSchool2').value = teacher.school2 || '';
-            document.getElementById('quickEditSchool3').value = teacher.school3 || '';
             
             // Actualizar período actual
             updateCurrentPeriodDisplay();
@@ -1501,9 +1482,7 @@
         
         const updatedData = {
             name: document.getElementById('quickEditName').value.trim(),
-            school_name: document.getElementById('quickEditSchool').value.trim(),
-            school2: document.getElementById('quickEditSchool2').value.trim(),
-            school3: document.getElementById('quickEditSchool3').value.trim()
+            school_name: document.getElementById('quickEditSchool').value.trim()
         };
         
         if (!updatedData.name || !updatedData.school_name) {
@@ -1523,8 +1502,6 @@
             if (result.success) {
                 teacherData.name = updatedData.name;
                 teacherData.school = updatedData.school_name;
-                teacherData.school2 = updatedData.school2;
-                teacherData.school3 = updatedData.school3;
                 sessionStorage.setItem('teacherData', JSON.stringify(teacherData));
                 localStorage.setItem('teacherInfo', JSON.stringify(teacherData));
                 
