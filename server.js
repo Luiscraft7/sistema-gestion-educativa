@@ -3253,7 +3253,6 @@ app.get('/api/cotidiano/history', authenticateTeacher, async (req, res) => {
 
 // ========================================
 // MÓDULO SEA - Sistema de Evaluación Académica
-// AGREGAR ESTE CÓDIGO AL FINAL DE server.js (ANTES DE startServer())
 // ========================================
 
 // Guardar configuración de pesos SEA
