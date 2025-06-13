@@ -1038,8 +1038,8 @@
                 tableHTML += `<td class="attendance-column ${attendanceClass}" data-tooltip="Asistencia: ${student.attendance.attendance_percentage || 'N/A'}%">${attendanceGrade}</td>`;
                 
                 // Nota de cotidiano mejorada con colores dinámicos
-                const cotidianoClass = student.cotidiano.total_grade !== 'Sin datos' ? 
-                    getDynamicGradeClass(parseFloat(student.cotidiano.total_grade), 65) : 'grade-missing';
+                const cotidianoClass = student.cotidiano.total_grade !== 'Sin datos' ?
+                    getDynamicGradeClass(parseFloat(student.cotidiano.total_grade), weightConfig.cotidiano_weight || 65) : 'grade-missing';
                 tableHTML += `<td class="cotidiano-column ${cotidianoClass}" data-tooltip="Cotidiano total">${student.cotidiano.total_grade}</td>`;
                 
                 // Calificaciones de evaluaciones con colores dinámicos

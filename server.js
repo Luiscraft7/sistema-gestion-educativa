@@ -3444,6 +3444,14 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
 
         database.ensureConnection();
 
+        // Obtener configuración de pesos antes de procesar
+        const weightConfig = await database.getSEAWeightConfig(
+            academicPeriodId,
+            req.teacher.id,
+            req.teacher.school_id
+        );
+        const cotidianoWeight = weightConfig.cotidiano_weight || 65;
+
         // 1. Obtener todas las evaluaciones activas del grado/materia
         const evaluations = await new Promise((resolve, reject) => {
             const evaluationsQuery = `
@@ -3569,7 +3577,7 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                             
                             let sumaPromedios = 0;
                             let totalFechas = 0;
-                            const porcentajeTotal = 65; // Valor por defecto, podrías hacerlo configurable
+                            const porcentajeTotal = cotidianoWeight; // usar peso configurado
                             
                             // Calcular promedio de todas las fechas (igual que en el frontend)
                             rows.forEach(row => {
@@ -3633,7 +3641,7 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
                                 // Para simplificar, tomar solo la evaluación más reciente de la otra materia
                                 if (materiaConMasDatos.total_scores > 0) {
                                     const porcentaje = (materiaConMasDatos.suma_scores / (materiaConMasDatos.total_scores * 3)) * 100;
-                                    const cotidianoTotal = Math.round((porcentaje * 65) / 100);
+                                    const cotidianoTotal = Math.round((porcentaje * cotidianoWeight) / 100);
                                     resolve({ cotidiano_total: cotidianoTotal, evaluation_date: materiaConMasDatos.evaluation_date });
                                 } else {
                                     resolve(null);
@@ -3702,7 +3710,7 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
         }
 
         // 4. Obtener configuración de pesos (valores que suman hacia 100)
-        const weightConfig = await database.getSEAWeightConfig(academicPeriodId, req.teacher.id, req.teacher.school_id);
+        // (ya se obtuvo al inicio de la función)
 
         console.log(`✅ SEA procesado: ${studentsWithSEA.length} estudiantes completados`);
 
