@@ -35,10 +35,17 @@ async function authenticateTeacher(req, res, next) {
 
         // Verificar sesión en base de datos
         const query = `
-            SELECT s.teacher_id, t.full_name, t.email, t.school_name, t.is_active
+            SELECT
+                s.teacher_id,
+                s.school_id,
+                t.full_name,
+                t.email,
+                t.is_active,
+                sc.name AS school_name
             FROM active_sessions s
             INNER JOIN teachers t ON s.teacher_id = t.id
-            WHERE s.session_token = ? 
+            LEFT JOIN schools sc ON s.school_id = sc.id
+            WHERE s.session_token = ?
                 AND datetime(s.last_activity) > datetime('now', '-24 hours')
                 AND t.is_active = 1
         `;
@@ -59,8 +66,10 @@ async function authenticateTeacher(req, res, next) {
                 id: session.teacher_id,
                 name: session.full_name,
                 email: session.email,
+                school_id: session.school_id,
                 school: session.school_name
             };
+            req.sessionToken = sessionToken;
 
             next();
         });
@@ -232,7 +241,7 @@ app.get('/api/students', authenticateTeacher, async (req, res) => {
         }
         
         // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
-        const students = await database.getAllStudents(academicPeriodId, teacherId);
+        const students = await database.getAllStudents(academicPeriodId, teacherId, req.teacher.school_id);
         
         console.log(`✅ Estudiantes del profesor ${req.teacher.name}: ${students.length}`);
         
@@ -358,7 +367,10 @@ app.post('/api/students', authenticateTeacher, async (req, res) => {
             grade_level: req.body.grade_level
         });
         
-        // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
+        if (!req.body.school_id) {
+            req.body.school_id = req.teacher.school_id;
+        }
+
         const result = await database.addStudent(req.body, teacherId);
         
         res.json({
@@ -406,7 +418,12 @@ app.put('/api/students/:id', authenticateTeacher, async (req, res) => {
         });
         
         // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
-        const result = await database.updateStudent(req.params.id, req.body, teacherId);
+        const result = await database.updateStudent(
+            req.params.id,
+            req.body,
+            teacherId,
+            req.teacher.school_id
+        );
         
         if (result.changes === 0) {
             return res.status(404).json({
@@ -448,7 +465,11 @@ app.delete('/api/students/:id', authenticateTeacher, async (req, res) => {
         });
         
         // ✅ CAMBIO PRINCIPAL: Pasar teacherId a la función
-        const result = await database.deleteStudent(req.params.id, teacherId);
+        const result = await database.deleteStudent(
+            req.params.id,
+            teacherId,
+            req.teacher.school_id
+        );
         
         if (result.changes === 0) {
             return res.status(404).json({
@@ -4211,6 +4232,48 @@ app.get('/api/teachers/current', authenticateTeacher, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error obteniendo datos del profesor',
+            error: error.message
+        });
+    }
+});
+
+// Cambiar escuela activa de la sesión
+app.put('/api/session/school', authenticateTeacher, async (req, res) => {
+    try {
+        const { school_id } = req.body;
+
+        if (!school_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'school_id requerido'
+            });
+        }
+
+        const schools = await database.getTeacherSchools(req.teacher.id);
+        const target = schools.find(s => s.school_id === parseInt(school_id));
+
+        if (!target) {
+            return res.status(403).json({
+                success: false,
+                message: 'Escuela no asignada a este profesor'
+            });
+        }
+
+        await database.updateSessionSchool(req.sessionToken, parseInt(school_id));
+
+        req.teacher.school_id = parseInt(school_id);
+        req.teacher.school = target.school_name;
+
+        res.json({
+            success: true,
+            message: 'Escuela activa actualizada',
+            school: { id: req.teacher.school_id, name: req.teacher.school }
+        });
+    } catch (error) {
+        console.error('Error cambiando escuela activa:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error cambiando escuela activa',
             error: error.message
         });
     }
