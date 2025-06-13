@@ -2731,10 +2731,12 @@ console.log('📚 Event listeners de período académico configurados en student
                 return;
             }
             
+            const current = getCurrentAcademicPeriod();
             const defaultOptions = {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-School-Id': current && current.schoolId ? current.schoolId : ''
                 }
             };
             
