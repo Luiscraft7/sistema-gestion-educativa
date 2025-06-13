@@ -566,7 +566,7 @@
                     </div>
                     <div class="period-text">
                         <span class="period-label">Período Académico Activo:</span>
-                        <span class="period-info" id="activePeriodDisplay">Luis Alfonso Carrera Marín - 2025 - Primer Semestre - San Marcos</span>
+                        <span class="period-info" id="activePeriodDisplay">Cargando...</span>
                     </div>
                     <div class="period-badge">
                         <i class="fas fa-circle pulse"></i>
@@ -823,7 +823,9 @@
 
         async function loadSubjects() {
             try {
-                const response = await authenticatedFetch('/api/custom-subjects');
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/custom-subjects?school_id=${period.schoolId}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
+                const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -841,7 +843,9 @@
 
         async function loadGrades() {
             try {
-                const response = await authenticatedFetch('/api/grades');
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/grades?school_id=${period.schoolId}`;
+                const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -859,7 +863,9 @@
 
         async function loadGradeAssignments() {
             try {
-                const response = await authenticatedFetch('/api/grade-subjects');
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/grade-subjects?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
+                const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1123,7 +1129,9 @@
 
                 console.log('📤 Enviando asignación:', { gradeName, subjects: selectedSubjects });
 
-                const response = await authenticatedFetch('/api/grade-subjects/assign', {
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/grade-subjects/assign?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
+                const response = await authenticatedFetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1231,7 +1239,9 @@
 
                 console.log('📤 Enviando asignación masiva:', { grades: selectedGrades, subjects: selectedSubjects });
 
-                const response = await authenticatedFetch('/api/grade-subjects/assign-multiple', {
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/grade-subjects/assign-multiple?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
+                const response = await authenticatedFetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1275,7 +1285,9 @@
             }
             
             try {
-                const response = await authenticatedFetch(`/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}`, {
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
+                const response = await authenticatedFetch(url, {
                     method: 'DELETE'
                 });
                 
