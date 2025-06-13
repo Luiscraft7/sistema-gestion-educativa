@@ -354,6 +354,17 @@ async applyPeriodChange() {
         // Mostrar estado de carga
         this.setLoadingState(true);
 
+        // Actualizar escuela activa en el servidor
+        try {
+            await authenticatedFetch('/api/session/school', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ school_id: parseInt(newPeriod.schoolId) })
+            });
+        } catch (schoolErr) {
+            console.error('⚠️ Error actualizando escuela activa:', schoolErr);
+        }
+
         // Obtener período actual para comparación
         const currentPeriod = this.currentPeriod || this.loadCurrentPeriod();
         

@@ -966,7 +966,13 @@ app.get('/api/grades', authenticateTeacher, async (req, res) => {
 // Agregar nuevo grado
 app.post('/api/grades', authenticateTeacher, async (req, res) => {
     try {
-        const result = await database.addGrade({ ...req.body, teacher_id: req.teacher.id });
+        const gradePayload = {
+            ...req.body,
+            teacher_id: req.teacher.id,
+            school_id: req.teacher.school_id
+        };
+
+        const result = await database.addGrade(gradePayload);
         res.json({
             success: true,
             data: result,
