@@ -69,6 +69,15 @@ async function authenticateTeacher(req, res, next) {
                 school_id: session.school_id,
                 school: session.school_name
             };
+
+            // Permitir enviar school_id desde el cliente para endpoints de estudiantes
+            if (req.path.startsWith('/api/students')) {
+                const headerSchoolId = req.headers['x-school-id'];
+                if (headerSchoolId) {
+                    req.teacher.school_id = parseInt(headerSchoolId);
+                }
+            }
+
             req.sessionToken = sessionToken;
 
             next();

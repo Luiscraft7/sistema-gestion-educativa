@@ -379,22 +379,23 @@ getBasicMultiSchoolSchema() {
             `;
             const params = [];
 
-            if (academicPeriodId) {
-                query += ' AND s.academic_period_id = ?';
-                params.push(academicPeriodId);
-            }
-            if (teacherId) {
+            if (teacherId !== null) {
                 query += ' AND s.teacher_id = ?';
                 params.push(teacherId);
             }
-            if (schoolId) {
+
+            if (schoolId !== null) {
                 query += ' AND s.school_id = ?';
                 params.push(schoolId);
             }
 
+            if (academicPeriodId !== null) {
+                query += ' AND s.academic_period_id = ?';
+                params.push(academicPeriodId);
+            }
+
             query += ' ORDER BY s.academic_period_id DESC, s.first_surname, s.first_name';
-            
-            
+
             this.db.all(query, params, (err, rows) => {
                 if (err) {
                     console.error('❌ Error en getAllStudents:', err);
