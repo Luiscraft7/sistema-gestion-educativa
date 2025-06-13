@@ -859,7 +859,9 @@
         // Cargar combinaciones de grado-materia disponibles
         async function loadGradeSubjects() {
             try {
-                const response = await authenticatedFetch('/api/sea/grade-subjects');
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/sea/grade-subjects?academic_period_id=${period.periodId}`;
+                const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
@@ -893,6 +895,8 @@
             }
         }
 
+        window.loadGradeSubjects = loadGradeSubjects;
+
         // Cargar datos SEA
         async function loadSEAData() {
             const grade = document.getElementById('gradeSelect').value;
@@ -909,7 +913,9 @@
             showLoading();
 
             try {
-                const response = await authenticatedFetch(`/api/sea/consolidated?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}`);
+                const period = getCurrentAcademicPeriod();
+                const url = `/api/sea/consolidated?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}&academic_period_id=${period.periodId}`;
+                const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -923,6 +929,8 @@
                 showError('Error de conexión al cargar datos SEA');
             }
         }
+
+        window.loadSEAData = loadSEAData;
 
         // Función para limpiar todas las animaciones activas
         function clearAllAnimations() {
@@ -1313,6 +1321,10 @@
             }
 
             reloadPageData() {
+                if (typeof window.loadGradeSubjects === 'function') {
+                    console.log('🔄 Recargando listas de grados y materias...');
+                    window.loadGradeSubjects();
+                }
                 if (typeof window.loadSEAData === 'function') {
                     console.log('🔄 Recargando datos SEA...');
                     window.loadSEAData();
