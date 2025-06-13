@@ -754,10 +754,11 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
-            const query = 'INSERT INTO grades (teacher_id, name, description, priority) VALUES (?, ?, ?, ?)';
+            const query = 'INSERT INTO grades (teacher_id, school_id, name, description, priority) VALUES (?, ?, ?, ?, ?)';
 
             this.db.run(query, [
                 gradeData.teacher_id,
+                gradeData.school_id,
                 gradeData.name,
                 gradeData.description || null,
                 gradeData.priority || 0
