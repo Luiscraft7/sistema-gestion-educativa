@@ -1394,15 +1394,28 @@
             document.getElementById('teacherProfileName').textContent = teacher.name || 'Sin nombre';
             document.getElementById('teacherProfileSchool').textContent = teacher.school || teacher.school_name || 'Sin escuela';
             
-            // NUEVO: Actualizar selector de escuelas con la escuela del profesor
+            // Actualizar selector de escuelas con las escuelas del profesor
             const schoolSelector = document.getElementById('schoolSelector');
             if (schoolSelector) {
-                const schoolName = teacher.school || teacher.school_name || 'Mi Escuela';
-                schoolSelector.innerHTML = `
-                    <option value="teacher_school" selected>${schoolName}</option>
-                    <option value="add_2" disabled>+ Agregar Segunda Escuela</option>
-                    <option value="add_3" disabled>+ Agregar Tercera Escuela</option>
-                `;
+                schoolSelector.innerHTML = '';
+
+                if (teacher.schools && Array.isArray(teacher.schools) && teacher.schools.length > 0) {
+                    teacher.schools.forEach((s, idx) => {
+                        const option = document.createElement('option');
+                        option.value = s.school_id;
+                        option.textContent = s.school_name;
+                        if (s.is_primary_school === 1 || idx === 0) {
+                            option.selected = true;
+                        }
+                        schoolSelector.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = 'teacher_school';
+                    option.textContent = teacher.school || teacher.school_name || 'Mi Escuela';
+                    option.selected = true;
+                    schoolSelector.appendChild(option);
+                }
             }
             
             // Información en las tarjetas (código existente...)
