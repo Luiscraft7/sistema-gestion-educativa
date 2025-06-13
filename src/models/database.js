@@ -2206,7 +2206,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     }
 
     // Obtener indicadores por grado y materia
-    async getIndicatorsByGradeAndSubject(grade, subject, academicPeriodId = 1, teacherId) {
+    async getIndicatorsByGradeAndSubject(grade, subject, academicPeriodId = 1, teacherId, schoolId) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
@@ -2218,6 +2218,10 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
             if (teacherId) {
                 query += ' AND teacher_id = ?';
                 params.push(teacherId);
+            }
+            if (schoolId) {
+                query += ' AND school_id = ?';
+                params.push(schoolId);
             }
             query += ' AND is_active = 1 ORDER BY parent_indicator_id IS NULL DESC, parent_indicator_id ASC, id ASC';
 
@@ -2237,14 +2241,14 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { academic_period_id = 1, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id } = indicatorData;
+            const { academic_period_id = 1, teacher_id, school_id, grade_level, subject_area, indicator_name, parent_indicator_id } = indicatorData;
 
             const query = `
-                INSERT INTO daily_indicators (academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO daily_indicators (academic_period_id, teacher_id, school_id, grade_level, subject_area, indicator_name, parent_indicator_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
 
-            this.db.run(query, [academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id || null], function(err) {
+            this.db.run(query, [academic_period_id, teacher_id, school_id, grade_level, subject_area, indicator_name, parent_indicator_id || null], function(err) {
                 if (err) {
                     console.error('Error creating indicator:', err);
                     reject(err);
@@ -2260,7 +2264,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { academic_period_id = 1, teacher_id, grade_level, subject_area, indicators } = bulkData;
+            const { academic_period_id = 1, teacher_id, school_id, grade_level, subject_area, indicators } = bulkData;
             
             if (!indicators || !Array.isArray(indicators)) {
                 reject(new Error('Indicadores debe ser un array'));
@@ -2301,11 +2305,11 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 }
                 
                 const query = `
-                    INSERT INTO daily_indicators (academic_period_id, teacher_id, grade_level, subject_area, indicator_name, parent_indicator_id)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO daily_indicators (academic_period_id, teacher_id, school_id, grade_level, subject_area, indicator_name, parent_indicator_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 `;
 
-                this.db.run(query, [academic_period_id, teacher_id, grade_level, subject_area, indicator_name.trim(), parent_indicator_id || null], function(err) {
+                this.db.run(query, [academic_period_id, teacher_id, school_id, grade_level, subject_area, indicator_name.trim(), parent_indicator_id || null], function(err) {
                     if (err) {
                         results.push({
                             indicator_name: indicator_name,
@@ -2349,18 +2353,27 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     }
 
     // Obtener evaluación por fecha
-    async getEvaluationByDate(grade, subject, date) {
+    async getEvaluationByDate(grade, subject, date, teacherId, schoolId) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const query = `
+            let query = `
                 SELECT de.*, dis.daily_indicator_id AS indicator_id, dis.score, dis.notes as score_notes
                 FROM daily_evaluations de
                 LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
                 WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
             `;
-            
-            this.db.all(query, [grade, subject, date], (err, rows) => {
+            const params = [grade, subject, date];
+            if (teacherId) {
+                query += ' AND de.teacher_id = ?';
+                params.push(teacherId);
+            }
+            if (schoolId) {
+                query += ' AND de.school_id = ?';
+                params.push(schoolId);
+            }
+
+            this.db.all(query, params, (err, rows) => {
                 if (err) {
                     console.error('Error fetching evaluation:', err);
                     reject(err);
@@ -2372,7 +2385,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     }
 
     // Obtener historial de evaluaciones CORREGIDO
-    async getCotidianoHistory(grade, subject, academicPeriodId = 1, teacherId) {
+    async getCotidianoHistory(grade, subject, academicPeriodId = 1, teacherId, schoolId) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
@@ -2398,6 +2411,10 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
             if (teacherId) {
                 query += ' AND de.teacher_id = ?';
                 params.push(teacherId);
+            }
+            if (schoolId) {
+                query += ' AND de.school_id = ?';
+                params.push(schoolId);
             }
             query += ' ORDER BY de.evaluation_date DESC, s.first_surname, di.indicator_name';
 
