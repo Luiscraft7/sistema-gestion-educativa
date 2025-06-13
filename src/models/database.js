@@ -297,31 +297,43 @@ getBasicMultiSchoolSchema() {
                 await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher ON custom_subjects(teacher_id)');
             }
 
+            if (!subjectInfo.some(r => r.name === 'school_id')) {
+                await run('ALTER TABLE custom_subjects ADD COLUMN school_id INTEGER DEFAULT 1');
+                await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_school ON custom_subjects(school_id)');
+            }
+
             const subjectIndexes = await new Promise((resolve, reject) => {
                 this.db.all('PRAGMA index_list(custom_subjects);', (err, rows) => err ? reject(err) : resolve(rows));
             });
+            const hasTeacherSchoolNameIndex = subjectIndexes.some(i => i.name === 'idx_custom_subjects_teacher_school_name' && i.unique);
             const hasTeacherNameIndex = subjectIndexes.some(i => i.name === 'idx_custom_subjects_teacher_name' && i.unique);
             const hasNameOnlyUnique = subjectIndexes.some(i => i.name === 'sqlite_autoindex_custom_subjects_1');
 
-            if (hasNameOnlyUnique && !hasTeacherNameIndex) {
+            if (hasNameOnlyUnique && !hasTeacherSchoolNameIndex) {
                 await run('ALTER TABLE custom_subjects RENAME TO tmp_custom_subjects');
                 await run(`CREATE TABLE custom_subjects (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     teacher_id INTEGER DEFAULT 0,
+                    school_id INTEGER DEFAULT 1,
                     name TEXT NOT NULL,
                     description TEXT,
                     usage INTEGER DEFAULT 0,
                     priority INTEGER DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-                    UNIQUE(teacher_id, name)
+                    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+                    UNIQUE(teacher_id, school_id, name)
                 )`);
-                await run(`INSERT INTO custom_subjects (id, teacher_id, name, description, usage, priority, created_at)
-                            SELECT id, teacher_id, name, description, usage, priority, created_at FROM tmp_custom_subjects`);
+                await run(`INSERT INTO custom_subjects (id, teacher_id, school_id, name, description, usage, priority, created_at)
+                            SELECT id, teacher_id, 1, name, description, usage, priority, created_at FROM tmp_custom_subjects`);
                 await run('DROP TABLE tmp_custom_subjects');
                 await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher ON custom_subjects(teacher_id)');
-            } else if (!hasTeacherNameIndex) {
-                await run('CREATE UNIQUE INDEX IF NOT EXISTS idx_custom_subjects_teacher_name ON custom_subjects(teacher_id, name)');
+                await run('CREATE INDEX IF NOT EXISTS idx_custom_subjects_school ON custom_subjects(school_id)');
+            } else if (!hasTeacherSchoolNameIndex) {
+                if (hasTeacherNameIndex) {
+                    await run('DROP INDEX IF EXISTS idx_custom_subjects_teacher_name');
+                }
+                await run('CREATE UNIQUE INDEX IF NOT EXISTS idx_custom_subjects_teacher_school_name ON custom_subjects(teacher_id, school_id, name)');
             }
 
             // Ensure daily_indicators table has academic_period_id, teacher_id and parent_indicator_id
