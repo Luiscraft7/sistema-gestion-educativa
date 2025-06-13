@@ -612,6 +612,356 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ========================================
+        ESTILOS PARA ADMIN MULTI-ESCUELA
+        ======================================== */
+
+        /* Badges para escuelas */
+        .school-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 1px;
+            white-space: nowrap;
+        }
+
+        .school-badge.primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: 1px solid #4CAF50;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+
+        .school-badge.secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Celda de escuelas */
+        .schools-cell {
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+
+        /* Badges de estado */
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-badge.inactive {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .payment-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .payment-badge.paid {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .payment-badge.unpaid {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .regional-badge {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* Información del profesor */
+        .teacher-info strong {
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .teacher-info small {
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons .btn {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+
+        /* Email link */
+        .email-link {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .email-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Last login */
+        .last-login {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+
+        /* Modal de detalles del profesor */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .teacher-details-modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .teacher-details-content {
+            padding: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .detail-section h4 {
+            color: #495057;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .detail-item strong {
+            color: #495057;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* Lista de escuelas en detalles */
+        .schools-detail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .school-detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .school-detail-item.primary {
+            background: linear-gradient(45deg, rgba(76, 175, 80, 0.1), rgba(69, 160, 73, 0.1));
+            border-left-color: #4CAF50;
+        }
+
+        .school-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-label {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .school-address, .school-phone, .school-code {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+
+        /* Grid de estado */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .status-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #17a2b8;
+        }
+
+        .status-item strong {
+            color: #495057;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Acciones del modal */
+        .modal-actions {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .modal-actions .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        /* Responsive para tabla */
+        @media (max-width: 1200px) {
+            .table th, .table td {
+                padding: 8px 4px;
+                font-size: 0.85rem;
+            }
+            
+            .schools-cell {
+                max-width: 150px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 2px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .teacher-details-modal {
+                width: 95%;
+                margin: 10px;
+            }
+            
+            .detail-grid, .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+            
+            .modal-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .table-responsive {
+                font-size: 0.8rem;
+            }
+        }
+
+
+        
     </style>
 </head>
 <body>
@@ -823,6 +1173,7 @@
 
     <script>
         // Variables globales
+        let currentTeachersList = [];
         let currentDate = new Date();
         let teachers = [];
         let sessions = [];
@@ -876,26 +1227,43 @@
             headerActions.appendChild(adminInfo);
         }
 
-        // Inicializar panel administrativo
+        // Actualizar la función de inicialización del admin
         async function initializeAdmin() {
-            loadPaymentConfig(); // Cargar configuración de pagos
-            await loadTeachers();
-            await loadSessions();
-            updateStats();
-            updateCalendar();
-            loadActivityLog();
-            
-            // Renderizar lista de pagos si existe el contenedor
-            if (document.getElementById('teachers-payment-list')) {
-                renderTeachersPaymentList();
+            try {
+                console.log('🚀 Inicializando panel de administrador...');
+                
+                // Cargar estadísticas primero
+                await updateStats();
+                
+                // Luego cargar profesores
+                await loadTeachers();
+                
+                // Configurar actualización automática cada 30 segundos
+                setInterval(() => {
+                    updateStats();
+                }, 30000);
+                
+                console.log('✅ Panel de administrador inicializado correctamente');
+                
+            } catch (error) {
+                console.error('❌ Error inicializando admin:', error);
             }
-            
-            // Verificar si necesita reset automático
-            checkAutoResetNeeded();
-            
-            // REMOVED: Actualización automática cada 30 segundos
-            // Solo actualizar cuando se haga clic en "Actualizar Estado"
         }
+
+        // Actualizar la carga inicial para usar la nueva inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAdmin();
+            
+            // Mantener la inicialización existente también
+            if (typeof loadTeachers === 'function') {
+                loadTeachers();
+            }
+            if (typeof updateStats === 'function') {
+                updateStats();
+            }
+        });
+
+
 
         function checkAutoResetNeeded() {
             if (!paymentConfig.autoReset) return;
@@ -951,88 +1319,152 @@
         // GESTIÓN DE PROFESORES
         // ========================================
         async function loadTeachers() {
-            try {
-                const response = await fetch('/api/teachers');
-                const data = await response.json();
-                
-                if (data.success) {
-                    teachers = data.data;
-                    renderTeachersTable();
-                }
-            } catch (error) {
-                console.error('Error cargando profesores:', error);
-                addActivityLog('error', 'Error', 'Falló la carga de profesores');
+        try {
+            console.log('📋 Cargando profesores...');
+            
+            const response = await fetch('/api/teachers');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Error cargando profesores');
+            }
+            
+            const teachers = data.data || [];
+            console.log(`✅ ${teachers.length} profesores cargados`);
+            
+            renderTeachersTable(teachers);
+            
+        } catch (error) {
+            console.error('❌ Error cargando profesores:', error);
+            const container = document.getElementById('teachers-table-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>❌ Error cargando profesores</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadTeachers()">🔄 Reintentar</button>
+                    </div>
+                `;
             }
         }
+    }
 
-        function renderTeachersTable() {
-            const container = document.getElementById('teachers-table-container');
-            
-            const tableHTML = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Profesor</th>
-                                <th>Email</th>
-                                <th>Escuela</th>
-                                <th>Estado</th>
-                                <th>Pago</th>
-                                <th>Último Acceso</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${teachers.map(teacher => `
+    function renderTeachersTable(teachers) {
+        const container = document.getElementById('teachers-table-container');
+        
+        if (!container) {
+            console.error('❌ Contenedor de tabla no encontrado');
+            return;
+        }
+        
+        if (!teachers || teachers.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <h4>ℹ️ No hay profesores registrados</h4>
+                    <p>Los profesores aparecerán aquí cuando se registren en el sistema.</p>
+                </div>
+            `;
+            return;
+        }
+
+        currentTeachersList = teachers;
+        
+        const tableHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>👤 Profesor</th>
+                            <th>🏫 Escuelas</th>
+                            <th>📧 Email</th>
+                            <th>🆔 Cédula</th>
+                            <th>📍 Regional</th>
+                            <th>✅ Estado</th>
+                            <th>💰 Pago</th>
+                            <th>🕐 Último Login</th>
+                            <th>⚙️ Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${teachers.map(teacher => {
+                            // Formatear escuelas con badges
+                            const schoolsBadges = teacher.schools && teacher.schools.length > 0 
+                                ? teacher.schools.map(school => 
+                                    `<span class="school-badge ${school.is_primary_school ? 'primary' : 'secondary'}">
+                                        ${school.is_primary_school ? '🏆' : '🏫'} ${school.school_name}
+                                    </span>`
+                                ).join(' ')
+                                : '<span class="text-muted">Sin escuelas</span>';
+                            
+                            return `
                                 <tr>
                                     <td>
-                                        <strong>${teacher.full_name}</strong><br>
-                                        <small>ID: ${teacher.cedula}</small>
+                                        <div class="teacher-info">
+                                            <strong>${teacher.full_name}</strong>
+                                            ${teacher.teacher_type ? `<br><small class="text-muted">${teacher.teacher_type}</small>` : ''}
+                                            ${teacher.specialized_type ? `<br><small class="text-info">${teacher.specialized_type}</small>` : ''}
+                                        </div>
                                     </td>
-                                    <td>${teacher.email}</td>
-                                    <td>${teacher.school_name}</td>
                                     <td>
-                                        <span class="status-indicator ${teacher.is_active ? 'status-active' : 'status-inactive'}">
-                                            ${teacher.is_active ? '🟢 Activo' : '🔴 Inactivo'}
+                                        <div class="schools-cell">
+                                            ${schoolsBadges}
+                                            <br><small class="text-muted">${teacher.schools_count || 0} escuela(s)</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="mailto:${teacher.email}" class="email-link">${teacher.email}</a>
+                                    </td>
+                                    <td>
+                                        <code>${teacher.cedula}</code>
+                                    </td>
+                                    <td>
+                                        <span class="regional-badge">${teacher.regional || 'No especificada'}</span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge ${teacher.is_active ? 'active' : 'inactive'}">
+                                            ${teacher.is_active ? '✅ Activo' : '⏳ Pendiente'}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="status-indicator ${teacher.is_paid ? 'status-paid' : 'status-unpaid'}">
+                                        <span class="payment-badge ${teacher.is_paid ? 'paid' : 'unpaid'}">
                                             ${teacher.is_paid ? '💰 Pagado' : '⏳ Pendiente'}
                                         </span>
                                     </td>
                                     <td>
-                                        ${teacher.last_login ? new Date(teacher.last_login).toLocaleString() : 'Nunca'}
+                                        <small class="last-login">
+                                            ${teacher.last_login ? new Date(teacher.last_login).toLocaleString('es-ES') : 'Nunca'}
+                                        </small>
                                     </td>
                                     <td>
-                                        <div style="display: flex; gap: 0.5rem;">
+                                        <div class="action-buttons">
                                             <button class="btn btn-sm ${teacher.is_active ? 'btn-danger' : 'btn-success'}" 
-                                                    onclick="toggleTeacherStatus(${teacher.id}, '${teacher.is_active ? 'deactivate' : 'activate'}')">
+                                                    onclick="toggleTeacherStatus(${teacher.id}, '${teacher.is_active ? 'deactivate' : 'activate'}')"
+                                                    title="${teacher.is_active ? 'Desactivar' : 'Activar'} profesor">
                                                 ${teacher.is_active ? '❌' : '✅'}
                                             </button>
                                             <button class="btn btn-sm ${teacher.is_paid ? 'btn-warning' : 'btn-success'}" 
-                                                    onclick="togglePayment(${teacher.id}, ${!teacher.is_paid})">
+                                                    onclick="togglePayment(${teacher.id}, ${!teacher.is_paid})"
+                                                    title="Cambiar estado de pago">
                                                 💰
                                             </button>
-                                            <button class="btn btn-sm btn-info" onclick="viewTeacherDetails(${teacher.id})">
+                                            <button class="btn btn-sm btn-info" 
+                                                    onclick="viewTeacherDetails(${teacher.id})"
+                                                    title="Ver detalles del profesor">
                                                 👁️
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            container.innerHTML = tableHTML;
-            
-            // También actualizar la lista de pagos si existe
-            if (document.getElementById('teachers-payment-list')) {
-                renderTeachersPaymentList();
-            }
-        }
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = tableHTML;
+    }
+
 
         async function toggleTeacherStatus(teacherId, action) {
             try {
@@ -1076,29 +1508,163 @@
             }
         }
 
-        function viewTeacherDetails(teacherId) {
-            const teacher = teachers.find(t => t.id === teacherId);
-            if (teacher) {
-                alert(`
-                    📋 DETALLES DEL PROFESOR
-                    
-                    Nombre: ${teacher.full_name}
-                    Cédula: ${teacher.cedula}
-                    Email: ${teacher.email}
-                    Escuela: ${teacher.school_name}
-                    Tipo: ${teacher.teacher_type}
-                    Estado: ${teacher.is_active ? 'Activo' : 'Inactivo'}
-                    Pago: ${teacher.is_paid ? 'Al día' : 'Pendiente'}
-                    Registro: ${new Date(teacher.created_at).toLocaleString()}
-                    Último acceso: ${teacher.last_login ? new Date(teacher.last_login).toLocaleString() : 'Nunca'}
-                `);
+       function viewTeacherDetails(teacherId) {
+            // Encontrar el profesor en la lista actual
+            const teacher = currentTeachersList.find(t => t.id === teacherId);
+            
+            if (!teacher) {
+                alert('❌ Profesor no encontrado');
+                return;
+            }
+            
+            // Crear modal con detalles
+            const modalHTML = `
+                <div class="modal-overlay" onclick="closeTeacherDetails()">
+                    <div class="modal-content teacher-details-modal" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3>👤 Detalles del Profesor</h3>
+                            <button class="close-btn" onclick="closeTeacherDetails()">×</button>
+                        </div>
+                        
+                        <div class="teacher-details-content">
+                            <div class="detail-section">
+                                <h4>📋 Información Personal</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <strong>Nombre:</strong> ${teacher.full_name}
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Cédula:</strong> ${teacher.cedula}
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Email:</strong> ${teacher.email}
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Tipo:</strong> ${teacher.teacher_type || 'No especificado'}
+                                    </div>
+                                    ${teacher.specialized_type ? `
+                                    <div class="detail-item">
+                                        <strong>Especialización:</strong> ${teacher.specialized_type}
+                                    </div>
+                                    ` : ''}
+                                    <div class="detail-item">
+                                        <strong>Regional:</strong> ${teacher.regional || 'No especificada'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>🏫 Escuelas Asignadas (${teacher.schools_count || 0})</h4>
+                                <div class="schools-detail-list">
+                                    ${teacher.schools && teacher.schools.length > 0 
+                                        ? teacher.schools.map(school => `
+                                            <div class="school-detail-item ${school.is_primary_school ? 'primary' : ''}">
+                                                <div class="school-name">
+                                                    ${school.is_primary_school ? '🏆' : '🏫'} ${school.school_name}
+                                                    ${school.is_primary_school ? '<span class="primary-label">Principal</span>' : ''}
+                                                </div>
+                                                ${school.address ? `<div class="school-address">📍 ${school.address}</div>` : ''}
+                                                ${school.phone ? `<div class="school-phone">📞 ${school.phone}</div>` : ''}
+                                                ${school.school_code ? `<div class="school-code">🆔 Código: ${school.school_code}</div>` : ''}
+                                            </div>
+                                        `).join('')
+                                        : '<p class="text-muted">Sin escuelas asignadas</p>'
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>📊 Estado de la Cuenta</h4>
+                                <div class="status-grid">
+                                    <div class="status-item">
+                                        <strong>Estado:</strong> 
+                                        <span class="status-badge ${teacher.is_active ? 'active' : 'inactive'}">
+                                            ${teacher.is_active ? '✅ Activo' : '⏳ Pendiente de Activación'}
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <strong>Pago:</strong> 
+                                        <span class="payment-badge ${teacher.is_paid ? 'paid' : 'unpaid'}">
+                                            ${teacher.is_paid ? '💰 Al día' : '⏳ Pendiente de pago'}
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <strong>Registro:</strong> ${new Date(teacher.registration_date).toLocaleString('es-ES')}
+                                    </div>
+                                    ${teacher.activation_date ? `
+                                    <div class="status-item">
+                                        <strong>Activación:</strong> ${new Date(teacher.activation_date).toLocaleString('es-ES')}
+                                    </div>
+                                    ` : ''}
+                                    <div class="status-item">
+                                        <strong>Último Login:</strong> ${teacher.last_login ? new Date(teacher.last_login).toLocaleString('es-ES') : 'Nunca'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button class="btn ${teacher.is_active ? 'btn-danger' : 'btn-success'}" 
+                                    onclick="toggleTeacherStatus(${teacher.id}, '${teacher.is_active ? 'deactivate' : 'activate'}'); closeTeacherDetails();">
+                                ${teacher.is_active ? '❌ Desactivar' : '✅ Activar'}
+                            </button>
+                            <button class="btn ${teacher.is_paid ? 'btn-warning' : 'btn-success'}" 
+                                    onclick="togglePayment(${teacher.id}, ${!teacher.is_paid}); closeTeacherDetails();">
+                                💰 ${teacher.is_paid ? 'Marcar No Pagado' : 'Marcar Pagado'}
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeTeacherDetails()">
+                                ❌ Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar modal al DOM
+            const modalContainer = document.getElementById('modal-container') || createModalContainer();
+            modalContainer.innerHTML = modalHTML;
+            modalContainer.style.display = 'block';
+        }
+
+
+
+        function closeTeacherDetails() {
+            const modalContainer = document.getElementById('modal-container');
+            if (modalContainer) {
+                modalContainer.style.display = 'none';
+                modalContainer.innerHTML = '';
             }
         }
+
 
         async function refreshTeachers() {
             await loadTeachers();
             addActivityLog('refresh', 'Actualización', 'Lista de profesores actualizada');
         }
+
+
+
+
+        function createModalContainer() {
+            let container = document.getElementById('modal-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'modal-container';
+                container.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.8);
+                    z-index: 10000;
+                    display: none;
+                `;
+                document.body.appendChild(container);
+            }
+            return container;
+        }
+
 
         // ========================================
         // GESTIÓN DE PAGOS
@@ -1701,13 +2267,82 @@
         // ========================================
         // ESTADÍSTICAS
         // ========================================
-        function updateStats() {
-            document.getElementById('total-teachers').textContent = teachers.length;
-            document.getElementById('active-sessions').textContent = sessions.filter(s => s.status === 'active').length;
-            document.getElementById('paid-teachers').textContent = teachers.filter(t => t.is_paid).length;
-            document.getElementById('unpaid-teachers').textContent = teachers.filter(t => !t.is_paid).length;
+
+        async function updateStats() {
+            try {
+                console.log('📊 Actualizando estadísticas de admin...');
+                
+                // Obtener estadísticas del servidor
+                const response = await fetch('/api/admin/stats');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Error obteniendo estadísticas');
+                }
+                
+                const stats = data.data;
+                console.log('✅ Estadísticas recibidas:', stats);
+                
+                // Actualizar contadores en la interfaz
+                updateStatElement('total-teachers', stats.total_teachers || 0);
+                updateStatElement('active-sessions', stats.active_teachers || 0);
+                updateStatElement('paid-teachers', stats.paid_teachers || 0);
+                updateStatElement('unpaid-teachers', stats.unpaid_teachers || 0);
+                
+                // También actualizar estadísticas del dashboard si existen
+                updateStatElement('professorsCount', stats.total_teachers || 0);
+                updateStatElement('studentsCount', 0); // Por ahora 0, se puede implementar después
+                updateStatElement('schoolsCount', stats.total_schools || 0);
+                
+                console.log('✅ Estadísticas actualizadas en la interfaz');
+                
+            } catch (error) {
+                console.error('❌ Error actualizando estadísticas:', error);
+                
+                // Mostrar valores por defecto en caso de error
+                updateStatElement('total-teachers', 0);
+                updateStatElement('active-sessions', 0);
+                updateStatElement('paid-teachers', 0);
+                updateStatElement('unpaid-teachers', 0);
+                updateStatElement('professorsCount', 0);
+                updateStatElement('studentsCount', 0);
+                updateStatElement('schoolsCount', 0);
+            }
         }
 
+
+
+        function updateStatElement(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                // Animar el cambio de número
+                const currentValue = parseInt(element.textContent) || 0;
+                if (currentValue !== value) {
+                    animateNumber(element, currentValue, value);
+                }
+            }
+        }
+        function animateNumber(element, from, to) {
+            const duration = 1000; // 1 segundo
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Usar función de easing para animación suave
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const currentValue = Math.round(from + (to - from) * easeOutQuart);
+                
+                element.textContent = currentValue;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
         // ========================================
         // LOG DE ACTIVIDAD
         // ========================================

@@ -2546,26 +2546,138 @@ async getTeacherByCedula(cedula) {
 }
 
 
+// ========================================
+// FUNCIÓN ACTUALIZADA PARA MULTI-ESCUELA
+// ========================================
 
 async getAllTeachers() {
     this.ensureConnection();
     
     return new Promise((resolve, reject) => {
-        const query = `
+        // Consulta principal para obtener profesores
+        const teachersQuery = `
             SELECT 
-                id, full_name, cedula, school_name, email,
-                teacher_type, specialized_type, school_code,
-                circuit_code, regional, is_active, is_paid,
-                registration_date, activation_date, last_login
-            FROM teachers 
-            ORDER BY registration_date DESC
+                t.id, t.full_name, t.cedula, t.email,
+                t.teacher_type, t.specialized_type, t.regional,
+                t.is_active, t.is_paid,
+                t.registration_date, t.activation_date, t.last_login,
+                t.created_at, t.updated_at
+            FROM teachers t 
+            ORDER BY t.registration_date DESC
         `;
         
-        this.db.all(query, [], (err, rows) => {
+        this.db.all(teachersQuery, [], (err, teachers) => {
             if (err) {
+                console.error('❌ Error obteniendo profesores:', err);
+                reject(err);
+            } else if (!teachers || teachers.length === 0) {
+                console.log('ℹ️ No se encontraron profesores registrados');
+                resolve([]);
+            } else {
+                console.log(`✅ Encontrados ${teachers.length} profesores, obteniendo escuelas...`);
+                
+                // Para cada profesor, obtener sus escuelas
+                let processedTeachers = 0;
+                const teachersWithSchools = [];
+                
+                teachers.forEach((teacher, index) => {
+                    // Consulta para obtener escuelas del profesor
+                    const schoolsQuery = `
+                        SELECT 
+                            s.id as school_id,
+                            s.name as school_name,
+                            s.address,
+                            s.phone,
+                            s.school_code,
+                            ts.is_primary_school,
+                            ts.is_active as relation_active
+                        FROM teacher_schools ts
+                        JOIN schools s ON ts.school_id = s.id
+                        WHERE ts.teacher_id = ? AND ts.is_active = 1
+                        ORDER BY ts.is_primary_school DESC, s.name ASC
+                    `;
+                    
+                    this.db.all(schoolsQuery, [teacher.id], (err, schools) => {
+                        if (err) {
+                            console.error(`❌ Error obteniendo escuelas para profesor ${teacher.id}:`, err);
+                            // Incluir profesor sin escuelas si hay error
+                            teachersWithSchools[index] = {
+                                ...teacher,
+                                schools: [],
+                                primary_school: null,
+                                schools_count: 0,
+                                schools_names: 'Sin escuelas asignadas'
+                            };
+                        } else {
+                            // Procesar escuelas del profesor
+                            const primarySchool = schools.find(s => s.is_primary_school === 1);
+                            const schoolNames = schools.map(s => s.school_name).join(', ');
+                            
+                            teachersWithSchools[index] = {
+                                ...teacher,
+                                schools: schools || [],
+                                primary_school: primarySchool ? primarySchool.school_name : null,
+                                schools_count: schools ? schools.length : 0,
+                                schools_names: schoolNames || 'Sin escuelas asignadas'
+                            };
+                            
+                            console.log(`✅ Profesor ${teacher.full_name}: ${schools ? schools.length : 0} escuelas`);
+                        }
+                        
+                        processedTeachers++;
+                        
+                        // Cuando terminemos de procesar todos los profesores
+                        if (processedTeachers === teachers.length) {
+                            console.log(`🎉 Procesamiento completo: ${teachersWithSchools.length} profesores con escuelas`);
+                            resolve(teachersWithSchools);
+                        }
+                    });
+                });
+            }
+        });
+    });
+}
+
+// ========================================
+// FUNCIÓN AUXILIAR PARA OBTENER ESTADÍSTICAS DE ADMIN
+// ========================================
+
+async getAdminStats() {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const statsQuery = `
+            SELECT 
+                COUNT(*) as total_teachers,
+                SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_teachers,
+                SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as pending_teachers,
+                SUM(CASE WHEN is_paid = 1 THEN 1 ELSE 0 END) as paid_teachers,
+                SUM(CASE WHEN is_paid = 0 THEN 1 ELSE 0 END) as unpaid_teachers
+            FROM teachers
+        `;
+        
+        this.db.get(statsQuery, [], (err, stats) => {
+            if (err) {
+                console.error('❌ Error obteniendo estadísticas de admin:', err);
                 reject(err);
             } else {
-                resolve(rows || []);
+                // También obtener número de escuelas
+                const schoolsQuery = `SELECT COUNT(*) as total_schools FROM schools`;
+                
+                this.db.get(schoolsQuery, [], (err, schoolStats) => {
+                    if (err) {
+                        console.error('❌ Error obteniendo estadísticas de escuelas:', err);
+                        resolve({
+                            ...stats,
+                            total_schools: 0
+                        });
+                    } else {
+                        resolve({
+                            ...stats,
+                            total_schools: schoolStats.total_schools
+                        });
+                    }
+                });
             }
         });
     });
@@ -2692,29 +2804,100 @@ async getAdminUser() {
 
 
 
-async updateTeacherLastLogin(teacherId) {
-        this.ensureConnection();
+// Función para cambiar la escuela activa de un profesor
+async switchTeacherActiveSchool(teacherId, schoolId, sessionToken) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        // Primero verificar que el profesor tenga acceso a esa escuela
+        const checkQuery = `
+            SELECT COUNT(*) as count 
+            FROM teacher_schools 
+            WHERE teacher_id = ? AND school_id = ? AND is_active = 1
+        `;
         
-        return new Promise((resolve, reject) => {
-            const query = `
-                UPDATE teachers 
-                SET last_login = CURRENT_TIMESTAMP
-                WHERE id = ?
+        this.db.get(checkQuery, [teacherId, schoolId], (err, result) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            if (result.count === 0) {
+                reject(new Error('Profesor no tiene acceso a esta escuela'));
+                return;
+            }
+            
+            // Actualizar la sesión activa
+            const updateQuery = `
+                UPDATE active_sessions 
+                SET school_id = ?, last_activity = CURRENT_TIMESTAMP
+                WHERE teacher_id = ? AND session_token = ?
             `;
             
-            this.db.run(query, [teacherId], function(err) {
+            this.db.run(updateQuery, [schoolId, teacherId, sessionToken], function(err) {
                 if (err) {
                     reject(err);
                 } else {
                     resolve({
-                        id: teacherId,
+                        teacherId: teacherId,
+                        schoolId: schoolId,
                         changes: this.changes
                     });
                 }
             });
         });
-    }
+    });
+}
 
+
+// ========================================
+// FUNCIÓN PARA OBTENER ESCUELA POR ID
+// ========================================
+
+async getSchoolById(schoolId) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                id, name, address, phone, school_code,
+                created_at, updated_at
+            FROM schools 
+            WHERE id = ?
+        `;
+        
+        this.db.get(query, [schoolId], (err, row) => {
+            if (err) {
+                console.error('❌ Error obteniendo escuela por ID:', err);
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+// Actualizar último login del profesor
+async updateTeacherLastLogin(teacherId) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            UPDATE teachers 
+            SET last_login = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `;
+        
+        this.db.run(query, [teacherId], function(err) {
+            if (err) {
+                console.error('❌ Error actualizando último login:', err);
+                reject(err);
+            } else {
+                resolve({ teacherId: teacherId, changes: this.changes });
+            }
+        });
+    });
+}
 // Actualizar estado de pago de profesor
 async updateTeacherPayment(teacherId, isPaid) {
     return new Promise((resolve, reject) => {
@@ -2749,6 +2932,8 @@ async updateTeacherLastLogin(teacherId) {
         });
     });
 }
+
+
 
 
 // ========================================
@@ -2791,27 +2976,66 @@ async getActiveSessions() {
     });
 }
 
-async createActiveSession(teacherId, sessionToken, ipAddress, userAgent) {
+// Obtener escuelas de un profesor específico
+async getTeacherSchools(teacherId) {
     this.ensureConnection();
     
     return new Promise((resolve, reject) => {
         const query = `
-            INSERT INTO active_sessions (teacher_id, session_token, ip_address, user_agent)
-            VALUES (?, ?, ?, ?)
+            SELECT 
+                s.id as school_id,
+                s.name as school_name,
+                s.address,
+                s.phone,
+                s.school_code,
+                ts.is_primary_school,
+                ts.is_active as relation_active,
+                ts.assigned_date
+            FROM teacher_schools ts
+            JOIN schools s ON ts.school_id = s.id
+            WHERE ts.teacher_id = ? AND ts.is_active = 1
+            ORDER BY ts.is_primary_school DESC, s.name ASC
         `;
         
-        this.db.run(query, [teacherId, sessionToken, ipAddress, userAgent], function(err) {
+        this.db.all(query, [teacherId], (err, rows) => {
             if (err) {
-                console.error('❌ Error creando sesión activa:', err);
+                console.error('❌ Error obteniendo escuelas del profesor:', err);
                 reject(err);
             } else {
-                console.log('✅ Sesión activa creada con ID:', this.lastID);
-                resolve({ id: this.lastID, teacher_id: teacherId });
+                console.log(`✅ Escuelas encontradas para profesor ${teacherId}:`, rows ? rows.length : 0);
+                resolve(rows || []);
             }
         });
     });
 }
 
+
+// Actualizar createActiveSession para incluir school_id
+async createActiveSession(teacherId, sessionToken, ipAddress, userAgent, schoolId = null) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO active_sessions (
+                teacher_id, school_id, session_token, ip_address, user_agent
+            ) VALUES (?, ?, ?, ?, ?)
+        `;
+        
+        this.db.run(query, [teacherId, schoolId, sessionToken, ipAddress, userAgent], function(err) {
+            if (err) {
+                console.error('❌ Error creando sesión activa:', err);
+                reject(err);
+            } else {
+                resolve({
+                    sessionId: this.lastID,
+                    teacherId: teacherId,
+                    schoolId: schoolId,
+                    sessionToken: sessionToken
+                });
+            }
+        });
+    });
+}
 
 
 
@@ -2858,6 +3082,7 @@ async deleteActiveSession(sessionToken) {
     });
 }
 
+// Limpiar sesiones anteriores del usuario
 async clearUserPreviousSessions(teacherId) {
     this.ensureConnection();
     
@@ -2869,13 +3094,12 @@ async clearUserPreviousSessions(teacherId) {
                 console.error('❌ Error limpiando sesiones anteriores:', err);
                 reject(err);
             } else {
-                console.log(`✅ ${this.changes} sesiones anteriores eliminadas`);
-                resolve({ changes: this.changes });
+                console.log(`🧹 ${this.changes} sesiones anteriores eliminadas para profesor ${teacherId}`);
+                resolve({ deletedSessions: this.changes });
             }
         });
     });
 }
-    
 
 // NUEVA FUNCIÓN: Actualizar perfil del profesor
     async updateTeacherProfile(teacherId, profileData) {

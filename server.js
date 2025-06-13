@@ -476,21 +476,48 @@ app.delete('/api/students/:id', authenticateTeacher, async (req, res) => {
     }
 });
 
-
+// Obtener estadísticas generales para admin
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        console.log('📊 Obteniendo estadísticas de administrador...');
+        
+        const stats = await database.getAdminStats();
+        
+        console.log('✅ Estadísticas obtenidas:', stats);
+        
+        res.json({
+            success: true,
+            data: stats,
+            message: 'Estadísticas obtenidas correctamente'
+        });
+        
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas de admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo estadísticas',
+            error: error.message
+        });
+    }
+});
 
 // ========================================
 // API DE LOGIN PARA PROFESORES
 // ========================================
 
-// Login de profesores
+
+// REEMPLAZAR COMPLETAMENTE la función de login de profesores existente
 app.post('/api/teachers/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        console.log('🔐 Intento de login de profesor:', { email: email, password: '[OCULTA]' });
         
         // Buscar profesor por email
         const teacher = await database.getTeacherByEmail(email);
         
         if (!teacher) {
+            console.log('❌ Profesor no encontrado');
             return res.status(401).json({
                 success: false,
                 message: 'Credenciales incorrectas'
@@ -499,6 +526,7 @@ app.post('/api/teachers/login', async (req, res) => {
         
         // Verificar contraseña
         if (teacher.password !== password) {
+            console.log('❌ Contraseña incorrecta');
             return res.status(401).json({
                 success: false,
                 message: 'Credenciales incorrectas'
@@ -507,6 +535,7 @@ app.post('/api/teachers/login', async (req, res) => {
         
         // Verificar si está activo
         if (teacher.is_active === 0) {
+            console.log('⏳ Cuenta pendiente de aprobación');
             return res.status(403).json({
                 success: false,
                 message: 'Tu cuenta está pendiente de aprobación. Contacta al administrador.',
@@ -514,10 +543,26 @@ app.post('/api/teachers/login', async (req, res) => {
             });
         }
         
-        // Login exitoso - REEMPLAZAR esta sección completa
+        console.log('✅ Credenciales válidas, obteniendo escuelas...');
+        
+        // Obtener escuelas del profesor
+        const teacherSchools = await database.getTeacherSchools(teacher.id);
+        
+        if (!teacherSchools || teacherSchools.length === 0) {
+            console.log('❌ Profesor sin escuelas asignadas');
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes escuelas asignadas. Contacta al administrador.',
+                status: 'no_schools'
+            });
+        }
+        
+        console.log(`✅ Profesor tiene ${teacherSchools.length} escuelas asignadas`);
+        
+        // Actualizar último login
         await database.updateTeacherLastLogin(teacher.id);
 
-        // NUEVO: Limpiar sesiones anteriores del mismo usuario
+        // Limpiar sesiones anteriores
         try {
             await database.clearUserPreviousSessions(teacher.id);
             console.log(`🧹 Sesiones anteriores limpiadas para: ${teacher.full_name}`);
@@ -525,19 +570,22 @@ app.post('/api/teachers/login', async (req, res) => {
             console.error('⚠️ Error limpiando sesiones anteriores:', cleanupError);
         }
 
-        // Crear nueva sesión activa en base de datos
+        // Crear nueva sesión activa
         const sessionToken = generateSessionToken();
         const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
         const userAgent = req.get('User-Agent') || 'unknown';
 
+        // Usar la escuela principal para la sesión inicial
+        const primarySchool = teacherSchools.find(s => s.is_primary_school === 1) || teacherSchools[0];
+
         try {
-            await database.createActiveSession(teacher.id, sessionToken, ipAddress, userAgent);
+            await database.createActiveSession(teacher.id, sessionToken, ipAddress, userAgent, primarySchool.school_id);
             console.log(`✅ Sesión activa creada para profesor: ${teacher.full_name}`);
         } catch (sessionError) {
             console.error('⚠️ Error creando sesión activa:', sessionError);
         }
-
-        // Login del profesor 
+        
+        // Login exitoso
         res.json({
             success: true,
             message: 'Login exitoso',
@@ -546,21 +594,28 @@ app.post('/api/teachers/login', async (req, res) => {
                 id: teacher.id,
                 name: teacher.full_name,
                 email: teacher.email,
-                school: teacher.school_name,
                 teacher_type: teacher.teacher_type,
-                cedula: teacher.cedula,          // ✅ AGREGAR
-                regional: teacher.regional       // ✅ AGREGAR
+                cedula: teacher.cedula,
+                regional: teacher.regional,
+                // Información de escuelas
+                schools: teacherSchools,
+                primary_school: primarySchool,
+                schools_count: teacherSchools.length,
+                // Para compatibilidad con código anterior
+                school: primarySchool.school_name
             }
         });
         
     } catch (error) {
-        console.error('Error en login de profesor:', error);
+        console.error('❌ Error completo en login de profesor:', error);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
         });
     }
 });
+
+
 
 // NUEVO ENDPOINT: Actualizar perfil del profesor
 app.put('/api/teachers/:id/profile', async (req, res) => {
