@@ -356,11 +356,37 @@ async applyPeriodChange() {
 
         // Actualizar escuela activa en el servidor
         try {
-            await authenticatedFetch('/api/session/school', {
+            const schoolResp = await authenticatedFetch('/api/session/school', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ school_id: parseInt(newPeriod.schoolId) })
             });
+            const schoolResult = await schoolResp.json();
+
+            if (schoolResult.success && schoolResult.school) {
+                const stored = sessionStorage.getItem('teacherData');
+                let teacher = {};
+                if (stored) {
+                    try { teacher = JSON.parse(stored); } catch (e) { console.warn('Error parseando teacherData:', e); }
+                }
+                teacher.school_id = schoolResult.school.id;
+                teacher.school = schoolResult.school.name;
+                teacher.school_name = schoolResult.school.name;
+                sessionStorage.setItem('teacherData', JSON.stringify(teacher));
+
+                const info = localStorage.getItem('teacherInfo');
+                if (info) {
+                    try {
+                        const parsed = JSON.parse(info);
+                        parsed.school_id = schoolResult.school.id;
+                        parsed.school = schoolResult.school.name;
+                        parsed.school_name = schoolResult.school.name;
+                        localStorage.setItem('teacherInfo', JSON.stringify(parsed));
+                    } catch (e) {
+                        console.warn('Error actualizando teacherInfo:', e);
+                    }
+                }
+            }
         } catch (schoolErr) {
             console.error('⚠️ Error actualizando escuela activa:', schoolErr);
         }
