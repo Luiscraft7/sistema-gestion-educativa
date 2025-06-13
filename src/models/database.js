@@ -1252,7 +1252,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     // ========================================
     // FUNCIONES DE ASISTENCIA
     // ========================================
-    async getAttendanceByDate(date, grade, teacherId = null, academicPeriodId = null, subject = null) {
+    async getAttendanceByDate(date, grade, teacherId = null, academicPeriodId = null, subject = null, schoolId = null) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
@@ -1279,6 +1279,11 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 query += ' AND a.subject_area = ?';
                 params.push(subject);
             }
+
+            if (schoolId) {
+                query += ' AND a.school_id = ?';
+                params.push(schoolId);
+            }
             
             query += ' ORDER BY s.first_surname, s.second_surname, s.first_name';
             
@@ -1299,7 +1304,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
             const checkQuery = `
                 SELECT id FROM attendance
                 WHERE student_id = ? AND date = ? AND grade_level = ? AND subject_area = ?
-                    AND teacher_id = ? AND academic_period_id = ?
+                    AND teacher_id = ? AND academic_period_id = ? AND school_id = ?
             `;
 
             const checkParams = [
@@ -1308,7 +1313,8 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 attendanceData.grade_level,
                 attendanceData.subject_area,
                 attendanceData.teacher_id,
-                attendanceData.academic_period_id
+                attendanceData.academic_period_id,
+                attendanceData.school_id
             ];
             
             this.db.get(checkQuery, checkParams, (err, existingRecord) => {
@@ -1345,15 +1351,16 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                     // Crear nuevo registro
                     const insertQuery = `
                         INSERT INTO attendance (
-                            academic_period_id, teacher_id, student_id, date,
+                            academic_period_id, teacher_id, school_id, student_id, date,
                             status, arrival_time, justification,
                             notes, lesson_number, grade_level, subject_area
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
 
                     const insertParams = [
                         attendanceData.academic_period_id,
                         attendanceData.teacher_id,
+                        attendanceData.school_id,
                         attendanceData.student_id,
                         attendanceData.date,
                         attendanceData.status,
@@ -1377,7 +1384,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     }
 
-    async deleteAttendanceByDate(date, grade, teacherId = null, academicPeriodId = null, subject = null) {
+    async deleteAttendanceByDate(date, grade, teacherId = null, academicPeriodId = null, subject = null, schoolId = null) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
@@ -1397,6 +1404,11 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
             if (subject) {
                 query += ' AND subject_area = ?';
                 params.push(subject);
+            }
+
+            if (schoolId) {
+                query += ' AND school_id = ?';
+                params.push(schoolId);
             }
             
             this.db.run(query, params, function(err) {
