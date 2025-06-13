@@ -1062,7 +1062,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
-            const { gradeName, subjects, teacherId, academicPeriodId, teacherName } = gradeData;
+            const { gradeName, subjects, teacherId, academicPeriodId, teacherName, schoolId } = gradeData;
             
             // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
             const db = this.db;
@@ -1078,9 +1078,10 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
 
                 subjects.forEach((subject) => {
                     db.run(
-                        `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, grade_name, subject_name, teacher_name, is_active)
-                        VALUES (?, ?, ?, ?, ?, 1)`,
-                        [academicPeriodId || 1, teacherId, gradeName, subject, teacherName || null],
+                        `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, school_id, grade_name, subject_name, teacher_name, is_active)`
+                        VALUES (?, ?, ?, ?, ?, ?, 1)`,
+                        [academicPeriodId || 1, teacherId, schoolId, gradeName, subject, teacherName || null],
+
                         function(err) {
                             if (err) {
                                 errorCount++;
@@ -1124,7 +1125,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
-            const { grades, subjects, teacherId, academicPeriodId, teacherName } = assignmentData;
+            const { grades, subjects, teacherId, academicPeriodId, teacherName, schoolId } = assignmentData;
             
             // ✅ CAPTURAR LA REFERENCIA A this.db ANTES DE LOS CALLBACKS
             const db = this.db;
@@ -1141,9 +1142,10 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                 grades.forEach((gradeName) => {
                     subjects.forEach((subject) => {
                         db.run(
-                            `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, grade_name, subject_name, teacher_name, is_active)
-                            VALUES (?, ?, ?, ?, ?, 1)`,
-                            [academicPeriodId || 1, teacherId, gradeName, subject, teacherName || null],
+                            `INSERT OR REPLACE INTO grade_subjects (academic_period_id, teacher_id, school_id, grade_name, subject_name, teacher_name, is_active)`
+                            VALUES (?, ?, ?, ?, ?, ?, 1)`,
+                            [academicPeriodId || 1, teacherId, schoolId, gradeName, subject, teacherName || null],
+
                             function(err) {
                                 if (err) {
                                     totalErrorCount++;
