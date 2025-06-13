@@ -2116,7 +2116,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     }
 
     // Obtener resumen general de evaluaciones
-    async getEvaluationsSummary() {
+    async getGeneralEvaluationsSummary() {
         this.ensureConnection();
         
         return new Promise((resolve, reject) => {
