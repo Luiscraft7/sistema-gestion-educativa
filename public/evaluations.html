@@ -356,6 +356,17 @@
             align-items: center;
             flex-wrap: wrap;
         }
+
+        .search-input {
+            width: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .search-input {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
         
         .modal {
             display: none;
@@ -758,7 +769,8 @@
                     <div class="quick-actions">
                         <span style="font-weight: 600; color: #333;">Calificando:</span>
                         <span id="currentEvaluationTitle" style="color: #667eea; font-weight: 600;"></span>
-                        <div style="margin-left: auto; display: flex; gap: 10px;">
+                        <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+                            <input type="text" class="form-input search-input" id="studentSearch" placeholder="Buscar estudiante..." oninput="filterStudents()">
                             <button class="btn btn-success btn-sm" onclick="saveAllGrades()">
                                 💾 Guardar Todas las Calificaciones
                             </button>
@@ -1670,6 +1682,19 @@
 
         function viewEvaluationStats(evaluationId) {
             showMessage('success', '📊 Función de estadísticas detalladas en desarrollo');
+        }
+
+        function filterStudents() {
+            const query = document.getElementById('studentSearch').value.toLowerCase();
+            document.querySelectorAll('#gradingTableBody tr').forEach(row => {
+                const name = row.querySelector('.student-name')?.textContent.toLowerCase() || '';
+                const id = row.querySelector('.student-id')?.textContent.toLowerCase() || '';
+                if (name.includes(query) || id.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         }
 
         // Cerrar modales al hacer clic fuera
