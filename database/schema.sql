@@ -381,6 +381,23 @@ CREATE TABLE IF NOT EXISTS grade_scale_config (
     UNIQUE(academic_period_id, teacher_id, school_id, grade_level, subject_area)
 );
 
+-- Tabla de Configuración de Pesos SEA
+CREATE TABLE IF NOT EXISTS sea_weight_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    academic_period_id INTEGER DEFAULT 1,
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL,
+    cotidiano_weight REAL DEFAULT 65,
+    attendance_weight REAL DEFAULT 10,
+    evaluations_weight REAL DEFAULT 25,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(academic_period_id, teacher_id, school_id)
+);
+
 -- Tabla de Períodos de Asistencia [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS attendance_periods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -499,6 +516,7 @@ CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_school_grade_subject
 
 -- Índice para Configuración de Escalas
 CREATE INDEX IF NOT EXISTS idx_grade_scale_period_teacher_school_grade_subject ON grade_scale_config(academic_period_id, teacher_id, school_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_sea_weight_period_teacher_school ON sea_weight_config(academic_period_id, teacher_id, school_id);
 
 -- Índices para Cotidiano Avanzado
 CREATE INDEX IF NOT EXISTS idx_daily_indicators_period_teacher_grade_subject ON daily_indicators(academic_period_id, teacher_id, grade_level, subject_area);

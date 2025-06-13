@@ -2541,6 +2541,62 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     }
 
+    // Guardar configuración de pesos SEA
+    saveSEAWeightConfig(weightData) {
+        this.ensureConnection();
+
+        return new Promise((resolve, reject) => {
+            const query = `
+                INSERT INTO sea_weight_config (
+                    academic_period_id, teacher_id, school_id,
+                    cotidiano_weight, attendance_weight, evaluations_weight, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(academic_period_id, teacher_id, school_id)
+                DO UPDATE SET
+                    cotidiano_weight = excluded.cotidiano_weight,
+                    attendance_weight = excluded.attendance_weight,
+                    evaluations_weight = excluded.evaluations_weight,
+                    updated_at = datetime('now')
+            `;
+
+            this.db.run(query, [
+                weightData.academic_period_id || 1,
+                weightData.teacher_id,
+                weightData.school_id,
+                weightData.cotidiano_weight,
+                weightData.attendance_weight,
+                weightData.evaluations_weight
+            ], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ success: true });
+                }
+            });
+        });
+    }
+
+    // Obtener configuración de pesos SEA
+    getSEAWeightConfig(academicPeriodId, teacherId, schoolId) {
+        this.ensureConnection();
+
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT cotidiano_weight, attendance_weight, evaluations_weight
+                FROM sea_weight_config
+                WHERE academic_period_id = ? AND teacher_id = ? AND school_id = ?
+            `;
+
+            this.db.get(query, [academicPeriodId || 1, teacherId, schoolId], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row || { cotidiano_weight: 65, attendance_weight: 10, evaluations_weight: 25 });
+                }
+            });
+        });
+    }
+
     // ========================================
     // CÁLCULOS DE ESTADÍSTICAS MEP
     // ========================================

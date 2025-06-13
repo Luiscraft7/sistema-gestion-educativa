@@ -1035,7 +1035,7 @@ Participa activamente en discusiones"
         let currentDate = localStorage.getItem('cotidianoFecha') || new Date().toISOString().split('T')[0];
         let hasUnsavedChanges = false;
         let subIndicatorCounter = 3;
-        let porcentajeTotalConfig = localStorage.getItem('cotidianoPorcentajeTotal') || '65';
+        let porcentajeTotalConfig = '65';
 
         // Helper para peticiones autenticadas
         async function authenticatedFetch(url, options = {}) {
@@ -1140,6 +1140,24 @@ Participa activamente en discusiones"
                 showLoading();
                 console.log('🚀 Inicializando sistema...');
                 await loadSystemData();
+
+                // Cargar configuración de pesos desde el servidor
+                try {
+                    const period = getCurrentAcademicPeriod();
+                    const weightRes = await authenticatedFetch(`/api/sea/weights?academic_period_id=${period.periodId}&school_id=${period.schoolId}`);
+                    const weightData = await weightRes.json();
+                    if (weightData.success && weightData.data) {
+                        porcentajeTotalConfig = weightData.data.cotidiano_weight || '65';
+                        localStorage.setItem('cotidianoPorcentajeTotal', porcentajeTotalConfig);
+                    } else {
+                        const stored = localStorage.getItem('cotidianoPorcentajeTotal');
+                        if (stored) porcentajeTotalConfig = stored;
+                    }
+                } catch (err) {
+                    console.error('Error cargando pesos SEA:', err);
+                    const stored = localStorage.getItem('cotidianoPorcentajeTotal');
+                    if (stored) porcentajeTotalConfig = stored;
+                }
 
                 // Establecer fecha actual en el selector
                 const fechaInput = document.getElementById('fecha');
@@ -2614,6 +2632,16 @@ Participa activamente en discusiones"
             const porcentaje = document.getElementById('porcentajeTotal').value;
             localStorage.setItem('cotidianoPorcentajeTotal', porcentaje);
             porcentajeTotalConfig = porcentaje;
+
+            const period = getCurrentAcademicPeriod();
+            authenticatedFetch('/api/sea/weights', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    cotidiano_weight: porcentaje,
+                    academic_period_id: period.periodId,
+                    school_id: period.schoolId
+                })
+            }).catch(err => console.error('Error guardando pesos:', err));
             
             // Filtrar estudiantes por grado actual y recalcular sumas
             const studentsInGrade = students.filter(student => {
