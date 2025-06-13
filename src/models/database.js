@@ -1851,7 +1851,7 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                         ag.is_late,
                         ag.notes,
                         ag.feedback,
-                        ag.submitted_at,
+                        ag.submitted_at as grade_date,
                         ? as assignment_id,
                         ? as task_title,
                         ? as max_points,
@@ -1925,9 +1925,9 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
                         const query = `
                             INSERT OR REPLACE INTO assignment_grades (
                                 academic_period_id, teacher_id, school_id, assignment_id, student_id,
-                                points_earned, grade, percentage, is_submitted, is_late,
+                                points_earned, grade, percentage, submitted_at, is_submitted, is_late,
                                 notes, feedback, updated_at
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                         `;
 
                         const percentage = row.max_points && row.max_points > 0
