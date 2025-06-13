@@ -577,42 +577,6 @@ async addStudent(studentData, teacherId) {
         });
     }
 
-    // Eliminar estudiantes por período académico
-
-    async deleteStudentsByPeriod(academicPeriodId, teacherId = null) {
-        this.ensureConnection();
-        
-        return new Promise((resolve, reject) => {
-            let query, params;
-            
-            if (teacherId) {
-                // Solo eliminar estudiantes del profesor específico en ese período
-                query = 'DELETE FROM students WHERE academic_period_id = ? AND teacher_id = ?';
-                params = [academicPeriodId, teacherId];
-            } else {
-                // Modo admin - eliminar TODOS los estudiantes del período
-                query = 'DELETE FROM students WHERE academic_period_id = ?';
-                params = [academicPeriodId];
-            }
-            
-            this.db.run(query, params, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    const message = teacherId 
-                        ? `${this.changes} estudiantes del profesor eliminados del período ${academicPeriodId}`
-                        : `${this.changes} estudiantes eliminados del período ${academicPeriodId}`;
-                        
-                    resolve({
-                        deletedCount: this.changes,
-                        message: message,
-                        academicPeriodId: academicPeriodId,
-                        teacherId: teacherId
-                    });
-                }
-            });
-        });
-    }
 async deleteStudent(id, teacherId = null, schoolId = null) {
     this.ensureConnection();
     
@@ -642,46 +606,6 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     });
 }
-    // Función para limpiar datos relacionados cuando se cambia de período
-    async cleanPeriodData(academicPeriodId) {
-        this.ensureConnection();
-        
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Eliminar asistencias del período
-                await new Promise((res, rej) => {
-                    this.db.run('DELETE FROM attendance WHERE academic_period_id = ?', [academicPeriodId], (err) => {
-                        if (err) rej(err);
-                        else res();
-                    });
-                });
-                
-                // Eliminar evaluaciones del período
-                await new Promise((res, rej) => {
-                    this.db.run('DELETE FROM assignment_grades WHERE academic_period_id = ?', [academicPeriodId], (err) => {
-                        if (err) rej(err);
-                        else res();
-                    });
-                });
-                
-                // Eliminar configuraciones de lecciones del período
-                await new Promise((res, rej) => {
-                    this.db.run('DELETE FROM lesson_config WHERE academic_period_id = ?', [academicPeriodId], (err) => {
-                        if (err) rej(err);
-                        else res();
-                    });
-                });
-                
-                resolve({
-                    success: true,
-                    message: 'Datos del período limpiados correctamente'
-                });
-                
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
 
 
 
@@ -1613,42 +1537,6 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
     // FUNCIONES DEL MÓDULO DE EVALUACIONES - CORREGIDAS ✅
     // ========================================
 
-    // Obtener evaluaciones por grado y materia
-    async getEvaluationsByGradeAndSubject(gradeLevel, subjectArea) {
-        this.ensureConnection();
-        
-        return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    a.*,
-                    COUNT(ag.id) as total_grades,
-                    AVG(CASE 
-                        WHEN ag.points_earned IS NOT NULL AND a.max_points > 0 
-                        THEN (ag.points_earned * 100.0 / a.max_points) 
-                        ELSE NULL 
-                    END) as avg_grade,
-                    (SELECT COUNT(*) 
-                    FROM students s 
-                    WHERE s.status = 'active' 
-                    AND s.grade_level = a.grade_level 
-                    AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
-                    ) as total_students
-                FROM assignments a
-                LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
-                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
-                GROUP BY a.id
-                ORDER BY a.created_at DESC
-            `;
-            
-            this.db.all(query, [gradeLevel, subjectArea], (err, rows) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rows || []);
-                }
-            });
-        });
-    }
 
     // Obtener evaluaciones por grado, materia y período académico
     async getEvaluationsByGradeSubjectAndPeriod(gradeLevel, subjectArea, academicPeriodId, teacherId, schoolId) {
@@ -1987,66 +1875,6 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     }
 
-    // Obtener estadísticas de evaluaciones por estudiante
-    async getStudentEvaluationStats(studentId, gradeLevel, subjectArea) {
-        this.ensureConnection();
-        
-        return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    COUNT(DISTINCT a.id) as total_evaluations,
-                    COUNT(ag.id) as completed_evaluations,
-                    AVG(CASE WHEN ag.percentage IS NOT NULL THEN ag.percentage ELSE 0 END) as avg_percentage,
-                    SUM(a.percentage) as total_weight,
-                    SUM(CASE WHEN ag.is_late = 1 THEN 1 ELSE 0 END) as late_submissions,
-                    SUM(CASE WHEN ag.percentage >= 70 THEN 1 ELSE 0 END) as good_grades,
-                    MIN(ag.percentage) as min_grade,
-                    MAX(ag.percentage) as max_grade
-                FROM assignments a
-                LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id AND ag.student_id = ?
-                WHERE a.grade_level = ? AND a.subject_area = ? AND a.is_active = 1
-            `;
-            
-            this.db.get(query, [studentId, gradeLevel, subjectArea], (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    const stats = row || {
-                        total_evaluations: 0,
-                        completed_evaluations: 0,
-                        avg_percentage: 0,
-                        total_weight: 0,
-                        late_submissions: 0,
-                        good_grades: 0,
-                        min_grade: 0,
-                        max_grade: 0
-                    };
-                    
-                    // Calcular estadísticas adicionales
-                    const completionRate = stats.total_evaluations > 0 
-                        ? (stats.completed_evaluations / stats.total_evaluations) * 100 
-                        : 0;
-                    
-                    resolve({
-                        student_id: studentId,
-                        grade_level: gradeLevel,
-                        subject_area: subjectArea,
-                        total_evaluations: stats.total_evaluations,
-                        completed_evaluations: stats.completed_evaluations,
-                        pending_evaluations: stats.total_evaluations - stats.completed_evaluations,
-                        completion_rate: completionRate,
-                        avg_percentage: stats.avg_percentage || 0,
-                        total_weight: stats.total_weight || 0,
-                        late_submissions: stats.late_submissions || 0,
-                        good_grades: stats.good_grades || 0,
-                        min_grade: stats.min_grade || 0,
-                        max_grade: stats.max_grade || 0,
-                        calculated_at: new Date().toISOString()
-                    });
-                }
-            });
-        });
-    }
 
     // Obtener resumen de evaluaciones filtrado
     async getEvaluationsSummary(
@@ -2115,43 +1943,6 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     }
 
-    // Obtener resumen general de evaluaciones
-    async getGeneralEvaluationsSummary() {
-        this.ensureConnection();
-        
-        return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    a.grade_level,
-                    a.subject_area,
-                    a.type,
-                    COUNT(DISTINCT a.id) as total_evaluations,
-                    COUNT(ag.id) as total_grades,
-                    ROUND(AVG(ag.percentage), 1) as avg_percentage,
-                    COUNT(DISTINCT ag.student_id) as students_graded,
-                    (SELECT COUNT(*) FROM students s
-                     WHERE s.status = 'active'
-                       AND s.grade_level = a.grade_level
-                       AND (s.subject_area = a.subject_area OR s.subject_area IS NULL OR s.subject_area = '')
-                       AND s.academic_period_id = a.academic_period_id
-                       AND s.teacher_id = a.teacher_id
-                    ) as total_students
-                FROM assignments a
-                LEFT JOIN assignment_grades ag ON a.id = ag.assignment_id
-                WHERE a.is_active = 1
-                GROUP BY a.grade_level, a.subject_area, a.type
-                ORDER BY a.grade_level, a.subject_area, a.type
-            `;
-            
-            this.db.all(query, [], (err, rows) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rows || []);
-                }
-            });
-        });
-    }
 
     async getEvaluationTypeStats() {
         this.ensureConnection();
@@ -2413,37 +2204,6 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         });
     }
 
-    // Obtener evaluación por fecha
-    async getEvaluationByDate(grade, subject, date, teacherId, schoolId) {
-        this.ensureConnection();
-        
-        return new Promise((resolve, reject) => {
-            let query = `
-                SELECT de.*, dis.daily_indicator_id AS indicator_id, dis.score, dis.notes as score_notes
-                FROM daily_evaluations de
-                LEFT JOIN daily_indicator_scores dis ON de.id = dis.daily_evaluation_id
-                WHERE de.grade_level = ? AND de.subject_area = ? AND de.evaluation_date = ?
-            `;
-            const params = [grade, subject, date];
-            if (teacherId) {
-                query += ' AND de.teacher_id = ?';
-                params.push(teacherId);
-            }
-            if (schoolId) {
-                query += ' AND de.school_id = ?';
-                params.push(schoolId);
-            }
-
-            this.db.all(query, params, (err, rows) => {
-                if (err) {
-                    console.error('Error fetching evaluation:', err);
-                    reject(err);
-                } else {
-                    resolve(rows || []);
-                }
-            });
-        });
-    }
 
     // Obtener historial de evaluaciones CORREGIDO
     async getCotidianoHistory(grade, subject, academicPeriodId = 1, teacherId, schoolId) {
