@@ -600,41 +600,109 @@ app.put('/api/teachers/:id/profile', async (req, res) => {
 // ========================================
 // RUTAS API PARA PROFESORES
 // ========================================
-
-// Registrar nuevo profesor
+// Registrar nuevo profesor (VERSIÓN MULTI-ESCUELA)
 app.post('/api/teachers/register', async (req, res) => {
     try {
-        const teacherData = req.body;
+        console.log('🎯 POST /api/teachers/register - Datos recibidos:', {
+            ...req.body,
+            password: '[OCULTA]' // No logear la contraseña
+        });
+        
+        const { full_name, cedula, email, password, schools, teacher_type, specialized_type, regional } = req.body;
         
         // Validar campos obligatorios
-        const requiredFields = ['full_name', 'cedula', 'school_name', 'email', 'password'];
-        for (const field of requiredFields) {
-            if (!teacherData[field]) {
+        if (!full_name || !cedula || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Campos obligatorios faltantes: nombre, cédula, email y contraseña'
+            });
+        }
+        
+        // Validar escuelas
+        if (!schools || !Array.isArray(schools) || schools.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe agregar al menos una escuela'
+            });
+        }
+        
+        if (schools.length > 3) {
+            return res.status(400).json({
+                success: false,
+                message: 'Máximo 3 escuelas permitidas'
+            });
+        }
+        
+        // Validar que cada escuela tenga nombre
+        for (let i = 0; i < schools.length; i++) {
+            if (!schools[i].name || !schools[i].name.trim()) {
                 return res.status(400).json({
                     success: false,
-                    message: `Campo obligatorio faltante: ${field}`
+                    message: `La escuela ${i + 1} debe tener un nombre`
                 });
             }
         }
         
-        // Verificar si ya existe
-        const existingTeacher = await database.getTeacherByEmail(teacherData.email);
-        if (existingTeacher) {
+        console.log(`✅ Validaciones pasadas. Escuelas: ${schools.length}`);
+        
+        // Verificar email duplicado
+        const existingEmail = await database.getTeacherByEmail(email);
+        if (existingEmail) {
             return res.status(400).json({
                 success: false,
                 message: 'Ya existe un profesor registrado con este email'
             });
         }
         
-        const result = await database.createTeacher(teacherData);
+        // Verificar cédula duplicada
+        const existingCedula = await database.getTeacherByCedula(cedula);
+        if (existingCedula) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ya existe un profesor registrado con esta cédula'
+            });
+        }
+        
+        console.log('✅ No hay duplicados de email ni cédula');
+        
+        // Crear profesor
+        const teacherData = {
+            full_name: full_name.trim(),
+            cedula: cedula.trim(),
+            email: email.trim(),
+            password: password, // En producción, usar hash
+            teacher_type: teacher_type || null,
+            specialized_type: specialized_type || null,
+            regional: regional || null
+        };
+        
+        // Limpiar datos de escuelas
+        const cleanSchools = schools.map(school => ({
+            name: school.name.trim(),
+            address: school.address ? school.address.trim() : null,
+            phone: school.phone ? school.phone.trim() : null,
+            school_code: school.school_code ? school.school_code.trim() : null
+        }));
+        
+        console.log('🔄 Iniciando creación de profesor y escuelas...');
+        
+        const teacherResult = await database.createTeacherMultiSchool(teacherData, cleanSchools);
+        
+        console.log('🎉 Registro completado:', teacherResult);
+        
         res.json({
             success: true,
-            data: result,
+            data: teacherResult,
             message: 'Profesor registrado exitosamente. Pendiente de activación.'
         });
         
     } catch (error) {
-        console.error('Error registrando profesor:', error);
+        console.error('❌ Error completo en registro:', {
+            message: error.message,
+            stack: error.stack,
+            body: req.body
+        });
+        
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor',
@@ -642,8 +710,6 @@ app.post('/api/teachers/register', async (req, res) => {
         });
     }
 });
-
-
 
 
 
@@ -4010,6 +4076,67 @@ app.post('/api/academic-periods/set-current', async (req, res) => {
 });
 
 
+// ========================================
+// APIS DE VALIDACIÓN EN TIEMPO REAL
+// ========================================
+
+// Verificar si email existe
+app.post('/api/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email requerido'
+            });
+        }
+        
+        const existingTeacher = await database.getTeacherByEmail(email);
+        
+        res.json({
+            success: true,
+            exists: !!existingTeacher
+        });
+        
+    } catch (error) {
+        console.error('❌ Error verificando email:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error verificando email'
+        });
+    }
+});
+
+// Verificar si cédula existe
+app.post('/api/check-cedula', async (req, res) => {
+    try {
+        const { cedula } = req.body;
+        
+        if (!cedula) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cédula requerida'
+            });
+        }
+        
+        const existingTeacher = await database.getTeacherByCedula(cedula);
+        
+        res.json({
+            success: true,
+            exists: !!existingTeacher
+        });
+        
+    } catch (error) {
+        console.error('❌ Error verificando cédula:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error verificando cédula'
+        });
+    }
+});
+
+
 // Obtener información del profesor logueado (VERSIÓN REAL CON AUTENTICACIÓN)
 app.get('/api/teachers/current', authenticateTeacher, async (req, res) => {
     try {
@@ -4033,6 +4160,8 @@ app.get('/api/teachers/current', authenticateTeacher, async (req, res) => {
         });
     }
 });
+
+
 
 // Iniciar todo
 startServer();

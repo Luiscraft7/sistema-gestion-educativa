@@ -220,6 +220,56 @@
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
         }
 
+        /* Validación en tiempo real */
+        .input-validation {
+            position: relative;
+        }
+
+        .validation-message {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            border-radius: 0 0 8px 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .validation-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .validation-message.error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #fc8181;
+        }
+
+        .validation-message.success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border: 1px solid #68d391;
+        }
+
+        .validation-message.checking {
+            background: #bee3f8;
+            color: #2b6cb0;
+            border: 1px solid #63b3ed;
+        }
+
+        .input-error {
+            border-color: #e53e3e !important;
+        }
+
+        .input-success {
+            border-color: #48bb78 !important;
+        }
+
         .info-box {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%);
             border: 1px solid rgba(102, 126, 234, 0.1);
@@ -242,6 +292,112 @@
             color: #718096;
             font-size: 0.95rem;
             line-height: 1.6;
+        }
+
+        /* Estilos para múltiples escuelas */
+        .schools-container {
+            border: 2px dashed #e2e8f0;
+            border-radius: 15px;
+            padding: 2rem;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .schools-container:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .school-entry {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .school-entry:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .school-entry.removing {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        .school-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .school-number {
+            font-weight: 600;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-school-btn {
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .remove-school-btn:hover {
+            background: #fc8181;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .add-school-btn {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .add-school-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .add-school-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .schools-counter {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #718096;
+            font-size: 0.9rem;
         }
 
         .submit-section {
@@ -319,7 +475,6 @@
             position: relative;
         }
 
-        /* Botón de cerrar (X) */
         .close {
             color: #aaa;
             position: absolute;
@@ -463,6 +618,14 @@
                 padding: 2rem;
                 margin: 1rem;
             }
+
+            .schools-container {
+                padding: 1rem;
+            }
+
+            .school-entry {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -521,14 +684,11 @@
 
                             <div class="form-group">
                                 <label for="cedula" class="required">Cédula</label>
-                                <input type="text" id="cedula" name="cedula" required 
-                                       placeholder="Ej: 1-1234-5678">
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label for="school_name" class="required">Nombre de la Escuela</label>
-                                <input type="text" id="school_name" name="school_name" required 
-                                       placeholder="Ej: Escuela República de Costa Rica">
+                                <div class="input-validation">
+                                    <input type="text" id="cedula" name="cedula" required 
+                                           placeholder="Ej: 1-1234-5678">
+                                    <div class="validation-message" id="cedula-validation"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -543,8 +703,11 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="email" class="required">Correo Electrónico</label>
-                                <input type="email" id="email" name="email" required 
-                                       placeholder="tu.email@ejemplo.com">
+                                <div class="input-validation">
+                                    <input type="email" id="email" name="email" required 
+                                           placeholder="tu.email@ejemplo.com">
+                                    <div class="validation-message" id="email-validation"></div>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -552,6 +715,29 @@
                                 <input type="password" id="password" name="password" required 
                                        placeholder="Mínimo 8 caracteres">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Escuelas (Múltiples) -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-school section-icon"></i>
+                            Escuelas donde trabajas (Máximo 3)
+                        </h2>
+                        
+                        <div class="schools-container">
+                            <div class="schools-counter">
+                                <span id="schools-count">1</span> de 3 escuelas agregadas
+                            </div>
+                            
+                            <div id="schools-list">
+                                <!-- Las escuelas se agregan dinámicamente aquí -->
+                            </div>
+                            
+                            <button type="button" class="add-school-btn" id="add-school-btn" onclick="addSchool()">
+                                <i class="fas fa-plus"></i>
+                                Agregar otra escuela
+                            </button>
                         </div>
                     </div>
 
@@ -576,18 +762,6 @@
                                 <label for="specialized_type">Tipo de Profesor Especializado</label>
                                 <input type="text" id="specialized_type" name="specialized_type" 
                                        placeholder="Ej: Educación Física, Inglés, Música, etc.">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="school_code">Código de la Escuela</label>
-                                <input type="text" id="school_code" name="school_code" 
-                                       placeholder="Ej: 12345">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="circuit_code">Código del Circuito</label>
-                                <input type="text" id="circuit_code" name="circuit_code" 
-                                       placeholder="Ej: 01-02">
                             </div>
 
                             <div class="form-group">
@@ -634,7 +808,263 @@
     </div>
 
     <script>
-        // Función para mostrar/ocultar campo de profesor especializado
+        // Variables globales
+        let schoolCount = 0;
+        const maxSchools = 3;
+        let validationTimeouts = {};
+
+        // Inicializar la primera escuela al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            addSchool(); // Agregar la primera escuela automáticamente
+        });
+
+        // ===== FUNCIONES PARA MÚLTIPLES ESCUELAS =====
+
+        function addSchool() {
+            if (schoolCount >= maxSchools) return;
+            
+            schoolCount++;
+            const schoolsContainer = document.getElementById('schools-list');
+            
+            const schoolDiv = document.createElement('div');
+            schoolDiv.className = 'school-entry';
+            schoolDiv.id = `school-${schoolCount}`;
+            
+            schoolDiv.innerHTML = `
+                <div class="school-header">
+                    <div class="school-number">
+                        <i class="fas fa-school"></i>
+                        Escuela ${schoolCount}
+                    </div>
+                    ${schoolCount > 1 ? `<button type="button" class="remove-school-btn" onclick="removeSchool(${schoolCount})">
+                        <i class="fas fa-times"></i>
+                    </button>` : ''}
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="school_name_${schoolCount}" class="required">Nombre de la Escuela</label>
+                        <input type="text" id="school_name_${schoolCount}" name="school_name[]" required 
+                               placeholder="Ej: Escuela República de Costa Rica">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="school_address_${schoolCount}">Dirección</label>
+                        <input type="text" id="school_address_${schoolCount}" name="school_address[]" 
+                               placeholder="Ej: San José, Centro">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="school_phone_${schoolCount}">Teléfono</label>
+                        <input type="text" id="school_phone_${schoolCount}" name="school_phone[]" 
+                               placeholder="Ej: 2222-3333">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="school_code_${schoolCount}">Código MEP</label>
+                        <input type="text" id="school_code_${schoolCount}" name="school_code[]" 
+                               placeholder="Ej: 12345 (Opcional)">
+                    </div>
+                </div>
+            `;
+            
+            schoolsContainer.appendChild(schoolDiv);
+            updateSchoolsCounter();
+            updateAddButton();
+            
+            // Animar la entrada
+            setTimeout(() => {
+                schoolDiv.style.opacity = '1';
+                schoolDiv.style.transform = 'scale(1)';
+            }, 10);
+        }
+
+        function removeSchool(schoolId) {
+            if (schoolCount <= 1) return; // No permitir eliminar la última escuela
+            
+            const schoolDiv = document.getElementById(`school-${schoolId}`);
+            if (schoolDiv) {
+                schoolDiv.classList.add('removing');
+                
+                setTimeout(() => {
+                    schoolDiv.remove();
+                    schoolCount--;
+                    renumberSchools();
+                    updateSchoolsCounter();
+                    updateAddButton();
+                }, 300);
+            }
+        }
+
+        function renumberSchools() {
+            const schoolEntries = document.querySelectorAll('.school-entry');
+            schoolEntries.forEach((school, index) => {
+                const newNumber = index + 1;
+                const oldId = school.id;
+                const newId = `school-${newNumber}`;
+                
+                school.id = newId;
+                
+                // Actualizar el título
+                const numberDiv = school.querySelector('.school-number');
+                if (numberDiv) {
+                    numberDiv.innerHTML = `<i class="fas fa-school"></i> Escuela ${newNumber}`;
+                }
+                
+                // Actualizar IDs y names de los inputs
+                const inputs = school.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const oldName = input.name;
+                    const fieldType = oldName.replace('[]', '').replace(/_\d+$/, '');
+                    input.id = `${fieldType}_${newNumber}`;
+                });
+                
+                // Actualizar el botón de eliminar
+                const removeBtn = school.querySelector('.remove-school-btn');
+                if (removeBtn) {
+                    removeBtn.setAttribute('onclick', `removeSchool(${newNumber})`);
+                    // Ocultar botón de eliminar si es la primera escuela
+                    if (newNumber === 1) {
+                        removeBtn.style.display = 'none';
+                    } else {
+                        removeBtn.style.display = 'flex';
+                    }
+                }
+            });
+        }
+
+        function updateSchoolsCounter() {
+            document.getElementById('schools-count').textContent = schoolCount;
+        }
+
+        function updateAddButton() {
+            const addBtn = document.getElementById('add-school-btn');
+            if (schoolCount >= maxSchools) {
+                addBtn.disabled = true;
+                addBtn.innerHTML = '<i class="fas fa-check"></i> Máximo de escuelas alcanzado';
+            } else {
+                addBtn.disabled = false;
+                addBtn.innerHTML = '<i class="fas fa-plus"></i> Agregar otra escuela';
+            }
+        }
+
+        // ===== VALIDACIONES EN TIEMPO REAL =====
+
+        async function checkEmailExists(email) {
+            if (!email || !email.includes('@')) return;
+            
+            const validation = document.getElementById('email-validation');
+            const input = document.getElementById('email');
+            
+            // Mostrar estado "verificando"
+            validation.textContent = 'Verificando disponibilidad...';
+            validation.className = 'validation-message checking show';
+            input.className = '';
+            
+            try {
+                const response = await fetch('/api/check-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.exists) {
+                    validation.textContent = '❌ Este email ya está registrado';
+                    validation.className = 'validation-message error show';
+                    input.classList.add('input-error');
+                } else {
+                    validation.textContent = '✅ Email disponible';
+                    validation.className = 'validation-message success show';
+                    input.classList.add('input-success');
+                }
+            } catch (error) {
+                validation.textContent = 'Error al verificar email';
+                validation.className = 'validation-message error show';
+            }
+        }
+
+        async function checkCedulaExists(cedula) {
+            if (!cedula || cedula.length < 9) return;
+            
+            const validation = document.getElementById('cedula-validation');
+            const input = document.getElementById('cedula');
+            
+            // Mostrar estado "verificando"
+            validation.textContent = 'Verificando disponibilidad...';
+            validation.className = 'validation-message checking show';
+            input.className = '';
+            
+            try {
+                const response = await fetch('/api/check-cedula', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cedula })
+                });
+                
+                const result = await response.json();
+                
+                if (result.exists) {
+                    validation.textContent = '❌ Esta cédula ya está registrada';
+                    validation.className = 'validation-message error show';
+                    input.classList.add('input-error');
+                } else {
+                    validation.textContent = '✅ Cédula disponible';
+                    validation.className = 'validation-message success show';
+                    input.classList.add('input-success');
+                }
+            } catch (error) {
+                validation.textContent = 'Error al verificar cédula';
+                validation.className = 'validation-message error show';
+            }
+        }
+
+        // Event listeners para validación en tiempo real
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value.trim();
+            
+            // Limpiar timeout anterior
+            if (validationTimeouts.email) {
+                clearTimeout(validationTimeouts.email);
+            }
+            
+            // Limpiar validación si está vacío
+            if (!email) {
+                document.getElementById('email-validation').className = 'validation-message';
+                this.className = '';
+                return;
+            }
+            
+            // Esperar 1 segundo después de que deje de escribir
+            validationTimeouts.email = setTimeout(() => {
+                checkEmailExists(email);
+            }, 1000);
+        });
+
+        document.getElementById('cedula').addEventListener('input', function() {
+            const cedula = this.value.trim();
+            
+            // Limpiar timeout anterior
+            if (validationTimeouts.cedula) {
+                clearTimeout(validationTimeouts.cedula);
+            }
+            
+            // Limpiar validación si está vacío
+            if (!cedula) {
+                document.getElementById('cedula-validation').className = 'validation-message';
+                this.className = '';
+                return;
+            }
+            
+            // Esperar 1 segundo después de que deje de escribir
+            validationTimeouts.cedula = setTimeout(() => {
+                checkCedulaExists(cedula);
+            }, 1000);
+        });
+
+        // ===== OTRAS FUNCIONES =====
+
         function toggleSpecializedField() {
             const teacherType = document.getElementById('teacher_type').value;
             const specializedGroup = document.getElementById('specialized_type_group');
@@ -655,12 +1085,10 @@
             }
         }
 
-        // Función para ir al login
         function goToLogin() {
             window.location.href = 'login.html';
         }
 
-        // Función para cerrar el modal
         function closeSuccessModal() {
             document.getElementById('successModal').style.display = 'none';
         }
@@ -673,12 +1101,20 @@
             }
         }
 
-        // Event listener principal del formulario
+        // ===== ENVÍO DEL FORMULARIO =====
+
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Verificar si hay errores de validación
+            const errorInputs = document.querySelectorAll('.input-error');
+            if (errorInputs.length > 0) {
+                alert('Por favor corrige los errores antes de continuar.');
+                return;
+            }
+            
             // Validar campos obligatorios
-            const requiredFields = ['full_name', 'cedula', 'school_name', 'email', 'password'];
+            const requiredFields = ['full_name', 'cedula', 'email', 'password'];
             let isValid = true;
             
             requiredFields.forEach(fieldId => {
@@ -690,6 +1126,24 @@
                     field.style.borderColor = '#e2e8f0';
                 }
             });
+
+            // Validar que al menos hay una escuela
+            const schoolNames = document.querySelectorAll('input[name="school_name[]"]');
+            let schoolsValid = false;
+            schoolNames.forEach(input => {
+                if (input.value.trim()) {
+                    schoolsValid = true;
+                    input.style.borderColor = '#e2e8f0';
+                } else {
+                    input.style.borderColor = '#e53e3e';
+                    isValid = false;
+                }
+            });
+
+            if (!schoolsValid) {
+                alert('Debes agregar al menos una escuela.');
+                return;
+            }
 
             if (!isValid) {
                 alert('Por favor completa todos los campos obligatorios.');
@@ -709,15 +1163,26 @@
             const formData = {
                 full_name: document.getElementById('full_name').value.trim(),
                 cedula: document.getElementById('cedula').value.trim(),
-                school_name: document.getElementById('school_name').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 password: document.getElementById('password').value,
                 teacher_type: document.getElementById('teacher_type').value || null,
                 specialized_type: document.getElementById('specialized_type').value.trim() || null,
-                school_code: document.getElementById('school_code').value.trim() || null,
-                circuit_code: document.getElementById('circuit_code').value.trim() || null,
-                regional: document.getElementById('regional').value.trim() || null
+                regional: document.getElementById('regional').value.trim() || null,
+                schools: []
             };
+
+            // Recopilar datos de las escuelas
+            for (let i = 1; i <= schoolCount; i++) {
+                const nameInput = document.getElementById(`school_name_${i}`);
+                if (nameInput && nameInput.value.trim()) {
+                    formData.schools.push({
+                        name: nameInput.value.trim(),
+                        address: document.getElementById(`school_address_${i}`)?.value.trim() || null,
+                        phone: document.getElementById(`school_phone_${i}`)?.value.trim() || null,
+                        school_code: document.getElementById(`school_code_${i}`)?.value.trim() || null
+                    });
+                }
+            }
 
             try {
                 const response = await fetch('/api/teachers/register', {
@@ -749,13 +1214,15 @@
         });
 
         // Efectos visuales mejorados
-        document.querySelectorAll('input, select').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
             });
         });
 

@@ -2345,6 +2345,208 @@ async createTeacher(teacherData) {
     });
 }
 
+// ========================================
+// FUNCIÓN COMPLETAMENTE CORREGIDA - SIN FUNCIONES AUXILIARES
+// ========================================
+
+async createTeacherMultiSchool(teacherData, schools) {
+    this.ensureConnection();
+    
+    // ✅ GUARDAR REFERENCIA A this.db
+    const db = this.db;
+    
+    return new Promise((resolve, reject) => {
+        console.log('🔄 Iniciando registro de profesor multi-escuela...');
+        
+        // Iniciar transacción
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION', (err) => {
+                if (err) {
+                    console.error('❌ Error iniciando transacción:', err);
+                    reject(err);
+                    return;
+                }
+                
+                // 1. Crear profesor
+                const teacherQuery = `
+                    INSERT INTO teachers (
+                        full_name, cedula, email, password,
+                        teacher_type, specialized_type, regional
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
+                
+                const teacherParams = [
+                    teacherData.full_name,
+                    teacherData.cedula,
+                    teacherData.email,
+                    teacherData.password,
+                    teacherData.teacher_type,
+                    teacherData.specialized_type,
+                    teacherData.regional
+                ];
+                
+                db.run(teacherQuery, teacherParams, function(err) {
+                    if (err) {
+                        console.error('❌ Error creando profesor:', err);
+                        db.run('ROLLBACK');
+                        reject(err);
+                        return;
+                    }
+                    
+                    const teacherId = this.lastID;
+                    console.log(`✅ Profesor creado con ID: ${teacherId}`);
+                    
+                    // 2. Procesar escuelas - TODO INLINE
+                    let schoolsProcessed = 0;
+                    let schoolResults = [];
+                    const totalSchools = schools.length;
+                    
+                    console.log(`🏫 Procesando ${totalSchools} escuelas...`);
+                    
+                    // Función para finalizar el proceso
+                    const finishProcess = () => {
+                        if (schoolsProcessed === totalSchools) {
+                            db.run('COMMIT', (err) => {
+                                if (err) {
+                                    console.error('❌ Error en commit:', err);
+                                    reject(err);
+                                } else {
+                                    console.log('🎉 Registro completado exitosamente');
+                                    resolve({
+                                        teacherId: teacherId,
+                                        schools: schoolResults,
+                                        totalSchools: totalSchools,
+                                        message: 'Profesor y escuelas creados exitosamente'
+                                    });
+                                }
+                            });
+                        }
+                    };
+                    
+                    // Procesar cada escuela
+                    schools.forEach((schoolData, index) => {
+                        console.log(`🔍 Procesando escuela ${index + 1}: ${schoolData.name}`);
+                        
+                        // Buscar si escuela ya existe
+                        let findSchoolQuery, findParams;
+                        
+                        if (schoolData.school_code && schoolData.school_code.trim()) {
+                            // Si tiene código MEP, buscar por código
+                            findSchoolQuery = `SELECT id, name FROM schools WHERE school_code = ?`;
+                            findParams = [schoolData.school_code.trim()];
+                            console.log(`🔍 Buscando por código MEP: ${schoolData.school_code}`);
+                        } else {
+                            // Si no tiene código, buscar por nombre exacto
+                            findSchoolQuery = `SELECT id, name FROM schools WHERE name = ?`;
+                            findParams = [schoolData.name.trim()];
+                            console.log(`🔍 Buscando por nombre: ${schoolData.name}`);
+                        }
+                        
+                        db.get(findSchoolQuery, findParams, (err, existingSchool) => {
+                            if (err) {
+                                console.error('❌ Error buscando escuela:', err);
+                                db.run('ROLLBACK');
+                                reject(err);
+                                return;
+                            }
+                            
+                            // Función para crear la relación profesor-escuela
+                            const createRelation = (schoolId, schoolName) => {
+                                console.log(`🔗 Creando relación profesor-escuela: ${teacherId} -> ${schoolId}`);
+                                
+                                const relationQuery = `
+                                    INSERT INTO teacher_schools (teacher_id, school_id, is_primary_school)
+                                    VALUES (?, ?, ?)
+                                `;
+                                
+                                const isPrimary = index === 0 ? 1 : 0; // Primera escuela es principal
+                                
+                                db.run(relationQuery, [teacherId, schoolId, isPrimary], (err) => {
+                                    if (err) {
+                                        console.error('❌ Error creando relación profesor-escuela:', err);
+                                        db.run('ROLLBACK');
+                                        reject(err);
+                                        return;
+                                    }
+                                    
+                                    schoolResults.push({
+                                        schoolId: schoolId,
+                                        name: schoolName,
+                                        isPrimary: isPrimary === 1
+                                    });
+                                    
+                                    schoolsProcessed++;
+                                    console.log(`✅ Escuela ${index + 1} procesada. Total: ${schoolsProcessed}/${totalSchools}`);
+                                    
+                                    // Verificar si terminamos
+                                    finishProcess();
+                                });
+                            };
+                            
+                            if (existingSchool) {
+                                // Usar escuela existente
+                                console.log(`✅ Escuela encontrada, usando ID: ${existingSchool.id}`);
+                                createRelation(existingSchool.id, existingSchool.name);
+                            } else {
+                                // Crear nueva escuela
+                                console.log(`🆕 Creando nueva escuela: ${schoolData.name}`);
+                                
+                                const createSchoolQuery = `
+                                    INSERT INTO schools (name, address, phone, school_code)
+                                    VALUES (?, ?, ?, ?)
+                                `;
+                                
+                                const schoolParams = [
+                                    schoolData.name.trim(),
+                                    schoolData.address ? schoolData.address.trim() : null,
+                                    schoolData.phone ? schoolData.phone.trim() : null,
+                                    schoolData.school_code ? schoolData.school_code.trim() : null
+                                ];
+                                
+                                db.run(createSchoolQuery, schoolParams, function(err) {
+                                    if (err) {
+                                        console.error('❌ Error creando escuela:', err);
+                                        db.run('ROLLBACK');
+                                        reject(err);
+                                        return;
+                                    }
+                                    
+                                    const newSchoolId = this.lastID;
+                                    console.log(`✅ Nueva escuela creada con ID: ${newSchoolId}`);
+                                    createRelation(newSchoolId, schoolData.name.trim());
+                                });
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
+
+// ========================================
+// FUNCIÓN PARA VERIFICAR CÉDULA
+// ========================================
+
+async getTeacherByCedula(cedula) {
+    this.ensureConnection();
+    
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM teachers WHERE cedula = ?`;
+        
+        this.db.get(query, [cedula], (err, row) => {
+            if (err) {
+                console.error('❌ Error buscando profesor por cédula:', err);
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+
+
 async getAllTeachers() {
     this.ensureConnection();
     
@@ -2384,6 +2586,7 @@ async getTeacherByEmail(email) {
         });
     });
 }
+
 
 async toggleTeacherStatus(teacherId, action) {
     this.ensureConnection();

@@ -1,22 +1,29 @@
 -- ========================================
--- SISTEMA EDUCATIVO - ESQUEMA COMPLETAMENTE LIMPIO
--- Versión: 4.0 - Sistema de Períodos Académicos + Separación por Profesor
+-- SISTEMA EDUCATIVO - ESQUEMA MULTI-ESCUELA COMPLETO
+-- Versión: 5.0 - Sistema de Períodos Académicos + Múltiples Escuelas por Profesor
 -- ========================================
 
--- Tabla de Escuelas
+-- ========================================
+-- TABLA DE ESCUELAS (EXPANDIDA)
+-- ========================================
 CREATE TABLE IF NOT EXISTS schools (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     address TEXT,
     phone TEXT,
     email TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    school_code TEXT UNIQUE,
+    director_name TEXT,
+    region TEXT,
+    circuit TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ========================================
 -- TABLA DE PERÍODOS ACADÉMICOS
 -- ========================================
-
 CREATE TABLE IF NOT EXISTS academic_periods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     year INTEGER NOT NULL,
@@ -38,21 +45,17 @@ CREATE INDEX IF NOT EXISTS idx_academic_periods_current ON academic_periods(is_c
 CREATE INDEX IF NOT EXISTS idx_academic_periods_year ON academic_periods(year);
 
 -- ========================================
--- TABLA DE PROFESORES/USUARIOS
+-- TABLA DE PROFESORES/USUARIOS (MODIFICADA PARA MULTI-ESCUELA)
 -- ========================================
-
 CREATE TABLE IF NOT EXISTS teachers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT NOT NULL,
     cedula TEXT UNIQUE NOT NULL,
-    school_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     -- Datos opcionales
     teacher_type TEXT,
     specialized_type TEXT,
-    school_code TEXT,
-    circuit_code TEXT,
     regional TEXT,
     -- Control administrativo
     is_active INTEGER DEFAULT 0,
@@ -66,22 +69,42 @@ CREATE TABLE IF NOT EXISTS teachers (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ========================================
+-- TABLA DE RELACIÓN PROFESOR-ESCUELA (NUEVA - MÚLTIPLES ESCUELAS POR PROFESOR)
+-- ========================================
+CREATE TABLE IF NOT EXISTS teacher_schools (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    is_primary_school INTEGER DEFAULT 0, -- Escuela principal del profesor
+    assigned_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(teacher_id, school_id)
+);
+
 -- Índices para optimización
 CREATE INDEX IF NOT EXISTS idx_teachers_email ON teachers(email);
 CREATE INDEX IF NOT EXISTS idx_teachers_cedula ON teachers(cedula);
 CREATE INDEX IF NOT EXISTS idx_teachers_active ON teachers(is_active);
-CREATE INDEX IF NOT EXISTS idx_teachers_school ON teachers(school_name);
+CREATE INDEX IF NOT EXISTS idx_teacher_schools_teacher ON teacher_schools(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_schools_school ON teacher_schools(school_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_schools_active ON teacher_schools(is_active);
 
 -- Tabla de Sesiones Activas de Profesores
 CREATE TABLE IF NOT EXISTS active_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     teacher_id INTEGER NOT NULL,
+    school_id INTEGER, -- Nueva: Para saber en qué escuela está trabajando
     session_token TEXT UNIQUE NOT NULL,
     ip_address TEXT,
     user_agent TEXT,
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
 );
 
 -- Tabla para log de actividad administrativa
@@ -91,9 +114,11 @@ CREATE TABLE IF NOT EXISTS admin_activity_log (
     action_type TEXT NOT NULL,
     action_description TEXT,
     target_teacher_id INTEGER,
+    target_school_id INTEGER,
     ip_address TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (target_teacher_id) REFERENCES teachers(id)
+    FOREIGN KEY (target_teacher_id) REFERENCES teachers(id),
+    FOREIGN KEY (target_school_id) REFERENCES schools(id)
 );
 
 -- Tabla de Administrador Único
@@ -108,52 +133,58 @@ CREATE TABLE IF NOT EXISTS admin_users (
 );
 
 -- ========================================
--- TABLAS BÁSICAS DEL SISTEMA (VACÍAS)
+-- TABLAS BÁSICAS DEL SISTEMA (MULTI-ESCUELA)
 -- ========================================
 
--- Tabla de Materias del Sistema (básicas) - ✅ VACÍA PARA QUE USUARIO CONFIGURE
+-- Tabla de Materias del Sistema (básicas) - CON ESCUELA
 CREATE TABLE IF NOT EXISTS subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    school_id INTEGER,
+    school_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     code TEXT,
     description TEXT,
     grade_level TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (school_id) REFERENCES schools(id)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(school_id, name, grade_level)
 );
 
--- Tabla de Grados - ✅ VACÍA PARA QUE USUARIO CONFIGURE
+-- Tabla de Grados - CON ESCUELA
 CREATE TABLE IF NOT EXISTS grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ REQUERIDO: Debe especificar la escuela
     name TEXT NOT NULL,
     description TEXT,
     usage INTEGER DEFAULT 0,
     priority INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(teacher_id, name)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(teacher_id, school_id, name)
 );
 
--- Tabla de Materias Personalizadas - ✅ VACÍA PARA QUE USUARIO CONFIGURE
+-- Tabla de Materias Personalizadas - CON ESCUELA
 CREATE TABLE IF NOT EXISTS custom_subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    teacher_id INTEGER DEFAULT 0,
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     name TEXT NOT NULL,
     description TEXT,
     usage INTEGER DEFAULT 0,
     priority INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(teacher_id, name)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(teacher_id, school_id, name)
 );
 
--- Tabla de relación Grados-Materias [CON PERÍODO ACADÉMICO]
+-- Tabla de relación Grados-Materias [CON PERÍODO ACADÉMICO + ESCUELA]
 CREATE TABLE IF NOT EXISTS grade_subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
     teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     grade_name TEXT NOT NULL,
     subject_name TEXT NOT NULL,
     teacher_name TEXT,
@@ -161,18 +192,18 @@ CREATE TABLE IF NOT EXISTS grade_subjects (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(academic_period_id, teacher_id, grade_name, subject_name)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(academic_period_id, teacher_id, school_id, grade_name, subject_name)
 );
 
 -- ========================================
--- TABLA DE ESTUDIANTES [CON PERÍODO ACADÉMICO + PROFESOR]
+-- TABLA DE ESTUDIANTES [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 -- ========================================
-
 CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
-    school_id INTEGER DEFAULT 1,
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ REQUERIDO: Debe especificar la escuela
     cedula TEXT,
     first_surname TEXT NOT NULL,
     second_surname TEXT,
@@ -194,20 +225,21 @@ CREATE TABLE IF NOT EXISTS students (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    FOREIGN KEY (school_id) REFERENCES schools(id),
-    -- ✅ CÉDULA ÚNICA POR PERÍODO Y PROFESOR (permite misma cédula en diferentes profesores)
-    UNIQUE(academic_period_id, teacher_id, cedula)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    -- ✅ CÉDULA ÚNICA POR PERÍODO, PROFESOR Y ESCUELA
+    UNIQUE(academic_period_id, teacher_id, school_id, cedula)
 );
 
 -- ========================================
--- MÓDULO DE COTIDIANO [CON PERÍODO ACADÉMICO + PROFESOR]
+-- MÓDULO DE COTIDIANO [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 -- ========================================
 
--- Tabla de Cotidiano [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Cotidiano [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS daily_grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     student_id INTEGER NOT NULL,
     subject_id INTEGER,
     date DATE NOT NULL,
@@ -221,20 +253,21 @@ CREATE TABLE IF NOT EXISTS daily_grades (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
 -- ========================================
--- MÓDULO DE EVALUACIONES [CON PERÍODO ACADÉMICO + PROFESOR]
--- ✅ UNA SOLA TABLA PARA TAREAS, EXÁMENES, PROYECTOS, QUIZ
+-- MÓDULO DE EVALUACIONES [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 -- ========================================
 
--- Tabla de Evaluaciones (tareas, exámenes, proyectos, quiz) [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Evaluaciones (tareas, exámenes, proyectos, quiz) [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     subject_id INTEGER,
     title TEXT NOT NULL,
     description TEXT,
@@ -244,20 +277,22 @@ CREATE TABLE IF NOT EXISTS assignments (
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     teacher_name TEXT,
-    type TEXT DEFAULT 'tarea' CHECK (type IN ('tarea', 'examen', 'proyecto', 'quiz')), -- ✅ COMO EN TU CÓDIGO
+    type TEXT DEFAULT 'tarea' CHECK (type IN ('tarea', 'examen', 'proyecto', 'quiz')),
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
--- Tabla de Calificaciones de Evaluaciones [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Calificaciones de Evaluaciones [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS assignment_grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     assignment_id INTEGER NOT NULL,
     student_id INTEGER NOT NULL,
     points_earned REAL DEFAULT 0,
@@ -272,20 +307,22 @@ CREATE TABLE IF NOT EXISTS assignment_grades (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    UNIQUE(academic_period_id, teacher_id, assignment_id, student_id)
+    UNIQUE(academic_period_id, teacher_id, school_id, assignment_id, student_id)
 );
 
 -- ========================================
--- MÓDULO DE ASISTENCIA [CON PERÍODO ACADÉMICO + PROFESOR]
+-- MÓDULO DE ASISTENCIA [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 -- ========================================
 
--- Tabla de Asistencia [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Asistencia [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS attendance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     student_id INTEGER NOT NULL,
     date DATE NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('present', 'absent_justified', 'absent_unjustified', 'late_justified', 'late_unjustified')),
@@ -299,14 +336,16 @@ CREATE TABLE IF NOT EXISTS attendance (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
--- Tabla de Configuración de Lecciones [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Configuración de Lecciones [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS lesson_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     lessons_per_week INTEGER DEFAULT 5,
@@ -317,18 +356,20 @@ CREATE TABLE IF NOT EXISTS lesson_config (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(academic_period_id, teacher_id, grade_level, subject_area)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(academic_period_id, teacher_id, school_id, grade_level, subject_area)
 );
 
 -- ========================================
--- TABLA DE CONFIGURACIÓN DE ESCALAS DE CALIFICACIÓN
+-- TABLA DE CONFIGURACIÓN DE ESCALAS DE CALIFICACIÓN [MULTI-ESCUELA]
 -- ========================================
 
--- Tabla de Configuración de Escalas de Calificación [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Configuración de Escalas de Calificación [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS grade_scale_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ SEPARACIÓN POR PROFESOR
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     max_scale REAL DEFAULT 5.0,
@@ -336,14 +377,16 @@ CREATE TABLE IF NOT EXISTS grade_scale_config (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(academic_period_id, teacher_id, grade_level, subject_area)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(academic_period_id, teacher_id, school_id, grade_level, subject_area)
 );
 
--- Tabla de Períodos de Asistencia [CON PERÍODO ACADÉMICO + PROFESOR]
+-- Tabla de Períodos de Asistencia [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 CREATE TABLE IF NOT EXISTS attendance_periods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     start_date DATE NOT NULL,
@@ -353,17 +396,19 @@ CREATE TABLE IF NOT EXISTS attendance_periods (
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
 );
 
 -- ========================================
--- MÓDULO DE COTIDIANO AVANZADO [CON PERÍODO ACADÉMICO + PROFESOR]
+-- MÓDULO DE COTIDIANO AVANZADO [CON PERÍODO ACADÉMICO + PROFESOR + ESCUELA]
 -- ========================================
 
 -- Tabla de Indicadores de Cotidiano
 CREATE TABLE IF NOT EXISTS daily_indicators (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
     indicator_name TEXT NOT NULL,
@@ -373,14 +418,16 @@ CREATE TABLE IF NOT EXISTS daily_indicators (
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    UNIQUE(teacher_id, grade_level, subject_area, indicator_name)
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(teacher_id, school_id, grade_level, subject_area, indicator_name)
 );
 
 -- Tabla de Evaluaciones de Cotidiano
 CREATE TABLE IF NOT EXISTS daily_evaluations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     academic_period_id INTEGER DEFAULT 1,
-    teacher_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por profesor
+    teacher_id INTEGER NOT NULL,
+    school_id INTEGER NOT NULL, -- ✅ NUEVO: Separación por escuela
     student_id INTEGER NOT NULL,
     grade_level TEXT NOT NULL,
     subject_area TEXT NOT NULL,
@@ -392,8 +439,9 @@ CREATE TABLE IF NOT EXISTS daily_evaluations (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    UNIQUE(academic_period_id, teacher_id, student_id, evaluation_date, grade_level, subject_area)
+    UNIQUE(academic_period_id, teacher_id, school_id, student_id, evaluation_date, grade_level, subject_area)
 );
 
 -- Tabla de Puntuaciones de Indicadores
@@ -410,48 +458,57 @@ CREATE TABLE IF NOT EXISTS daily_indicator_scores (
 );
 
 -- ========================================
--- ÍNDICES OPTIMIZADOS PARA PERÍODOS ACADÉMICOS + PROFESORES
+-- ÍNDICES OPTIMIZADOS PARA MULTI-ESCUELA + PERÍODOS ACADÉMICOS + PROFESORES
 -- ========================================
 
+-- Índices para Escuelas
+CREATE INDEX IF NOT EXISTS idx_schools_active ON schools(is_active);
+CREATE INDEX IF NOT EXISTS idx_schools_code ON schools(school_code);
+
+-- Índices para Materias
+CREATE INDEX IF NOT EXISTS idx_subjects_school ON subjects(school_id);
+CREATE INDEX IF NOT EXISTS idx_subjects_school_grade ON subjects(school_id, grade_level);
+
 -- Índices para Estudiantes
-CREATE INDEX IF NOT EXISTS idx_students_period_teacher ON students(academic_period_id, teacher_id);
-CREATE INDEX IF NOT EXISTS idx_students_period_teacher_grade ON students(academic_period_id, teacher_id, grade_level);
-CREATE INDEX IF NOT EXISTS idx_students_period_teacher_status ON students(academic_period_id, teacher_id, status);
-CREATE INDEX IF NOT EXISTS idx_students_teacher_cedula ON students(teacher_id, cedula);
+CREATE INDEX IF NOT EXISTS idx_students_period_teacher_school ON students(academic_period_id, teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_students_period_teacher_school_grade ON students(academic_period_id, teacher_id, school_id, grade_level);
+CREATE INDEX IF NOT EXISTS idx_students_period_teacher_school_status ON students(academic_period_id, teacher_id, school_id, status);
+CREATE INDEX IF NOT EXISTS idx_students_teacher_school_cedula ON students(teacher_id, school_id, cedula);
 
 -- Índices para Evaluaciones
-CREATE INDEX IF NOT EXISTS idx_assignments_period_teacher ON assignments(academic_period_id, teacher_id);
-CREATE INDEX IF NOT EXISTS idx_assignments_period_teacher_grade_subject ON assignments(academic_period_id, teacher_id, grade_level, subject_area);
-CREATE INDEX IF NOT EXISTS idx_assignments_period_teacher_type ON assignments(academic_period_id, teacher_id, type);
-CREATE INDEX IF NOT EXISTS idx_assignment_grades_period_teacher ON assignment_grades(academic_period_id, teacher_id);
-CREATE INDEX IF NOT EXISTS idx_assignment_grades_period_teacher_student ON assignment_grades(academic_period_id, teacher_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_period_teacher_school ON assignments(academic_period_id, teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_period_teacher_school_grade_subject ON assignments(academic_period_id, teacher_id, school_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_assignments_period_teacher_school_type ON assignments(academic_period_id, teacher_id, school_id, type);
+CREATE INDEX IF NOT EXISTS idx_assignment_grades_period_teacher_school ON assignment_grades(academic_period_id, teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_grades_period_teacher_school_student ON assignment_grades(academic_period_id, teacher_id, school_id, student_id);
 
 -- Índices para Cotidiano
-CREATE INDEX IF NOT EXISTS idx_daily_grades_period_teacher ON daily_grades(academic_period_id, teacher_id);
-CREATE INDEX IF NOT EXISTS idx_daily_grades_period_teacher_student_date ON daily_grades(academic_period_id, teacher_id, student_id, date);
-CREATE INDEX IF NOT EXISTS idx_daily_grades_period_teacher_grade_subject ON daily_grades(academic_period_id, teacher_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_daily_grades_period_teacher_school ON daily_grades(academic_period_id, teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_daily_grades_period_teacher_school_student_date ON daily_grades(academic_period_id, teacher_id, school_id, student_id, date);
+CREATE INDEX IF NOT EXISTS idx_daily_grades_period_teacher_school_grade_subject ON daily_grades(academic_period_id, teacher_id, school_id, grade_level, subject_area);
 
 -- Índices para Asistencia
-CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher ON attendance(academic_period_id, teacher_id);
-CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_student_date ON attendance(academic_period_id, teacher_id, student_id, date);
-CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_date_grade ON attendance(academic_period_id, teacher_id, date, grade_level, subject_area);
-CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_grade_subject ON lesson_config(academic_period_id, teacher_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_school ON attendance(academic_period_id, teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_school_student_date ON attendance(academic_period_id, teacher_id, school_id, student_id, date);
+CREATE INDEX IF NOT EXISTS idx_attendance_period_teacher_school_date_grade ON attendance(academic_period_id, teacher_id, school_id, date, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_lesson_config_period_teacher_school_grade_subject ON lesson_config(academic_period_id, teacher_id, school_id, grade_level, subject_area);
 
 -- Índice para Configuración de Escalas
-CREATE INDEX IF NOT EXISTS idx_grade_scale_period_teacher_grade_subject ON grade_scale_config(academic_period_id, teacher_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_grade_scale_period_teacher_school_grade_subject ON grade_scale_config(academic_period_id, teacher_id, school_id, grade_level, subject_area);
 
 -- Índices para Cotidiano Avanzado
-CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_grade_subject ON daily_indicators(teacher_id, grade_level, subject_area);
-CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_student_date ON daily_evaluations(academic_period_id, teacher_id, student_id, evaluation_date);
-CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_grade_subject_date ON daily_evaluations(academic_period_id, teacher_id, grade_level, subject_area, evaluation_date);
+CREATE INDEX IF NOT EXISTS idx_daily_indicators_teacher_school_grade_subject ON daily_indicators(teacher_id, school_id, grade_level, subject_area);
+CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_school_student_date ON daily_evaluations(academic_period_id, teacher_id, school_id, student_id, evaluation_date);
+CREATE INDEX IF NOT EXISTS idx_daily_evaluations_period_teacher_school_grade_subject_date ON daily_evaluations(academic_period_id, teacher_id, school_id, grade_level, subject_area, evaluation_date);
 CREATE INDEX IF NOT EXISTS idx_daily_indicator_scores_evaluation ON daily_indicator_scores(daily_evaluation_id);
 
 -- Índices para Grados y Asignación de Materias
-CREATE INDEX IF NOT EXISTS idx_grades_teacher ON grades(teacher_id);
-CREATE INDEX IF NOT EXISTS idx_grade_subjects_teacher ON grade_subjects(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_grades_teacher_school ON grades(teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_grade_subjects_teacher_school ON grade_subjects(teacher_id, school_id);
+CREATE INDEX IF NOT EXISTS idx_custom_subjects_teacher_school ON custom_subjects(teacher_id, school_id);
 
 -- Índices para Sesiones y Admin
-CREATE INDEX IF NOT EXISTS idx_active_sessions_teacher ON active_sessions(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_active_sessions_teacher_school ON active_sessions(teacher_id, school_id);
 CREATE INDEX IF NOT EXISTS idx_active_sessions_token ON active_sessions(session_token);
 CREATE INDEX IF NOT EXISTS idx_active_sessions_activity ON active_sessions(last_activity);
 CREATE INDEX IF NOT EXISTS idx_admin_log_date ON admin_activity_log(created_at);
@@ -466,10 +523,26 @@ INSERT OR IGNORE INTO academic_periods (year, period_type, period_number, name, 
 (2025, 'semester', 1, '2025 - Primer Semestre', 1, 1),
 (2025, 'semester', 2, '2025 - Segundo Semestre', 1, 0);
 
--- Escuela de ejemplo (necesaria para funcionamiento)
-INSERT OR IGNORE INTO schools (id, name, address, phone, email) 
-VALUES (1, 'Mi Escuela', 'Dirección de la Escuela', '0000-0000', 'contacto@miescuela.cr');
+-- ✅ Tabla de escuelas vacía - El usuario configurará sus escuelas
 
 -- Insertar administrador único
 INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
 VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);
+
+-- ========================================
+-- TRIGGERS PARA MANTENER CONSISTENCIA (OPCIONAL)
+-- ========================================
+
+-- Trigger para asegurar que el teacher_id y school_id estén relacionados en teacher_schools
+CREATE TRIGGER IF NOT EXISTS check_teacher_school_relation
+BEFORE INSERT ON students
+FOR EACH ROW
+WHEN NOT EXISTS (
+    SELECT 1 FROM teacher_schools 
+    WHERE teacher_id = NEW.teacher_id 
+    AND school_id = NEW.school_id 
+    AND is_active = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'Teacher is not assigned to this school');
+END;
