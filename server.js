@@ -3256,6 +3256,73 @@ app.get('/api/cotidiano/history', authenticateTeacher, async (req, res) => {
 // AGREGAR ESTE CÓDIGO AL FINAL DE server.js (ANTES DE startServer())
 // ========================================
 
+// Guardar configuración de pesos SEA
+app.put('/api/sea/weights', authenticateTeacher, async (req, res) => {
+    try {
+        const { cotidiano_weight, attendance_weight, evaluations_weight, academic_period_id, year, period_type, period_number, school_id } = req.body;
+
+        let academicPeriodId = academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const current = await new Promise((resolve, reject) => {
+                database.db.get('SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1', [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = current ? current.id : 1;
+        }
+
+        const weightData = {
+            academic_period_id: academicPeriodId,
+            teacher_id: req.teacher.id,
+            school_id: school_id || req.teacher.school_id,
+            cotidiano_weight: parseFloat(cotidiano_weight || 65),
+            attendance_weight: parseFloat(attendance_weight || 10),
+            evaluations_weight: parseFloat(evaluations_weight || 25)
+        };
+
+        await database.saveSEAWeightConfig(weightData);
+
+        res.json({ success: true, message: 'Pesos SEA guardados correctamente' });
+    } catch (error) {
+        console.error('Error guardando pesos SEA:', error);
+        res.status(500).json({ success: false, message: 'Error guardando pesos SEA', error: error.message });
+    }
+});
+
+// Obtener configuración de pesos SEA
+app.get('/api/sea/weights', authenticateTeacher, async (req, res) => {
+    try {
+        const { academic_period_id, year, period_type, period_number, school_id } = req.query;
+
+        let academicPeriodId = academic_period_id || null;
+
+        if (!academicPeriodId && year && period_type && period_number) {
+            academicPeriodId = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        }
+
+        if (!academicPeriodId) {
+            const current = await new Promise((resolve, reject) => {
+                database.db.get('SELECT id FROM academic_periods WHERE is_current = 1 LIMIT 1', [], (err, row) => {
+                    if (err) reject(err); else resolve(row);
+                });
+            });
+            academicPeriodId = current ? current.id : 1;
+        }
+
+        const weights = await database.getSEAWeightConfig(academicPeriodId, req.teacher.id, school_id || req.teacher.school_id);
+
+        res.json({ success: true, data: weights });
+    } catch (error) {
+        console.error('Error obteniendo pesos SEA:', error);
+        res.status(500).json({ success: false, message: 'Error obteniendo pesos SEA', error: error.message });
+    }
+});
+
 // Endpoint para obtener lista de grados y materias disponibles para SEA
 app.get('/api/sea/grade-subjects', authenticateTeacher, async (req, res) => {
     try {
@@ -3635,11 +3702,7 @@ app.get('/api/sea/consolidated', authenticateTeacher, async (req, res) => {
         }
 
         // 4. Obtener configuración de pesos (valores que suman hacia 100)
-        const weightConfig = {
-            cotidiano_weight: 65, // 65 puntos del total
-            attendance_weight: 10,  // 10 puntos del total 
-            evaluations_weight: 25 // 25 puntos restantes (o lo que tengan configurado las evaluaciones)
-        };
+        const weightConfig = await database.getSEAWeightConfig(academicPeriodId, req.teacher.id, req.teacher.school_id);
 
         console.log(`✅ SEA procesado: ${studentsWithSEA.length} estudiantes completados`);
 
