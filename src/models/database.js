@@ -1,11 +1,26 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+
+const PASSWORD_SALT = process.env.PASSWORD_SALT || 'static_salt';
 
 class Database {
     constructor() {
         this.db = null;
         this.isInitialized = false;
+    }
+
+    hashPassword(password) {
+        if (!password) return '';
+        return crypto
+            .pbkdf2Sync(password, PASSWORD_SALT, 10000, 64, 'sha512')
+            .toString('hex');
+    }
+
+    verifyPassword(password, hash) {
+        if (!password || !hash) return false;
+        return this.hashPassword(password) === hash;
     }
 
     // ========================================

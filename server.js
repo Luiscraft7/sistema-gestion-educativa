@@ -621,8 +621,8 @@ app.post('/api/teachers/login', async (req, res) => {
             });
         }
         
-        // Verificar contraseña
-        if (teacher.password !== password) {
+        // Verificar contraseña (comparar hash)
+        if (!database.verifyPassword(password || '', teacher.password)) {
             console.log('❌ Contraseña incorrecta');
             return res.status(401).json({
                 success: false,
@@ -822,7 +822,7 @@ app.post('/api/teachers/register', async (req, res) => {
             full_name: full_name.trim(),
             cedula: cedula.trim(),
             email: email.trim(),
-            password: password, // En producción, usar hash
+            password: database.hashPassword(password),
             teacher_type: teacher_type || null,
             specialized_type: specialized_type || null,
             regional: regional || null
