@@ -5,7 +5,7 @@
 
 // Helper para realizar peticiones autenticadas usando el token
 async function authenticatedFetch(url, options = {}) {
-    const token = localStorage.getItem('sessionToken');
+    const token = localStorage.getItem('sessionToken') || localStorage.getItem('adminToken');
 
     const defaultOptions = {
         headers: {
@@ -27,6 +27,7 @@ async function authenticatedFetch(url, options = {}) {
 
     if (response.status === 401) {
         localStorage.removeItem('sessionToken');
+        localStorage.removeItem('adminToken');
         localStorage.removeItem('teacherInfo');
         window.location.href = '/login.html';
         return Promise.reject(new Error('Unauthorized'));
@@ -146,7 +147,7 @@ class GlobalPeriodSelector {
 
     async loadAvailablePeriods() {
         try {
-            const response = await fetch('/api/academic-periods');
+            const response = await authenticatedFetch('/api/academic-periods');
             const result = await response.json();
             
             if (result.success) {
@@ -162,7 +163,7 @@ class GlobalPeriodSelector {
 
     async getCurrentPeriodFromAPI() {
         try {
-            const response = await fetch('/api/academic-periods/current');
+            const response = await authenticatedFetch('/api/academic-periods/current');
             const result = await response.json();
             
             if (result.success) {
@@ -395,7 +396,7 @@ async applyPeriodChange() {
         const currentPeriod = this.currentPeriod || this.loadCurrentPeriod();
         
         // Establecer nuevo período en servidor
-        const response = await fetch('/api/academic-periods/set-current', {
+        const response = await authenticatedFetch('/api/academic-periods/set-current', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

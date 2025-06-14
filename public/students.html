@@ -1159,7 +1159,7 @@
             if (period && period.year) return period;
 
             try {
-                const resp = await fetch('/api/academic-periods/current');
+                const resp = await authenticatedFetch('/api/academic-periods/current');
                 const result = await resp.json();
                 if (result.success) {
                     period = {

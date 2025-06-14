@@ -1785,7 +1785,7 @@
                 if (!yearSelector) return;
                 
                 const year = yearSelector.value;
-                const response = await fetch(`/api/academic-periods?year=${year}`);
+                const response = await authenticatedFetch(`/api/academic-periods?year=${year}`);
                 const periods = await response.json();
 
                 console.log('Períodos disponibles:', periods);
@@ -1831,7 +1831,7 @@
 
         try {
             // Enviar al servidor
-            const response = await fetch('/api/academic-periods/set-current', {
+            const response = await authenticatedFetch('/api/academic-periods/set-current', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
