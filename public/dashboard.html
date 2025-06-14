@@ -2208,6 +2208,19 @@
             toggleQuickEdit();
         }
 
+        // Función utilizada por el selector global de períodos
+        function loadDashboardData() {
+            const teacherSession = sessionStorage.getItem('teacherSession');
+            const adminSession = sessionStorage.getItem('adminSession');
+
+            if (teacherSession === 'true') {
+                loadTeacherStats();
+                loadIntegratedTeacherProfile();
+            } else if (adminSession === 'true') {
+                loadAdminStats();
+            }
+        }
+
         function updateCurrentPeriodDisplay() {
             const currentPeriod = getCurrentAcademicPeriod();
             const indicator = document.getElementById('currentPeriodText');
@@ -2588,6 +2601,9 @@
                 window.dispatchEvent(new CustomEvent('academicPeriodChanged', {
                     detail: newPeriod
                 }));
+                window.dispatchEvent(new CustomEvent('reloadPeriodData', {
+                    detail: newPeriod
+                }));
             }
 
             getCurrentPeriod() {
@@ -2638,5 +2654,6 @@
                 JSON.parse(localStorage.getItem(getPeriodStorageKey()) || '{}');
         };
     </script>
+    <script src="js/global-period-selector.js"></script>
 </body>
 </html>
