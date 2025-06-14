@@ -1153,17 +1153,7 @@
                         5.0 = MEP tradicional | 10.0 = escala de 10 | 100 = porcentajes
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">📅 Peso en SEA (%):</label>
-                    <input type="number"
-                        class="form-input"
-                        id="attendanceWeightInput"
-                        step="0.1"
-                        min="0"
-                        max="100"
-                        value="10"
-                        required>
-                </div>
+
                 
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeLessonConfigModal()">Cancelar</button>
@@ -2317,40 +2307,24 @@
             try {
                 if (!currentGrade) {
                     document.getElementById('maxScaleInput').value = 5.0;
-                    document.getElementById('attendanceWeightInput').value = 10;
                     debugLog('⚠️ No hay grado seleccionado, usando escala por defecto');
                     return;
                 }
 
                 const response = await authenticatedFetch(`/api/grade-scale?grade=${encodeURIComponent(currentGrade)}&subject=general`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     document.getElementById('maxScaleInput').value = data.max_scale;
-                    document.getElementById('attendanceWeightInput').value = 10;
                     debugLog(`✅ Escala cargada: ${data.max_scale}`);
                 } else {
                     document.getElementById('maxScaleInput').value = 5.0; // Default
-                    document.getElementById('attendanceWeightInput').value = 10;
                     debugLog('⚠️ No se encontró escala, usando 5.0 por defecto');
                 }
             } catch (error) {
                 console.error('Error cargando escala:', error);
                 document.getElementById('maxScaleInput').value = 5.0; // Default en caso de error
-                document.getElementById('attendanceWeightInput').value = 10;
                 debugLog('❌ Error cargando escala, usando 5.0 por defecto');
-            }
-
-            try {
-                const period = getCurrentAcademicPeriod();
-                const weightResp = await authenticatedFetch(`/api/sea/weights?academic_period_id=${period.periodId}&school_id=${period.schoolId}`);
-                const weightData = await weightResp.json();
-                if (weightData.success && weightData.data) {
-                    document.getElementById('attendanceWeightInput').value = weightData.data.attendance_weight;
-                    debugLog(`✅ Peso de asistencia cargado: ${weightData.data.attendance_weight}`);
-                }
-            } catch (wError) {
-                console.error('Error cargando peso:', wError);
             }
         }
         function closeLessonConfigModal() {
@@ -2363,7 +2337,7 @@
             try {
                 // ✅ OBTENER LA ESCALA MÁXIMA Y EL PESO
                 const maxScale = parseFloat(document.getElementById('maxScaleInput').value);
-                const attendanceWeight = parseFloat(document.getElementById('attendanceWeightInput').value);
+                const attendanceWeight = maxScale; // Unificar peso con escala
                 
                 if (!currentGrade) {
                     showMessage('error', 'Seleccione un grado primero');
