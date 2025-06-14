@@ -1201,6 +1201,36 @@
         let teachers = [];
         let sessions = [];
 
+        // Helper para peticiones autenticadas con token de administrador
+        async function adminAuthenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('adminToken');
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+
+            const response = await fetch(url, mergedOptions);
+
+            if (response.status === 401) {
+                console.error('Token requerido para acceso de administrador');
+                return Promise.reject(new Error('Unauthorized'));
+            }
+
+            return response;
+        }
+
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             checkAdminAuthentication();
@@ -1218,7 +1248,7 @@
             ) {
                 showToast('error', 'Acceso denegado. Redirigiendo al login administrativo...');
                 setTimeout(() => {
-                    window.location.href = 'admin-login.html';
+                    window.location.href = 'login.html';
                 }, 2000);
                 return false;
             }
@@ -1332,7 +1362,7 @@
             try {
                 console.log('📋 Cargando profesores...');
                 
-                const response = await fetch('/api/teachers');
+                const response = await adminAuthenticatedFetch('/api/teachers');
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -1535,7 +1565,7 @@
 
         async function toggleTeacherStatus(teacherId, action) {
             try {
-                const response = await fetch(`/api/teachers/${teacherId}/toggle-status`, {
+                const response = await adminAuthenticatedFetch(`/api/teachers/${teacherId}/toggle-status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1787,7 +1817,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     
                     for (const teacherId of teacherIds) {
-                        await fetch(`/api/teachers/${teacherId}/toggle-payment`, {
+                        await adminAuthenticatedFetch(`/api/teachers/${teacherId}/toggle-payment`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -1828,7 +1858,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     
                     for (const teacher of unpaidTeachers) {
-                        await fetch(`/api/teachers/${teacher.id}/toggle-payment`, {
+                        await adminAuthenticatedFetch(`/api/teachers/${teacher.id}/toggle-payment`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -2096,7 +2126,7 @@ ${teachers.filter(t => !t.is_paid).map(t => `- ${t.full_name} (${t.email})`).joi
         // ========================================
         async function loadSessions() {
             try {
-                const response = await fetch('/api/sessions/active');
+                const response = await adminAuthenticatedFetch('/api/sessions/active');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -2205,7 +2235,7 @@ ${teachers.filter(t => !t.is_paid).map(t => `- ${t.full_name} (${t.email})`).joi
                 try {
                     const session = sessions.find(s => s.id === sessionId);
                     if (session) {
-                        const response = await fetch('/api/teachers/logout', {
+                        const response = await adminAuthenticatedFetch('/api/teachers/logout', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2255,7 +2285,7 @@ ${teachers.filter(t => !t.is_paid).map(t => `- ${t.full_name} (${t.email})`).joi
             try {
                 console.log('📊 Actualizando estadísticas de admin...');
                 
-                const response = await fetch('/api/admin/stats');
+                const response = await adminAuthenticatedFetch('/api/admin/stats');
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -2479,7 +2509,7 @@ ${teachers.filter(t => !t.is_paid).map(t => `- ${t.full_name} (${t.email})`).joi
             if (confirm(`¿Activar todos los ${pendingTeachers.length} profesores pendientes?`)) {
                 try {
                     for (const teacher of pendingTeachers) {
-                        await fetch(`/api/teachers/${teacher.id}/toggle-status`, {
+                        await adminAuthenticatedFetch(`/api/teachers/${teacher.id}/toggle-status`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
