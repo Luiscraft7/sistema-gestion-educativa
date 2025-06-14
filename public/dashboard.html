@@ -2439,6 +2439,9 @@
                         });
 
                         serverResult = await response.json();
+                        if (serverResult.success && serverResult.data && serverResult.data.periodId) {
+                            newPeriod.periodId = serverResult.data.periodId;
+                        }
                     } catch (error) {
                         console.warn('No se pudo conectar al servidor, continuando con cambio local:', error);
                         // Continuar con cambio local si no hay servidor
