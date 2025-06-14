@@ -1800,6 +1800,8 @@ Presenta materiales completos"
         let allGrades = [];
         let allSubjects = [];
         let calificaciones = {};
+        // Datos históricos por estudiante (suma de porcentajes y total de fechas)
+        let historicalStats = {};
         let currentGrado = localStorage.getItem('cotidianoGrado') || '';
         let currentMateria = localStorage.getItem('cotidianoMateria') || '';
         let currentDate = localStorage.getItem('cotidianoFecha') || new Date().toISOString().split('T')[0];
@@ -2594,6 +2596,54 @@ Presenta materiales completos"
             }
         }
 
+        async function loadHistoricalStats() {
+            historicalStats = {};
+
+            if (!currentGrado || !currentMateria) return;
+
+            try {
+                const period = getCurrentAcademicPeriod();
+                const response = await authenticatedFetch(`/api/cotidiano/history?grade=${encodeURIComponent(currentGrado)}&subject=${encodeURIComponent(currentMateria)}&academic_period_id=${period.periodId}&school_id=${period.schoolId}`);
+                const result = await response.json();
+
+                if (result.success && Array.isArray(result.data)) {
+                    const temp = {};
+
+                    result.data.forEach(item => {
+                        if (!item.student_name) return;
+                        const student = students.find(s => {
+                            const fullName = `${s.first_surname} ${s.second_surname || ''} ${s.first_name}`.trim();
+                            return fullName === item.student_name;
+                        });
+                        if (!student) return;
+                        const key = `student_${student.id}`;
+                        if (!temp[key]) temp[key] = {};
+                        if (!temp[key][item.evaluation_date]) temp[key][item.evaluation_date] = [];
+                        if (item.score !== null && item.score !== undefined) {
+                            temp[key][item.evaluation_date].push(parseInt(item.score));
+                        }
+                    });
+
+                    Object.keys(temp).forEach(key => {
+                        let sumaPromedios = 0;
+                        let totalFechas = 0;
+                        Object.values(temp[key]).forEach(scores => {
+                            const suma = scores.reduce((a, b) => a + b, 0);
+                            const maxPosible = scores.length * 3;
+                            if (maxPosible > 0) {
+                                const porcentaje = (suma / maxPosible) * 100;
+                                sumaPromedios += porcentaje;
+                                totalFechas++;
+                            }
+                        });
+                        historicalStats[key] = { sumaPromedios, totalFechas };
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading historical data:', err);
+            }
+        }
+
         // Implementar el resto de funciones necesarias manteniendo la funcionalidad original...
         
         async function cambiarGrado() {
@@ -2809,8 +2859,7 @@ Presenta materiales completos"
                         });
                     }
                     
-                    renderIndicatorsList();
-                    renderCalificacionesTable();
+                    // La interfaz se actualizará después de cargar historial
                     
                 } else {
                     if (!calificaciones[currentGrado]) {
@@ -2825,9 +2874,12 @@ Presenta materiales completos"
                         estudiantes: {}
                     };
 
-                    renderIndicatorsList();
-                    renderCalificacionesTable();
+                    // La interfaz se actualizará después de cargar historial
                 }
+
+                await loadHistoricalStats();
+                renderIndicatorsList();
+                renderCalificacionesTable();
 
             } catch (error) {
                 console.error('Error cargando datos:', error);
@@ -2904,29 +2956,30 @@ Presenta materiales completos"
             }
             
             let cotidianoTotal = 0;
-            let sumaPromedios = 0;
-            let totalFechas = 0;
-            
-            if (calificaciones[currentGrado] && calificaciones[currentGrado][currentMateria]) {
-                Object.keys(calificaciones[currentGrado][currentMateria]).forEach(fecha => {
-                    const dateData = calificaciones[currentGrado][currentMateria][fecha];
-                    if (dateData.estudiantes && dateData.estudiantes[studentKey]) {
-                        const grades = dateData.estudiantes[studentKey];
-                        
-                        const sumaFecha = Object.values(grades).reduce((sum, grade) => {
-                            return sum + (grade !== null && grade !== undefined && !isNaN(grade) ? parseInt(grade) : 0);
-                        }, 0);
+            let sumaPromedios = historicalStats[studentKey]?.sumaPromedios || 0;
+            let totalFechas = historicalStats[studentKey]?.totalFechas || 0;
 
-                        const totalIndicadoresFecha = dateData.indicators ? dateData.indicators.length : Object.keys(grades).length;
-                        const maxPosibleFecha = totalIndicadoresFecha * 3;
-                        
-                        if (maxPosibleFecha > 0) {
-                            const porcentajeFecha = (sumaFecha / maxPosibleFecha) * 100;
-                            sumaPromedios += porcentajeFecha;
-                            totalFechas++;
-                        }
-                    }
-                });
+            if (calificaciones[currentGrado] &&
+                calificaciones[currentGrado][currentMateria] &&
+                calificaciones[currentGrado][currentMateria][currentDate] &&
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes &&
+                calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey]) {
+
+                const grades = calificaciones[currentGrado][currentMateria][currentDate].estudiantes[studentKey];
+
+                const sumaFecha = Object.values(grades).reduce((sum, grade) => {
+                    return sum + (grade !== null && grade !== undefined && !isNaN(grade) ? parseInt(grade) : 0);
+                }, 0);
+
+                const totalIndicadoresFecha = calificaciones[currentGrado][currentMateria][currentDate].indicators ?
+                    calificaciones[currentGrado][currentMateria][currentDate].indicators.length : Object.keys(grades).length;
+                const maxPosibleFecha = totalIndicadoresFecha * 3;
+
+                if (maxPosibleFecha > 0) {
+                    const porcentajeFecha = (sumaFecha / maxPosibleFecha) * 100;
+                    sumaPromedios += porcentajeFecha;
+                    totalFechas++;
+                }
             }
             
             if (totalFechas > 0) {
