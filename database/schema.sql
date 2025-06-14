@@ -549,8 +549,7 @@ INSERT OR IGNORE INTO academic_periods (year, period_type, period_number, name, 
 -- ✅ Tabla de escuelas vacía - El usuario configurará sus escuelas
 
 -- Insertar administrador único
-INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
-VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);
+-- El administrador se creará al iniciar la aplicación usando variables de entorno
 
 -- ========================================
 -- TRIGGERS PARA MANTENER CONSISTENCIA (OPCIONAL)

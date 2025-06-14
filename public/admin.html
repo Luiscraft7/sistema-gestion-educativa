@@ -1214,8 +1214,7 @@
 
             if (
                 adminSession !== 'true' ||
-                !adminUser ||
-                adminUser.trim().toLowerCase() !== 'luiscraft'
+                !adminUser
             ) {
                 showToast('error', 'Acceso denegado. Redirigiendo al login administrativo...');
                 setTimeout(() => {

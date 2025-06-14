@@ -505,26 +505,23 @@
             btn.disabled = true;
             
             try {
-                // 🔐 VERIFICAR SI ES ADMINISTRADOR PRIMERO
-                if (email.trim().toLowerCase() === 'luiscraft' && password === 'Naturarte0603') {
-                    // Login de Administrador
-                    const adminResponse = await fetch('/api/admin/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-                    
-                    const adminResult = await adminResponse.json();
-                    
-                    if (adminResult.success) {
-                        // Guardar sesión administrativa
-                        sessionStorage.setItem('adminSession', 'true');
-                        sessionStorage.setItem('adminUser', email.trim());
-                        
-                        alert('👑 ¡Bienvenido Administrador! Acceso total al sistema.');
-                        window.location.href = 'dashboard.html';
-                        return;
-                    }
+                // Intentar login administrativo primero
+                const adminResponse = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const adminResult = await adminResponse.json();
+
+                if (adminResult.success) {
+                    sessionStorage.setItem('adminSession', 'true');
+                    sessionStorage.setItem('adminUser', email.trim());
+                    localStorage.setItem('adminToken', adminResult.token);
+
+                    alert('👑 ¡Bienvenido Administrador! Acceso total al sistema.');
+                    window.location.href = 'dashboard.html';
+                    return;
                 }
                 
                 // 🧑‍🏫 SI NO ES ADMIN, INTENTAR LOGIN DE PROFESOR
