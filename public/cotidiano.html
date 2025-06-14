@@ -2813,13 +2813,25 @@ Presenta materiales completos"
                     renderCalificacionesTable();
                     
                 } else {
-                    resetInterface();
+                    if (!calificaciones[currentGrado]) {
+                        calificaciones[currentGrado] = {};
+                    }
+                    if (!calificaciones[currentGrado][currentMateria]) {
+                        calificaciones[currentGrado][currentMateria] = {};
+                    }
+                    calificaciones[currentGrado][currentMateria][currentDate] = {
+                        indicators: [],
+                        mainIndicator: null,
+                        estudiantes: {}
+                    };
+
+                    renderIndicatorsList();
+                    renderCalificacionesTable();
                 }
-                
+
             } catch (error) {
                 console.error('Error cargando datos:', error);
                 showNotification('Error cargando datos', 'error');
-                resetInterface();
             }
             
             hasUnsavedChanges = false;
