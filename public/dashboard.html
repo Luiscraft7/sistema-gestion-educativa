@@ -2020,7 +2020,7 @@
                 // Cargar número de estudiantes del período actual
                 document.getElementById('teacherStudentsCount').textContent = '⏳';
 
-                const period = window.getCurrentAcademicPeriod ? window.getCurrentAcademicPeriod() : null;
+                const period = window.getCurrentAcademicPeriod();
                 let query = '';
                 if (period) {
                     query = `?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
@@ -2209,7 +2209,7 @@
         }
 
         function updateCurrentPeriodDisplay() {
-            const currentPeriod = getCurrentAcademicPeriod();
+            const currentPeriod = window.getCurrentAcademicPeriod();
             const indicator = document.getElementById('currentPeriodText');
             const schoolLabel = document.getElementById('teacherProfileSchool');
             const schoolSelector = document.getElementById('schoolSelector');
@@ -2641,12 +2641,7 @@
             window.addEventListener('academicPeriodChanged', updateCurrentPeriodDisplay);
         });
 
-        // Función global para obtener período actual
-        window.getCurrentAcademicPeriod = () => {
-            return window.unifiedPeriodSelector ?
-                window.unifiedPeriodSelector.getCurrentPeriod() :
-                JSON.parse(localStorage.getItem(getPeriodStorageKey()) || '{}');
-        };
     </script>
+    <script src="js/global-period-selector.js"></script>
 </body>
 </html>

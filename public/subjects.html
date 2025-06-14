@@ -823,7 +823,7 @@
 
         async function loadSubjects() {
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/custom-subjects?school_id=${period.schoolId}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -843,7 +843,7 @@
 
         async function loadGrades() {
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/grades?school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -863,7 +863,7 @@
 
         async function loadGradeAssignments() {
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/grade-subjects?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -1129,7 +1129,7 @@
 
                 console.log('📤 Enviando asignación:', { gradeName, subjects: selectedSubjects });
 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/grade-subjects/assign?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url, {
                     method: 'POST',
@@ -1239,7 +1239,7 @@
 
                 console.log('📤 Enviando asignación masiva:', { grades: selectedGrades, subjects: selectedSubjects });
 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/grade-subjects/assign-multiple?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url, {
                     method: 'POST',
@@ -1285,7 +1285,7 @@
             }
             
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/grade-subjects/${encodeURIComponent(gradeName)}/${encodeURIComponent(subjectName)}?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url, {
                     method: 'DELETE'
@@ -1382,7 +1382,7 @@
                 const display = document.getElementById('activePeriodDisplay');
                 if (!display) return;
                 try {
-                    const currentPeriod = getCurrentAcademicPeriod();
+                    const currentPeriod = window.getCurrentAcademicPeriod();
                     const teacherData = this.getTeacherInfo();
                     const text = this.buildPeriodText(currentPeriod, teacherData);
                     display.textContent = text;

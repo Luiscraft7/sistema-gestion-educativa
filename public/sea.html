@@ -859,7 +859,7 @@
         // Cargar combinaciones de grado-materia disponibles
         async function loadGradeSubjects() {
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/sea/grade-subjects?academic_period_id=${period.periodId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -913,7 +913,7 @@
             showLoading();
 
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/sea/consolidated?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}&academic_period_id=${period.periodId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -1283,7 +1283,7 @@
                 const display = document.getElementById('activePeriodDisplay');
                 if (!display) return;
                 try {
-                    const currentPeriod = getCurrentAcademicPeriod();
+                    const currentPeriod = window.getCurrentAcademicPeriod();
                     const teacherData = this.getTeacherInfo();
                     const text = this.buildPeriodText(currentPeriod, teacherData);
                     display.textContent = text;

@@ -1034,7 +1034,7 @@
         // Inicialización
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Iniciando gestión simple de estudiantes...');
-            await ensureCurrentPeriod();
+            window.getCurrentAcademicPeriod();
             loadStudents();
             loadGrades();
         });
@@ -1053,7 +1053,7 @@
                 document.getElementById('emptyState').style.display = 'none';
 
                 // CORRECCIÓN: Mejor manejo del período académico actual
-                const currentPeriod = await ensureCurrentPeriod();
+                const currentPeriod = window.getCurrentAcademicPeriod();
                 console.log('📅 Período académico activo:', currentPeriod);
 
                 // Validar que el período tenga datos válidos
@@ -1136,53 +1136,6 @@
             }
         }
 
-        // FUNCIÓN HELPER: Obtener período académico actual
-        function getCurrentAcademicPeriod() {
-            if (window.unifiedPeriodSelector) {
-                return window.unifiedPeriodSelector.getCurrentPeriod();
-            }
-
-            const saved = localStorage.getItem(getPeriodStorageKey());
-            if (saved) {
-                try {
-                    return JSON.parse(saved);
-                } catch (error) {
-                    console.error('Error parseando período guardado:', error);
-                }
-            }
-
-            return null;
-        }
-
-        async function ensureCurrentPeriod() {
-            let period = getCurrentAcademicPeriod();
-            if (period && period.year) return period;
-
-            try {
-                const resp = await authenticatedFetch('/api/academic-periods/current');
-                const result = await resp.json();
-                if (result.success) {
-                    period = {
-                        schoolId: '1',
-                        year: result.data.year,
-                        periodType: result.data.period_type,
-                        periodNumber: result.data.period_number
-                    };
-                    localStorage.setItem(getPeriodStorageKey(), JSON.stringify(period));
-                    return period;
-                }
-            } catch (error) {
-                console.error('Error obteniendo período actual desde API:', error);
-            }
-
-            // Fallback por si no hay respuesta
-            return {
-                schoolId: '1',
-                year: 2025,
-                periodType: 'semester',
-                periodNumber: 1
-            };
-        }
 
         function showMessage(type, message) {
             const messageEl = document.getElementById(type + 'Message');
@@ -1442,7 +1395,7 @@
             const studentData = Object.fromEntries(formData.entries());
 
             // AGREGAR PERÍODO ACADÉMICO ACTUAL
-            const currentPeriod = await ensureCurrentPeriod();
+            const currentPeriod = window.getCurrentAcademicPeriod();
             console.log('📅 Guardando estudiante en período:', currentPeriod);
             
             // Buscar ID del período académico actual
@@ -2554,7 +2507,7 @@
 
             try {
                 // Obtener período actual
-                const currentPeriod = await ensureCurrentPeriod();
+                const currentPeriod = window.getCurrentAcademicPeriod();
                 
                 // Obtener datos del profesor (si están disponibles)
                 const teacherData = this.getTeacherInfo();
@@ -2575,7 +2528,7 @@
         }
 
        getCurrentPeriod() {
-            return getCurrentAcademicPeriod();
+            return window.getCurrentAcademicPeriod();
         }
         getTeacherInfo() {
             // Intentar obtener datos del profesor de sessionStorage
@@ -2678,7 +2631,7 @@
     // ESCUCHAR CAMBIOS DE PERÍODO desde el dashboard automáticamente
     document.addEventListener('DOMContentLoaded', async () => {
         // Cargar estudiantes inicialmente
-        await ensureCurrentPeriod();
+        window.getCurrentAcademicPeriod();
         loadStudents();
         
         // Escuchar cambios globales de período
@@ -2731,7 +2684,7 @@ console.log('📚 Event listeners de período académico configurados en student
                 return;
             }
             
-            const current = getCurrentAcademicPeriod();
+            const current = window.getCurrentAcademicPeriod();
             const defaultOptions = {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -2801,5 +2754,6 @@ console.log('📚 Event listeners de período académico configurados en student
         }
 
     </script>
+    <script src="js/global-period-selector.js"></script>
 </body>
 </html>
