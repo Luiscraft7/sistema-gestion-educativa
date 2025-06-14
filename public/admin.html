@@ -2610,6 +2610,7 @@ ${teachers.filter(t => !t.is_paid).map(t => `- ${t.full_name} (${t.email})`).joi
             if (confirm('¿Estás seguro de que quieres cerrar la sesión administrativa?')) {
                 sessionStorage.removeItem('adminSession');
                 sessionStorage.removeItem('adminUser');
+                localStorage.removeItem('adminToken');
                 addActivityLog('session', 'Logout Admin', 'Sesión administrativa cerrada');
                 showToast('info', 'Sesión cerrada. Redirigiendo...');
                 setTimeout(() => {
