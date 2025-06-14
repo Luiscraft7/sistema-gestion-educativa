@@ -58,7 +58,21 @@ const PORT = 3000;
 // ========================================
 // MIDDLEWARES
 // ========================================
-app.use(cors());
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            callback(new Error('Not allowed by CORS'));
+        }
+    })
+);
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -138,6 +152,20 @@ async function authenticateTeacher(req, res, next) {
             message: 'Error interno del servidor'
         });
     }
+}
+
+function authenticateAdmin(req, res, next) {
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, message: 'Token requerido' });
+    }
+    const token = auth.substring(7);
+    const payload = verifyJWT(token);
+    if (!payload || payload.role !== 'super_admin') {
+        return res.status(403).json({ success: false, message: 'Acceso denegado' });
+    }
+    req.admin = payload;
+    next();
 }
 
 
@@ -322,7 +350,7 @@ app.get('/api/students', authenticateTeacher, async (req, res) => {
 });
 
 // Copiar estudiantes entre períodos (para uso inicial)
-app.post('/api/students/copy-period', async (req, res) => {
+app.post('/api/students/copy-period', authenticateAdmin, async (req, res) => {
     try {
         const { fromPeriodId, toPeriodId } = req.body;
         
@@ -546,7 +574,7 @@ app.delete('/api/students/:id', authenticateTeacher, async (req, res) => {
 });
 
 // Obtener estadísticas generales para admin
-app.get('/api/admin/stats', async (req, res) => {
+app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
     try {
         console.log('📊 Obteniendo estadísticas de administrador...');
         
@@ -687,7 +715,7 @@ app.post('/api/teachers/login', async (req, res) => {
 
 
 // NUEVO ENDPOINT: Actualizar perfil del profesor
-app.put('/api/teachers/:id/profile', async (req, res) => {
+app.put('/api/teachers/:id/profile', authenticateTeacher, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, school_name } = req.body;
@@ -858,7 +886,7 @@ app.get('/api/teachers', async (req, res) => {
 });
 
 // Activar/Desactivar profesor
-app.put('/api/teachers/:id/toggle-status', async (req, res) => {
+app.put('/api/teachers/:id/toggle-status', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { action } = req.body; // 'activate' or 'deactivate'
@@ -880,7 +908,7 @@ app.put('/api/teachers/:id/toggle-status', async (req, res) => {
 });
 
 // Marcar pago
-app.put('/api/teachers/:id/payment', async (req, res) => {
+app.put('/api/teachers/:id/payment', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { is_paid } = req.body;
@@ -903,7 +931,7 @@ app.put('/api/teachers/:id/payment', async (req, res) => {
 
 
 // NUEVO ENDPOINT: Actualizar perfil del profesor
-app.put('/api/teachers/:id/profile', async (req, res) => {
+app.put('/api/teachers/:id/profile', authenticateTeacher, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, school_name } = req.body;
@@ -1573,7 +1601,7 @@ app.get('/api/lesson-config', async (req, res) => {
 });
 
 // Guardar configuración de lecciones
-app.post('/api/lesson-config', async (req, res) => {
+app.post('/api/lesson-config', authenticateTeacher, async (req, res) => {
     try {
         console.log('⚙️ POST /api/lesson-config:', req.body);
         
@@ -2157,7 +2185,7 @@ app.get('/api/evaluation-grades/:evaluationId', authenticateTeacher, async (req,
 });
 
 // Guardar calificaciones de evaluación
-app.post('/api/evaluation-grades', async (req, res) => {
+app.post('/api/evaluation-grades', authenticateTeacher, async (req, res) => {
     try {
         const { grades } = req.body;
         
@@ -2298,7 +2326,7 @@ app.get('/api/evaluations/progress', async (req, res) => {
 // ========================================
 
 // Debug: Verificar conexión a base de datos
-app.get('/api/debug/connection', async (req, res) => {
+app.get('/api/debug/connection', authenticateAdmin, async (req, res) => {
     try {
         const connectionStatus = {
             hasDatabase: !!database.db,
@@ -2335,7 +2363,7 @@ app.get('/api/debug/connection', async (req, res) => {
 });
 
 // Debug: Verificar módulo database
-app.get('/api/debug/database', (req, res) => {
+app.get('/api/debug/database', authenticateAdmin, (req, res) => {
     try {
         const debug = {
             databaseType: typeof database,
@@ -2361,7 +2389,7 @@ app.get('/api/debug/database', (req, res) => {
 });
 
 // Debug: Información de asistencia
-app.get('/api/debug/attendance/:date/:grade', async (req, res) => {
+app.get('/api/debug/attendance/:date/:grade', authenticateAdmin, async (req, res) => {
     try {
         const { date, grade } = req.params;
         
@@ -2408,7 +2436,7 @@ app.get('/api/debug/attendance/:date/:grade', async (req, res) => {
 });
 
 // Debug: Registros de asistencia de estudiante específico
-app.get('/api/debug/student-attendance/:studentId', async (req, res) => {
+app.get('/api/debug/student-attendance/:studentId', authenticateAdmin, async (req, res) => {
     try {
         const { studentId } = req.params;
         const { grade, subject } = req.query;
@@ -2446,7 +2474,7 @@ app.get('/api/debug/student-attendance/:studentId', async (req, res) => {
 });
 
 // Debug: Verificar materia específica
-app.get('/api/debug/subjects/:id', async (req, res) => {
+app.get('/api/debug/subjects/:id', authenticateAdmin, async (req, res) => {
     try {
         const subjectId = req.params.id;
         
@@ -2489,7 +2517,7 @@ app.get('/api/debug/subjects/:id', async (req, res) => {
 });
 
 // Debug: Ver qué devuelve getEvaluationGrades
-app.get('/api/debug/evaluation-grades/:evaluationId', authenticateTeacher, async (req, res) => {
+app.get('/api/debug/evaluation-grades/:evaluationId', authenticateAdmin, async (req, res) => {
     try {
         const { evaluationId } = req.params;
         
@@ -3829,21 +3857,12 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 // Verificar sesión administrativa
-app.get('/api/admin/verify', (req, res) => {
-    const auth = req.headers.authorization || '';
-    if (!auth.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, message: 'Token requerido' });
-    }
-    const token = auth.substring(7);
-    const payload = verifyJWT(token);
-    if (!payload) {
-        return res.status(401).json({ success: false, message: 'Token inválido' });
-    }
-    res.json({ success: true, user: payload });
+app.get('/api/admin/verify', authenticateAdmin, (req, res) => {
+    res.json({ success: true, user: req.admin });
 });
 
 // Logout administrativo
-app.post('/api/admin/logout', (req, res) => {
+app.post('/api/admin/logout', authenticateAdmin, (req, res) => {
     res.json({
         success: true,
         message: 'Sesión administrativa cerrada'
@@ -3856,7 +3875,7 @@ app.post('/api/admin/logout', (req, res) => {
 // ========================================
 
 // Toggle payment status
-app.put('/api/teachers/:id/toggle-payment', async (req, res) => {
+app.put('/api/teachers/:id/toggle-payment', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { is_paid } = req.body;
@@ -3878,7 +3897,7 @@ app.put('/api/teachers/:id/toggle-payment', async (req, res) => {
 });
 
 // Obtener sesiones activas (simulado)
-app.get('/api/sessions', (req, res) => {
+app.get('/api/sessions', authenticateAdmin, (req, res) => {
     // En implementación real, aquí consultarías sesiones activas de la BD
     const mockSessions = [
         {
@@ -3900,7 +3919,7 @@ app.get('/api/sessions', (req, res) => {
 
 
 // Obtener sesiones activas usando la base de datos real
-app.get('/api/sessions/active', async (req, res) => {
+app.get('/api/sessions/active', authenticateAdmin, async (req, res) => {
     try {
         const sessions = await database.getActiveSessions();
         res.json({
@@ -3948,7 +3967,7 @@ app.post('/api/teachers/logout', async (req, res) => {
 // ========================================
 
 // Obtener todos los períodos académicos
-app.get('/api/academic-periods', async (req, res) => {
+app.get('/api/academic-periods', authenticateAdmin, async (req, res) => {
     try {
         const { year, period_type, period_number, active_only } = req.query;
 
@@ -4007,7 +4026,7 @@ app.get('/api/academic-periods', async (req, res) => {
 });
 
 // Obtener período académico actual
-app.get('/api/academic-periods/current', async (req, res) => {
+app.get('/api/academic-periods/current', authenticateAdmin, async (req, res) => {
     try {
         const query = 'SELECT * FROM academic_periods WHERE is_current = 1 LIMIT 1';
         
@@ -4041,7 +4060,7 @@ app.get('/api/academic-periods/current', async (req, res) => {
 });
 
 // Crear nuevo período académico
-app.post('/api/academic-periods', async (req, res) => {
+app.post('/api/academic-periods', authenticateAdmin, async (req, res) => {
     try {
         console.log('📅 POST /api/academic-periods:', req.body);
         
@@ -4098,7 +4117,7 @@ app.post('/api/academic-periods', async (req, res) => {
 });
 
 // Activar período académico (marca como actual)
-app.put('/api/academic-periods/:id/activate', async (req, res) => {
+app.put('/api/academic-periods/:id/activate', authenticateAdmin, async (req, res) => {
     try {
         const periodId = req.params.id;
         console.log(`📅 PUT /api/academic-periods/${periodId}/activate`);
@@ -4151,7 +4170,7 @@ app.put('/api/academic-periods/:id/activate', async (req, res) => {
 });
 
 // Obtener escuelas disponibles
-app.get('/api/schools', async (req, res) => {
+app.get('/api/schools', authenticateAdmin, async (req, res) => {
     try {
         const query = 'SELECT * FROM schools ORDER BY name ASC';
         
@@ -4181,7 +4200,7 @@ app.get('/api/schools', async (req, res) => {
 });
 
 // Crear nueva escuela
-app.post('/api/schools', async (req, res) => {
+app.post('/api/schools', authenticateAdmin, async (req, res) => {
     try {
         console.log('🏫 POST /api/schools:', req.body);
         
@@ -4231,7 +4250,7 @@ app.post('/api/schools', async (req, res) => {
 });
 
 // API para cambiar período globalmente (para el frontend)
-app.post('/api/academic-periods/set-current', async (req, res) => {
+app.post('/api/academic-periods/set-current', authenticateAdmin, async (req, res) => {
     try {
         const { year, period_type, period_number } = req.body;
         console.log('📅 POST /api/academic-periods/set-current:', req.body);
