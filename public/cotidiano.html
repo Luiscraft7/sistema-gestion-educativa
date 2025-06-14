@@ -1998,7 +1998,7 @@ Presenta materiales completos"
         function updateStats() {
             // Total estudiantes
             const studentRows = document.querySelectorAll('#tableBody tr:not([style*="display: none"])');
-            const totalStudentsCount = studentRows.length;
+            const totalStudentsCount = Array.from(studentRows).filter(row => !row.querySelector('.table-empty-state')).length;
             document.getElementById('totalStudents').textContent = totalStudentsCount;
             
             // Total indicadores
