@@ -22,8 +22,9 @@ const PASSWORD_SALT = process.env.PASSWORD_SALT || 'static_salt';
 
 function hashPassword(password) {
     return crypto
-        .pbkdf2Sync(password, PASSWORD_SALT, 10000, 64, 'sha512')
-        .toString('hex');
+        .createHash('sha256')
+        .update(password + PASSWORD_SALT)
+        .digest('hex');
 }
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -3795,7 +3796,7 @@ app.post('/api/admin/login', async (req, res) => {
         const hashed = hashPassword(password || '');
 
         if (
-            trimmedEmail === ADMIN_USERNAME.toLowerCase() &&
+            (trimmedEmail === ADMIN_USERNAME.toLowerCase() || trimmedEmail === ADMIN_EMAIL.toLowerCase()) &&
             hashed === ADMIN_PASSWORD_HASH
         ) {
             await database.updateAdminLastLogin();
