@@ -168,6 +168,69 @@ function authenticateAdmin(req, res, next) {
     next();
 }
 
+// Middleware que permite tanto administradores como profesores
+async function authenticateAdminOrTeacher(req, res, next) {
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, message: 'Token requerido' });
+    }
+
+    const token = auth.substring(7);
+    const payload = verifyJWT(token);
+
+    // Si es token de administrador permitir inmediatamente
+    if (payload && payload.role === 'super_admin') {
+        req.admin = payload;
+        return next();
+    }
+
+    // Caso contrario validar como sesión de profesor
+    const query = `
+        SELECT
+            s.teacher_id,
+            s.school_id,
+            t.full_name,
+            t.email,
+            t.is_active,
+            sc.name AS school_name
+        FROM active_sessions s
+        INNER JOIN teachers t ON s.teacher_id = t.id
+        LEFT JOIN schools sc ON s.school_id = sc.id
+        WHERE s.session_token = ?
+            AND datetime(s.last_activity) > datetime('now', '-24 hours')
+            AND t.is_active = 1
+    `;
+
+    database.db.get(query, [token], async (err, session) => {
+        if (err || !session) {
+            return res.status(401).json({
+                success: false,
+                message: 'Sesión inválida o expirada'
+            });
+        }
+
+        await database.updateSessionActivity(token);
+
+        req.teacher = {
+            id: session.teacher_id,
+            name: session.full_name,
+            email: session.email,
+            school_id: session.school_id,
+            school: session.school_name
+        };
+
+        if (req.path.startsWith('/api/students')) {
+            const headerSchoolId = req.headers['x-school-id'];
+            if (headerSchoolId) {
+                req.teacher.school_id = parseInt(headerSchoolId);
+            }
+        }
+
+        req.sessionToken = token;
+        next();
+    });
+}
+
 
 // Función para generar tokens únicos de sesión
 function generateSessionToken() {
@@ -4250,7 +4313,7 @@ app.post('/api/schools', authenticateAdmin, async (req, res) => {
 });
 
 // API para cambiar período globalmente (para el frontend)
-app.post('/api/academic-periods/set-current', authenticateAdmin, async (req, res) => {
+app.post('/api/academic-periods/set-current', authenticateAdminOrTeacher, async (req, res) => {
     try {
         const { year, period_type, period_number } = req.body;
         console.log('📅 POST /api/academic-periods/set-current:', req.body);
