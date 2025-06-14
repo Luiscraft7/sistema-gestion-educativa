@@ -1553,11 +1553,17 @@
         // Helper para peticiones con autenticación
         async function authenticatedFetch(url, options = {}) {
             const token = localStorage.getItem('sessionToken');
-            
+
+            // Incluir escuela activa en cada petición si está disponible
+            const current = window.getCurrentAcademicPeriod
+                ? window.getCurrentAcademicPeriod()
+                : null;
+
             const defaultOptions = {
                 headers: {
                     'Authorization': token ? `Bearer ${token}` : '',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-School-Id': current && current.schoolId ? current.schoolId : ''
                 }
             };
 
