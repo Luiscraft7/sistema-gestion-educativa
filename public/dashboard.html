@@ -1831,22 +1831,29 @@
         console.log('📅 Aplicando período:', newPeriod);
 
         try {
-            // Enviar al servidor
-            const response = await authenticatedFetch('/api/academic-periods/set-current', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    year: newPeriod.year,
-                    period_type: newPeriod.periodType,
-                    period_number: newPeriod.periodNumber
-                })
-            });
+            let serverResult = { success: true };
 
-            const result = await response.json();
-            
-            if (result.success) {
+            if (typeof isAdmin === 'function' && isAdmin()) {
+                const response = await authenticatedFetch('/api/academic-periods/set-current', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        year: newPeriod.year,
+                        period_type: newPeriod.periodType,
+                        period_number: newPeriod.periodNumber
+                    })
+                });
+
+                serverResult = await response.json();
+
+                if (!serverResult.success) {
+                    throw new Error(serverResult.message);
+                }
+            }
+
+            if (serverResult.success) {
                 // Guardar en localStorage
                 this.saveCurrentPeriod(newPeriod);
                 
@@ -1874,7 +1881,7 @@
 
                 console.log('✅ Período académico actualizado:', newPeriod);
             } else {
-                throw new Error(result.message);
+                throw new Error(serverResult.message);
             }
         } catch (error) {
             console.error('❌ Error aplicando período:', error);
