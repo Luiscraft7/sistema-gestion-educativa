@@ -2445,6 +2445,33 @@
                     }
 
                     if (serverResult.success) {
+                        // Sincronizar cambio de escuela en la sesión
+                        try {
+                            const schoolResp = await authenticatedFetch('/api/session/school', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ school_id: parseInt(newPeriod.schoolId) })
+                            });
+                            const schoolResult = await schoolResp.json();
+                            if (schoolResult.success && schoolResult.school) {
+                                const teacher = JSON.parse(sessionStorage.getItem('teacherData') || '{}');
+                                teacher.school_id = schoolResult.school.id;
+                                teacher.school = schoolResult.school.name;
+                                teacher.school_name = schoolResult.school.name;
+                                sessionStorage.setItem('teacherData', JSON.stringify(teacher));
+                                const info = localStorage.getItem('teacherInfo');
+                                if (info) {
+                                    const parsed = JSON.parse(info);
+                                    parsed.school_id = schoolResult.school.id;
+                                    parsed.school = schoolResult.school.name;
+                                    parsed.school_name = schoolResult.school.name;
+                                    localStorage.setItem('teacherInfo', JSON.stringify(parsed));
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error actualizando escuela de sesión', error);
+                        }
+
                         // Guardar cambios
                         this.saveCurrentPeriod(newPeriod);
                         this.currentPeriod = newPeriod;
