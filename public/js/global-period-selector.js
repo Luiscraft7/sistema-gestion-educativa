@@ -162,6 +162,14 @@ class GlobalPeriodSelector {
 
         try {
             const response = await authenticatedFetch('/api/academic-periods');
+
+            if (response.status === 403) {
+                console.warn('Acceso denegado al obtener períodos. Eliminando adminToken.');
+                localStorage.removeItem('adminToken');
+                this.availablePeriods = [];
+                return;
+            }
+
             const result = await response.json();
 
             if (result.success) {
