@@ -1,0 +1,84 @@
+# ========================================
+# ARCHIVOS DE CONFIGURACIÓN SENSIBLE
+# ========================================
+# NUNCA subir archivos con credenciales
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ========================================
+# BASE DE DATOS
+# ========================================
+# Archivos de base de datos local
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================================
+# LOGS Y REGISTROS
+# ========================================
+# Archivos de log que pueden contener información sensible
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# NODE.JS
+# ========================================
+# Dependencias de Node
+node_modules/
+npm-debug.log*
+
+# ========================================
+# ARCHIVOS DE SISTEMA
+# ========================================
+# Archivos del sistema operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ========================================
+# ARCHIVOS TEMPORALES
+# ========================================
+# Archivos temporales de desarrollo
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# ========================================
+# ARCHIVOS DE RESPALDO
+# ========================================
+# Copias de seguridad que pueden contener datos sensibles
+*.backup
+*.bak
+backup/
+backups/
+
+# ========================================
+# CONFIGURACIÓN DEL EDITOR
+# ========================================
+# Configuraciones específicas del IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================================
+# CERTIFICADOS Y LLAVES
+# ========================================
+# Archivos de certificados SSL y llaves privadas
+*.pem
+*.key
+*.crt
+*.cert
