@@ -580,6 +580,8 @@ async applyPeriodChange() {
 
         this.updateCurrentPeriodIndicator();
 
+        await this.reloadCurrentModuleData(periodToSave);
+
         this.setSuccessState();
 
         this.broadcastPeriodChange(periodToSave);
@@ -664,6 +666,7 @@ async applyPeriodChange() {
     }
 
     setSuccessState() {
+        this.setLoadingState(false);
         const applyBtn = document.getElementById('applyPeriodBtn');
         if (!applyBtn) return;
 
@@ -677,6 +680,7 @@ async applyPeriodChange() {
     }
 
     setErrorState(message) {
+        this.setLoadingState(false);
         const applyBtn = document.getElementById('applyPeriodBtn');
         if (!applyBtn) return;
 
