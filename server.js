@@ -971,7 +971,7 @@ app.put('/api/teachers/:id/profile', authenticateTeacher, async (req, res) => {
 // ========================================
 
 // Obtener estadísticas generales
-app.get('/api/dashboard/stats', async (req, res) => {
+app.get('/api/dashboard/stats', authenticateTeacher, async (req, res) => {
     try {
         const teachers = await database.getAllTeachers();
         const students = await database.getAllStudents();
@@ -1090,7 +1090,7 @@ app.delete('/api/grades/:id', authenticateTeacher, async (req, res) => {
 // ========================================
 
 // Obtener todas las materias (BD)
-app.get('/api/subjects', async (req, res) => {
+app.get('/api/subjects', authenticateTeacher, async (req, res) => {
     try {
         const subjects = await database.getAllSubjects();
         res.json({
@@ -1574,7 +1574,7 @@ app.get('/api/attendance/class-stats', authenticateTeacher, async (req, res) => 
 // ========================================
 
 // Obtener configuración de lecciones
-app.get('/api/lesson-config', async (req, res) => {
+app.get('/api/lesson-config', authenticateTeacher, async (req, res) => {
     try {
         const { grade, subject } = req.query;
         
@@ -1622,7 +1622,7 @@ app.post('/api/lesson-config', authenticateTeacher, async (req, res) => {
 });
 
 // Contar lecciones reales dadas
-app.get('/api/attendance/lesson-count', async (req, res) => {
+app.get('/api/attendance/lesson-count', authenticateTeacher, async (req, res) => {
     try {
         const { grade, year, period_type, period_number, academic_period_id, school_id } = req.query;
         
@@ -2262,7 +2262,7 @@ app.get('/api/evaluations/summary', authenticateTeacher, async (req, res) => {
 });
 
 // Estadísticas por tipo de evaluación
-app.get('/api/evaluations/stats/types', async (req, res) => {
+app.get('/api/evaluations/stats/types', authenticateTeacher, async (req, res) => {
     try {
         console.log('📊 GET /api/evaluations/stats/types');
         
@@ -2282,7 +2282,7 @@ app.get('/api/evaluations/stats/types', async (req, res) => {
 });
 
 // Estadísticas por grado
-app.get('/api/evaluations/stats/grades', async (req, res) => {
+app.get('/api/evaluations/stats/grades', authenticateTeacher, async (req, res) => {
     try {
         console.log('📊 GET /api/evaluations/stats/grades');
         
@@ -2302,7 +2302,7 @@ app.get('/api/evaluations/stats/grades', async (req, res) => {
 });
 
 // Progreso de evaluaciones
-app.get('/api/evaluations/progress', async (req, res) => {
+app.get('/api/evaluations/progress', authenticateTeacher, async (req, res) => {
     try {
         console.log('📊 GET /api/evaluations/progress');
         
