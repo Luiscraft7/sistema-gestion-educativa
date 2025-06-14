@@ -1399,22 +1399,39 @@
             if (schoolSelector) {
                 schoolSelector.innerHTML = '';
 
+                const savedPeriodRaw = localStorage.getItem(getPeriodStorageKey());
+                let savedSchoolId = null;
+                if (savedPeriodRaw) {
+                    try {
+                        const savedPeriod = JSON.parse(savedPeriodRaw);
+                        savedSchoolId = savedPeriod.schoolId || null;
+                    } catch (err) {
+                        console.warn('Error parseando período guardado:', err);
+                    }
+                }
+
                 if (teacher.schools && Array.isArray(teacher.schools) && teacher.schools.length > 0) {
                     teacher.schools.forEach((s, idx) => {
                         const option = document.createElement('option');
                         option.value = s.school_id;
                         option.textContent = s.school_name;
-                        if (s.is_primary_school === 1 || idx === 0) {
-                            option.selected = true;
-                        }
                         schoolSelector.appendChild(option);
                     });
+
+                    if (savedSchoolId) {
+                        schoolSelector.value = savedSchoolId;
+                    } else {
+                        const primary = teacher.schools.find(s => s.is_primary_school === 1) || teacher.schools[0];
+                        if (primary) {
+                            schoolSelector.value = primary.school_id;
+                        }
+                    }
                 } else {
                     const option = document.createElement('option');
                     option.value = 'teacher_school';
                     option.textContent = teacher.school || teacher.school_name || 'Mi Escuela';
-                    option.selected = true;
                     schoolSelector.appendChild(option);
+                    schoolSelector.value = option.value;
                 }
             }
             
