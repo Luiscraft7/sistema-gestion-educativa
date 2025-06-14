@@ -65,7 +65,7 @@
 
         /* SIDEBAR COLAPSABLE */
         .sidebar {
-            width: 320px;
+            width: 380px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             display: flex;
             flex-direction: column;
@@ -2005,10 +2005,10 @@ Presenta materiales completos"
             
             // Total calificaciones y progreso
             const allInputs = document.querySelectorAll('.grade-input');
-            const filledInputs = document.querySelectorAll('.grade-input[value]:not([value=""])');
-            
+            const filledInputs = Array.from(allInputs).filter(input => input.value && input.value.trim() !== '');
+
             document.getElementById('totalGrades').textContent = filledInputs.length;
-            
+
             const progress = allInputs.length > 0 ? Math.round((filledInputs.length / allInputs.length) * 100) : 0;
             document.getElementById('progressPercent').textContent = progress + '%';
             
@@ -2027,10 +2027,9 @@ Presenta materiales completos"
                 }
             }
             
-            // Animar los números
-            animateValue('totalStudents', 0, totalStudentsCount, 500);
-            animateValue('totalIndicators', 0, totalIndicators, 500);
-            animateValue('totalGrades', 0, filledInputs.length, 500);
+            document.getElementById('totalStudents').textContent = totalStudentsCount;
+            document.getElementById('totalIndicators').textContent = totalIndicators;
+            document.getElementById('totalGrades').textContent = filledInputs.length;
         }
 
         // Función para animar valores numéricos
@@ -2905,9 +2904,9 @@ Presenta materiales completos"
                         const sumaFecha = Object.values(grades).reduce((sum, grade) => {
                             return sum + (grade !== null && grade !== undefined && !isNaN(grade) ? parseInt(grade) : 0);
                         }, 0);
-                        
-                        const indicadoresEnFecha = Object.keys(grades).length;
-                        const maxPosibleFecha = indicadoresEnFecha * 3;
+
+                        const totalIndicadoresFecha = dateData.indicators ? dateData.indicators.length : Object.keys(grades).length;
+                        const maxPosibleFecha = totalIndicadoresFecha * 3;
                         
                         if (maxPosibleFecha > 0) {
                             const porcentajeFecha = (sumaFecha / maxPosibleFecha) * 100;
