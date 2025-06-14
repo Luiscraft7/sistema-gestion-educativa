@@ -482,6 +482,7 @@
             sessionStorage.removeItem('teacherSession');
             sessionStorage.removeItem('teacherData');
             localStorage.removeItem('sessionToken');
+            localStorage.removeItem('adminToken');
             
             // Animación de entrada para los campos
             const inputs = document.querySelectorAll('input');
@@ -535,8 +536,10 @@
                 });
                 
                 const teacherResult = await teacherResponse.json();
-                
+
                 if (teacherResult.success) {
+                    // Asegurar que no quede token de administrador almacenado
+                    localStorage.removeItem('adminToken');
                     // Guardar datos del profesor y token
                     localStorage.setItem('sessionToken', teacherResult.sessionToken);
                     localStorage.setItem('teacherInfo', JSON.stringify(teacherResult.teacher));
