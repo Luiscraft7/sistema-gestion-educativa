@@ -36,6 +36,11 @@ async function authenticatedFetch(url, options = {}) {
     return response;
 }
 
+// Verificar si el usuario actual es administrador
+function isAdmin() {
+    return !!localStorage.getItem('adminToken');
+}
+
 // Obtener la clave de almacenamiento según el profesor actual
 function getPeriodStorageKey() {
     const data = sessionStorage.getItem('teacherData');
@@ -146,10 +151,15 @@ class GlobalPeriodSelector {
     }
 
     async loadAvailablePeriods() {
+        if (!isAdmin()) {
+            this.availablePeriods = [];
+            return;
+        }
+
         try {
             const response = await authenticatedFetch('/api/academic-periods');
             const result = await response.json();
-            
+
             if (result.success) {
                 this.availablePeriods = result.data;
             } else {
@@ -162,6 +172,10 @@ class GlobalPeriodSelector {
     }
 
     async getCurrentPeriodFromAPI() {
+        if (!isAdmin()) {
+            return null;
+        }
+
         try {
             const response = await authenticatedFetch('/api/academic-periods/current');
             const result = await response.json();
@@ -394,21 +408,27 @@ async applyPeriodChange() {
 
         // Obtener período actual para comparación
         const currentPeriod = this.currentPeriod || this.loadCurrentPeriod();
-        
-        // Establecer nuevo período en servidor
-        const response = await authenticatedFetch('/api/academic-periods/set-current', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                year: newPeriod.year,
-                period_type: newPeriod.periodType,
-                period_number: newPeriod.periodNumber
-            })
-        });
 
-        const result = await response.json();
+        let result = { success: true, data: { periodId: null } };
 
-        if (result.success) {
+        if (isAdmin()) {
+            // Establecer nuevo período en servidor
+            const response = await authenticatedFetch('/api/academic-periods/set-current', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    year: newPeriod.year,
+                    period_type: newPeriod.periodType,
+                    period_number: newPeriod.periodNumber
+                })
+            });
+
+            result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Error estableciendo período en servidor');
+            }
+
             console.log('✅ Período establecido en servidor:', result.data);
 
             // VERIFICAR SI EL NUEVO PERÍODO ESTÁ VACÍO Y OFRECER COPIA
@@ -511,33 +531,32 @@ async applyPeriodChange() {
                 console.log('ℹ️ No se pudo verificar estudiantes para copia automática:', checkError.message);
             }
 
-            // ========================================
-            // ACTUALIZAR ESTADO INTERNO
-            // ========================================
+            console.log('📅 Cambio de período completado exitosamente (servidor actualizado)');
 
-            // Guardar período con ID en localStorage
-            const periodToSave = {
-                ...newPeriod,
-                periodId: result.data.periodId
-            };
-            
-            this.saveCurrentPeriod(periodToSave);
-            
-            // Actualizar estado interno
-            this.currentPeriod = periodToSave;
-            
-            // Actualizar indicador visual
-            this.updateCurrentPeriodIndicator();
-            
-            // Mostrar estado de éxito
-            this.setSuccessState();
-            
-            // Enviar evento global para que otros módulos recarguen sus datos
-            this.broadcastPeriodChange(periodToSave);
-            
-            console.log('📅 Cambio de período completado exitosamente');
-            
-        } else {
+        }
+
+        // ========================================
+        // ACTUALIZAR ESTADO INTERNO
+        // ========================================
+
+        const periodToSave = {
+            ...newPeriod,
+            periodId: result.data.periodId
+        };
+
+        this.saveCurrentPeriod(periodToSave);
+
+        this.currentPeriod = periodToSave;
+
+        this.updateCurrentPeriodIndicator();
+
+        this.setSuccessState();
+
+        this.broadcastPeriodChange(periodToSave);
+
+        console.log('📅 Cambio de período completado exitosamente');
+
+        if (!result.success) {
             throw new Error(result.message || 'Error estableciendo período en servidor');
         }
         
