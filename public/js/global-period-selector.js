@@ -41,8 +41,13 @@ async function authenticatedFetch(url, options = {}) {
 }
 
 // Verificar si el usuario actual es administrador
+// Determinar si la sesión actual pertenece a un administrador
 function isAdmin() {
-    return !!localStorage.getItem('adminToken');
+    const adminToken = localStorage.getItem('adminToken');
+    const adminSession = sessionStorage.getItem('adminSession');
+
+    // Es admin únicamente si existe token y la bandera de sesión
+    return adminToken && adminSession === 'true';
 }
 
 // Obtener la clave de almacenamiento según el profesor actual
