@@ -1187,35 +1187,54 @@ async deleteStudent(id, teacherId = null, schoolId = null) {
         this.ensureConnection();
 
         return new Promise((resolve, reject) => {
-            let query = `SELECT g.name as grade_name,
-                                GROUP_CONCAT(gs.subject_name) as subjects,
-                                COUNT(gs.subject_name) as subject_count
-                         FROM grades g
-                         LEFT JOIN grade_subjects gs ON g.name = gs.grade_name AND gs.is_active = 1`;
             const params = [];
-            const conditions = [];
+
+            // ----------------------------------------
+            // Construir cláusula LEFT JOIN con filtros
+            // ----------------------------------------
+            const joinConditions = [
+                'g.name = gs.grade_name',
+                'gs.is_active = 1'
+            ];
 
             if (teacherId !== null) {
-                conditions.push('g.teacher_id = ?');
-                params.push(teacherId);
-                conditions.push('gs.teacher_id = ?');
+                joinConditions.push('gs.teacher_id = ?');
                 params.push(teacherId);
             }
 
             if (schoolId !== null) {
-                conditions.push('g.school_id = ?');
-                params.push(schoolId);
-                conditions.push('gs.school_id = ?');
+                joinConditions.push('gs.school_id = ?');
                 params.push(schoolId);
             }
 
             if (academicPeriodId !== null) {
-                conditions.push('gs.academic_period_id = ?');
+                joinConditions.push('gs.academic_period_id = ?');
                 params.push(academicPeriodId);
             }
 
-            if (conditions.length > 0) {
-                query += ' WHERE ' + conditions.join(' AND ');
+            let query = `SELECT g.name as grade_name,
+                                GROUP_CONCAT(gs.subject_name) as subjects,
+                                COUNT(gs.subject_name) as subject_count
+                         FROM grades g
+                         LEFT JOIN grade_subjects gs ON ${joinConditions.join(' AND ')}`;
+
+            // ----------------------------------------
+            // Condiciones sobre la tabla de grados
+            // ----------------------------------------
+            const whereConditions = [];
+
+            if (teacherId !== null) {
+                whereConditions.push('g.teacher_id = ?');
+                params.push(teacherId);
+            }
+
+            if (schoolId !== null) {
+                whereConditions.push('g.school_id = ?');
+                params.push(schoolId);
+            }
+
+            if (whereConditions.length > 0) {
+                query += ' WHERE ' + whereConditions.join(' AND ');
             }
 
             query += ' GROUP BY g.name ORDER BY g.name';
