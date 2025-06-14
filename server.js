@@ -375,7 +375,7 @@ app.post('/api/students/copy-period', authenticateAdmin, async (req, res) => {
 });
 
 // Obtener estudiante por ID
-app.get('/api/students/:id', async (req, res) => {
+app.get('/api/students/:id', authenticateTeacher, async (req, res) => {
     try {
         const student = await database.getStudentById(req.params.id);
         if (student) {
@@ -867,7 +867,7 @@ app.post('/api/teachers/register', async (req, res) => {
 
 
 // Obtener todos los profesores (para admin)
-app.get('/api/teachers', async (req, res) => {
+app.get('/api/teachers', authenticateAdmin, async (req, res) => {
     try {
         const teachers = await database.getAllTeachers();
         res.json({
