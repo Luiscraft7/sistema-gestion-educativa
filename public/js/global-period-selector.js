@@ -46,6 +46,12 @@ function isAdmin() {
     const adminToken = localStorage.getItem('adminToken');
     const adminSession = sessionStorage.getItem('adminSession');
 
+    // Si existe token pero no hay sesión de admin, limpiar token residual
+    if (adminToken && adminSession !== 'true') {
+        localStorage.removeItem('adminToken');
+        return false;
+    }
+
     // Es admin únicamente si existe token y la bandera de sesión
     return adminToken && adminSession === 'true';
 }
