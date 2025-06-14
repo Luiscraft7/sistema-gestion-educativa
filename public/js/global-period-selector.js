@@ -5,7 +5,11 @@
 
 // Helper para realizar peticiones autenticadas usando el token
 async function authenticatedFetch(url, options = {}) {
-    const token = localStorage.getItem('sessionToken') || localStorage.getItem('adminToken');
+    const { useAdminToken, ...fetchOptions } = options;
+
+    const adminToken = localStorage.getItem('adminToken');
+    const sessionToken = localStorage.getItem('sessionToken');
+    const token = useAdminToken ? adminToken : (sessionToken || adminToken);
 
     const defaultOptions = {
         headers: {
@@ -16,10 +20,10 @@ async function authenticatedFetch(url, options = {}) {
 
     const mergedOptions = {
         ...defaultOptions,
-        ...options,
+        ...fetchOptions,
         headers: {
             ...defaultOptions.headers,
-            ...(options.headers || {})
+            ...(fetchOptions.headers || {})
         }
     };
 
@@ -420,7 +424,8 @@ async applyPeriodChange() {
                     year: newPeriod.year,
                     period_type: newPeriod.periodType,
                     period_number: newPeriod.periodNumber
-                })
+                }),
+                useAdminToken: true
             });
 
             result = await response.json();
