@@ -2601,7 +2601,7 @@
             if (!notificationSystem) {
                 notificationSystem = new NotificationSystem();
             }
-            
+
             // Cerrar modal al hacer click en el overlay
             const overlay = document.getElementById('notificationOverlay');
             if (overlay) {
@@ -2611,10 +2611,24 @@
                     }
                 });
             }
-            
-            // Inicializar selector de período
-            window.unifiedPeriodSelector = new UnifiedPeriodSelector();
-            window.addEventListener('academicPeriodChanged', updateCurrentPeriodDisplay);
+
+            // Esperar a que la información del profesor esté disponible para
+            // utilizar la clave correcta en localStorage
+            function initSelectorWhenReady(attempts = 0) {
+                const teacherSession = sessionStorage.getItem('teacherSession');
+
+                if (teacherSession === 'true' && !sessionStorage.getItem('teacherData')) {
+                    if (attempts < 20) {
+                        return setTimeout(() => initSelectorWhenReady(attempts + 1), 100);
+                    }
+                }
+
+                window.unifiedPeriodSelector = new UnifiedPeriodSelector();
+                window.addEventListener('academicPeriodChanged', updateCurrentPeriodDisplay);
+                updateCurrentPeriodDisplay();
+            }
+
+            initSelectorWhenReady();
         });
 
         // Función global para obtener período actual
