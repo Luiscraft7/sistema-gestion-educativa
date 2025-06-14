@@ -45,6 +45,12 @@ async function authenticatedFetch(url, options = {}) {
 function isAdmin() {
     const adminToken = localStorage.getItem('adminToken');
     const adminSession = sessionStorage.getItem('adminSession');
+    const teacherSession = sessionStorage.getItem('teacherSession');
+
+    // Si existe una sesión activa de profesor, forzar modo no administrador
+    if (teacherSession === 'true') {
+        return false;
+    }
 
     // Si existe token pero no hay sesión de admin, limpiar token residual
     if (adminToken && adminSession !== 'true') {
