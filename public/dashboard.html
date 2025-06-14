@@ -1990,17 +1990,25 @@
         async function loadAdminStats() {
             try {
                 console.log('📊 Cargando estadísticas de administrador...');
-                
-                if (document.getElementById('professorsCount')) {
-                    document.getElementById('professorsCount').textContent = '0';
+                const response = await authenticatedFetch('/api/dashboard/stats');
+                if (!response.ok) throw new Error('Error al obtener estadísticas');
+
+                const result = await response.json();
+                if (result.success) {
+                    if (document.getElementById('professorsCount')) {
+                        document.getElementById('professorsCount').textContent =
+                            result.data.professors.total;
+                    }
+                    if (document.getElementById('studentsCount')) {
+                        document.getElementById('studentsCount').textContent =
+                            result.data.students.total;
+                    }
+                    if (document.getElementById('schoolsCount')) {
+                        document.getElementById('schoolsCount').textContent =
+                            result.data.schools.total;
+                    }
                 }
-                if (document.getElementById('studentsCount')) {
-                    document.getElementById('studentsCount').textContent = '0';
-                }
-                if (document.getElementById('schoolsCount')) {
-                    document.getElementById('schoolsCount').textContent = '0';
-                }
-                
+
                 console.log('✅ Estadísticas de administrador cargadas');
             } catch (error) {
                 console.error('⚠️ Error cargando estadísticas de admin:', error);
