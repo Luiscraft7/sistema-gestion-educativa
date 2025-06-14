@@ -1205,6 +1205,16 @@
                 loadAdminStats();
             } else if (sessionInfo.type === 'teacher') {
                 loadTeacherStats();
+
+                // Actualizar datos al cambiar de período o escuela
+                window.addEventListener('academicPeriodChanged', () => {
+                    loadTeacherStats();
+                    loadIntegratedTeacherProfile();
+                });
+                window.addEventListener('reloadPeriodData', () => {
+                    loadTeacherStats();
+                    loadIntegratedTeacherProfile();
+                });
             }
         }
     });
