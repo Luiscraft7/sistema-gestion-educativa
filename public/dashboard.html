@@ -1259,8 +1259,7 @@
 
         if (
             adminSession === 'true' &&
-            adminUser &&
-            adminUser.trim().toLowerCase() === 'luiscraft'
+            adminUser
         ) {
             console.log('✅ Sesión de administrador válida encontrada');
             updateHeaderWithAdmin(adminUser);

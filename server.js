@@ -1,7 +1,54 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 const cors = require('cors');
 const database = require('./src/models/database');
+
+function loadEnv(file = '.env') {
+    const envPath = path.join(__dirname, file);
+    if (!fs.existsSync(envPath)) return;
+    fs.readFileSync(envPath, 'utf8')
+        .split('\n')
+        .forEach(line => {
+            const m = line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/);
+            if (m) process.env[m[1]] = m[2];
+        });
+}
+
+loadEnv();
+
+const PASSWORD_SALT = process.env.PASSWORD_SALT || 'static_salt';
+
+function hashPassword(password) {
+    return crypto
+        .pbkdf2Sync(password, PASSWORD_SALT, 10000, 64, 'sha512')
+        .toString('hex');
+}
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || hashPassword('admin');
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
+function signJWT(payload) {
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const data = `${header}.${body}`;
+    const signature = crypto.createHmac('sha256', JWT_SECRET).update(data).digest('base64url');
+    return `${data}.${signature}`;
+}
+
+function verifyJWT(token) {
+    if (!token) return null;
+    const [header, body, signature] = token.split('.');
+    const data = `${header}.${body}`;
+    const expected = crypto.createHmac('sha256', JWT_SECRET).update(data).digest('base64url');
+    if (signature !== expected) return null;
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString());
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+}
 
 
 const app = express();
@@ -135,6 +182,12 @@ async function initializeDatabase() {
         
         // ✅ ASEGURAR QUE LA INICIALIZACIÓN SE COMPLETE
         await database.initialize();
+
+        await database.ensureAdminUser(
+            ADMIN_USERNAME,
+            ADMIN_EMAIL,
+            ADMIN_PASSWORD_HASH
+        );
         
         // ✅ VERIFICAR QUE LA CONEXIÓN ESTÉ LISTA
         if (!database.db || !database.isInitialized) {
@@ -3738,17 +3791,22 @@ app.post('/api/admin/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Verificar credenciales específicas del administrador
         const trimmedEmail = email ? email.trim().toLowerCase() : '';
-        if (trimmedEmail === 'luiscraft' && password === 'Naturarte0603') {
-            // Actualizar último login
+        const hashed = hashPassword(password || '');
+
+        if (
+            trimmedEmail === ADMIN_USERNAME.toLowerCase() &&
+            hashed === ADMIN_PASSWORD_HASH
+        ) {
             await database.updateAdminLastLogin();
-            
+            const token = signJWT({ email: ADMIN_EMAIL, role: 'super_admin', exp: Math.floor(Date.now() / 1000) + 3600 });
+
             res.json({
                 success: true,
                 message: 'Acceso administrativo autorizado',
+                token,
                 user: {
-                    email: email,
+                    email: ADMIN_EMAIL,
                     role: 'super_admin',
                     loginTime: new Date().toISOString()
                 }
@@ -3771,12 +3829,16 @@ app.post('/api/admin/login', async (req, res) => {
 
 // Verificar sesión administrativa
 app.get('/api/admin/verify', (req, res) => {
-    // En una implementación real, aquí verificarías JWT o sesión
-    // Por simplicidad, solo confirmamos que el endpoint existe
-    res.json({
-        success: true,
-        message: 'Endpoint de verificación disponible'
-    });
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, message: 'Token requerido' });
+    }
+    const token = auth.substring(7);
+    const payload = verifyJWT(token);
+    if (!payload) {
+        return res.status(401).json({ success: false, message: 'Token inválido' });
+    }
+    res.json({ success: true, user: payload });
 });
 
 // Logout administrativo

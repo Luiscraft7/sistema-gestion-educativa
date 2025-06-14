@@ -269,9 +269,8 @@ getBasicMultiSchoolSchema() {
             UNIQUE(teacher_id, school_id)
         );
         
-        -- Insertar datos básicos
-        INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin) 
-        VALUES ('admin', 'Luiscraft', 'Naturarte0603', 1);
+        -- El administrador se insertará durante la inicialización leyendo las
+        -- variables de entorno
     `;
 }
 
@@ -2937,13 +2936,14 @@ async updateAdminLastLogin() {
     this.ensureConnection();
     
     return new Promise((resolve, reject) => {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
         const query = `
-            UPDATE admin_users 
+            UPDATE admin_users
             SET last_login = CURRENT_TIMESTAMP
-            WHERE email = 'Luiscraft'
+            WHERE email = ?
         `;
         
-        this.db.run(query, [], function(err) {
+        this.db.run(query, [adminEmail], function(err) {
             if (err) {
                 reject(err);
             } else {
@@ -2952,6 +2952,19 @@ async updateAdminLastLogin() {
                     lastLogin: new Date().toISOString()
                 });
             }
+        });
+    });
+}
+
+async ensureAdminUser(username, email, passwordHash) {
+    this.ensureConnection();
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT OR IGNORE INTO admin_users (username, email, password, is_super_admin)
+            VALUES (?, ?, ?, 1)
+        `;
+        this.db.run(query, [username, email, passwordHash], function(err) {
+            if (err) reject(err); else resolve({ created: this.changes });
         });
     });
 }
