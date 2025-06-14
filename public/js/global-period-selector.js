@@ -268,6 +268,22 @@ class GlobalPeriodSelector {
         window.addEventListener('academicPeriodChanged', (event) => {
             this.onPeriodChanged(event.detail);
         });
+
+        // Escuchar cambios en localStorage (actualizaciones desde otras pestañas)
+        window.addEventListener('storage', (e) => {
+            if (e.key === getPeriodStorageKey()) {
+                try {
+                    const newPeriod = JSON.parse(e.newValue);
+                    if (newPeriod) {
+                        this.currentPeriod = newPeriod;
+                        this.updateUI();
+                        this.broadcastPeriodChange(newPeriod);
+                    }
+                } catch (err) {
+                    console.error('Error procesando cambio de período desde storage:', err);
+                }
+            }
+        });
     }
 
     // ========================================
@@ -824,11 +840,8 @@ window.reloadCurrentPeriodData = function() {
 
 // Auto-inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    // Solo inicializar si existe el contenedor del selector
-    if (document.getElementById('schoolSelector') || 
-        document.querySelector('.global-selector-container')) {
-        window.initGlobalPeriodSelector();
-    }
+    // Inicializar siempre, aunque no haya contenedor del selector
+    window.initGlobalPeriodSelector();
 });
 
 console.log('📅 Script del selector global de períodos cargado');
