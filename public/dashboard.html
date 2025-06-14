@@ -1833,24 +1833,23 @@
         try {
             let serverResult = { success: true };
 
-            if (typeof isAdmin === 'function' && isAdmin()) {
-                const response = await authenticatedFetch('/api/academic-periods/set-current', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        year: newPeriod.year,
-                        period_type: newPeriod.periodType,
-                        period_number: newPeriod.periodNumber
-                    })
-                });
+            const response = await authenticatedFetch('/api/academic-periods/set-current', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    year: newPeriod.year,
+                    period_type: newPeriod.periodType,
+                    period_number: newPeriod.periodNumber
+                }),
+                useAdminToken: (typeof isAdmin === 'function' && isAdmin())
+            });
 
-                serverResult = await response.json();
+            serverResult = await response.json();
 
-                if (!serverResult.success) {
-                    throw new Error(serverResult.message);
-                }
+            if (!serverResult.success) {
+                throw new Error(serverResult.message);
             }
 
             if (serverResult.success) {

@@ -440,7 +440,6 @@ async applyPeriodChange() {
 
         let result = { success: true, data: { periodId: null } };
 
-        if (isAdmin()) {
             // Establecer nuevo período en servidor
             const response = await authenticatedFetch('/api/academic-periods/set-current', {
                 method: 'POST',
@@ -450,7 +449,7 @@ async applyPeriodChange() {
                     period_type: newPeriod.periodType,
                     period_number: newPeriod.periodNumber
                 }),
-                useAdminToken: true
+                useAdminToken: isAdmin()
             });
 
             result = await response.json();
@@ -562,8 +561,6 @@ async applyPeriodChange() {
             }
 
             console.log('📅 Cambio de período completado exitosamente (servidor actualizado)');
-
-        }
 
         // ========================================
         // ACTUALIZAR ESTADO INTERNO
