@@ -5,6 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📅 Módulo de Asistencias - Sistema Educativo</title>
     <style>
+        /* ====================================
+           CSS VARIABLES & RESET
+        ==================================== */
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -13,9 +53,10 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-primary);
             min-height: 100vh;
-            padding: 20px;
+            padding: 1.25rem;
+            color: var(--gray-900);
         }
         
         .container {
@@ -23,96 +64,219 @@
             margin: 0 auto;
         }
         
+        /* ====================================
+           HEADER SECTION
+        ==================================== */
         .header {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            padding: 2rem;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-xl);
+            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 1.5rem;
         }
         
-        .header h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 5px;
+        .header-content h1 {
+            color: var(--gray-900);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
         
-        .header p {
-            color: #666;
-            font-size: 14px;
+        .header-content p {
+            color: var(--gray-600);
+            font-size: 1rem;
         }
         
         .header-actions {
             display: flex;
-            gap: 15px;
+            gap: 0.75rem;
             align-items: center;
             flex-wrap: wrap;
         }
         
+        /* ====================================
+           PERIOD INDICATOR
+        ==================================== */
+        .period-indicator {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-xl);
+            margin: 1rem 0 2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .period-icon {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .period-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .period-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .period-info {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .period-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.5rem 1rem;
+            border-radius: 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .pulse {
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        /* ====================================
+           BUTTONS
+        ==================================== */
         .btn {
-            padding: 12px 24px;
+            padding: 0.75rem 1.5rem;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
         }
         
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-warning { background: #ffc107; color: #212529; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-info { background: #17a2b8; color: white; }
-        .btn-purple { background: #6f42c1; color: white; }
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
         
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-secondary {
+            background: var(--gray-600);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
         
+        .btn-success {
+            background: var(--gradient-success);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-warning {
+            background: var(--gradient-warning);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-danger {
+            background: var(--gradient-danger);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-info {
+            background: var(--info);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid currentColor;
+        }
+        
+        /* ====================================
+           MAIN LAYOUT
+        ==================================== */
         .main-content {
             display: grid;
             grid-template-columns: 350px 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
         
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 1.5rem;
         }
         
         .card {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
+            border: 1px solid var(--gray-200);
         }
         
         .card-header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
             font-weight: 600;
-            color: #333;
-            font-size: 16px;
+            color: var(--gray-900);
+            font-size: 1.125rem;
+            background: var(--gray-50);
         }
         
         .card-body {
-            padding: 20px;
+            padding: 1.5rem;
         }
         
-        /* ========================================
-           CALENDARIO - CSS COMPLETAMENTE CORREGIDO
-           ======================================== */
+        /* ====================================
+           CALENDAR STYLES
+        ==================================== */
         .calendar-container {
             text-align: center;
         }
@@ -121,67 +285,71 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
         
         .calendar-nav {
-            background: #667eea;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.75rem;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
         
         .calendar-nav:hover {
-            background: #5a6fd8;
+            background: var(--secondary);
+            transform: scale(1.05);
         }
         
         .calendar-month-year {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
         }
 
         .calendar-wrapper {
-            background: #f8f9fa;
-            border-radius: 12px;
+            background: var(--gray-50);
+            border-radius: var(--radius-xl);
             padding: 1px;
             overflow: hidden;
+            border: 1px solid var(--gray-200);
         }
 
         .calendar-days-header {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            background: #667eea;
+            background: var(--primary);
         }
 
         .calendar-day-header {
-            padding: 12px 8px;
+            padding: 0.75rem 0.5rem;
             color: white;
-            font-size: 12px;
+            font-size: 0.75rem;
             font-weight: 700;
             text-align: center;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
         }
 
         .calendar-days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            background: #e9ecef;
+            background: var(--gray-300);
             gap: 1px;
         }
 
         .calendar-day {
             background: white;
-            padding: 12px 8px;
+            padding: 0.75rem 0.5rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 14px;
-            min-height: 45px;
+            font-size: 0.875rem;
+            min-height: 3rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -190,52 +358,36 @@
         }
 
         .calendar-day:hover {
-            background: #e3f2fd !important;
+            background: var(--gray-100);
             transform: scale(1.05);
             z-index: 2;
         }
 
         .calendar-day.other-month {
-            color: #adb5bd;
-            background: #f8f9fa;
+            color: var(--gray-400);
+            background: var(--gray-50);
             font-weight: 400;
         }
 
-        .calendar-day.other-month:hover {
-            background: #e9ecef !important;
-        }
-
         .calendar-day.selected {
-            background: #667eea !important;
-            color: white !important;
+            background: var(--primary);
+            color: white;
             font-weight: 700;
-            box-shadow: 0 0 0 2px #667eea;
+            box-shadow: 0 0 0 2px var(--primary);
         }
 
         .calendar-day.today {
-            background: #28a745 !important;
-            color: white !important;
+            background: var(--success);
+            color: white;
             font-weight: 700;
         }
 
-        .calendar-day.today::after {
-            content: '●';
-            position: absolute;
-            bottom: 4px;
-            right: 6px;
-            font-size: 8px;
-        }
-
         .calendar-day.weekend {
-            background: #fff5f5 !important;
-        }
-
-        .calendar-day.weekend:hover {
-            background: #fed7d7 !important;
+            background: #fff5f5;
         }
 
         .calendar-day.has-attendance {
-            border: 2px solid #ffc107;
+            border: 2px solid var(--warning);
         }
 
         .calendar-day.has-attendance::before {
@@ -243,156 +395,176 @@
             position: absolute;
             top: 2px;
             right: 2px;
-            font-size: 8px;
+            font-size: 0.5rem;
         }
         
-        /* Filtros */
+        /* ====================================
+           FILTERS
+        ==================================== */
         .filter-group {
-            margin-bottom: 15px;
+            margin-bottom: 1rem;
         }
         
         .filter-label {
             display: block;
-            margin-bottom: 8px;
-            color: #333;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
             font-weight: 500;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
         
         .filter-select {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
             background: white;
             cursor: pointer;
+            transition: border-color 0.2s ease;
         }
         
         .filter-select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        /* Panel de configuración de lecciones */
+        /* ====================================
+           LESSON CONFIG
+        ==================================== */
         .lesson-config {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--gray-200);
         }
         
         .config-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 0.75rem;
         }
         
         .config-input {
             width: 80px;
-            padding: 5px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
+            padding: 0.375rem 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            text-align: center;
         }
         
-        /* Área principal de asistencia */
+        .config-tip {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: var(--info);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            color: var(--info);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        /* ====================================
+           ATTENDANCE MAIN AREA
+        ==================================== */
         .attendance-main {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
+            border: 1px solid var(--gray-200);
         }
         
         .attendance-header {
-            padding: 25px;
-            border-bottom: 1px solid #eee;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gradient-primary);
             color: white;
         }
         
         .attendance-date {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
         
         .attendance-info {
-            font-size: 14px;
+            font-size: 1rem;
             opacity: 0.9;
         }
         
-        /* ========================================
-           BOTONES DE ESTADO MEJORADOS
-           ======================================== */
+        /* ====================================
+           QUICK ACTIONS
+        ==================================== */
         .quick-actions {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
             display: flex;
-            gap: 10px;
+            gap: 0.75rem;
             align-items: center;
             flex-wrap: wrap;
         }
         
         .quick-actions-title {
             font-weight: 600;
-            color: #333;
-            margin-right: 15px;
+            color: var(--gray-700);
+            margin-right: 1rem;
+            font-size: 0.875rem;
         }
         
         .status-btn {
-            padding: 10px 16px;
+            padding: 0.5rem 1rem;
             border: none;
-            border-radius: 25px;
+            border-radius: 1.5rem;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            gap: 0.375rem;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid transparent;
         }
         
-        /* ✅ NUEVOS ESTILOS MEJORADOS PARA ESTADOS */
-        .status-btn.present { 
-            background: linear-gradient(135deg, #28a745, #20c997); 
-            color: white; 
-            border: 2px solid #1e7e34;
+        .status-btn.present {
+            background: var(--gradient-success);
+            color: white;
         }
-        .status-btn.late-justified { 
-            background: linear-gradient(135deg, #ffc107, #ffca2c); 
-            color: #212529; 
-            border: 2px solid #d39e00;
+        
+        .status-btn.late-justified {
+            background: var(--gradient-warning);
+            color: white;
         }
-        .status-btn.late-unjustified { 
-            background: linear-gradient(135deg, #fd7e14, #ff8c42); 
-            color: white; 
-            border: 2px solid #dc6002;
+        
+        .status-btn.late-unjustified {
+            background: linear-gradient(135deg, #fd7e14, #ff8c42);
+            color: white;
         }
-        .status-btn.absent-justified { 
-            background: linear-gradient(135deg, #17a2b8, #20c997); 
-            color: white; 
-            border: 2px solid #117a8b;
+        
+        .status-btn.absent-justified {
+            background: var(--info);
+            color: white;
         }
-        .status-btn.absent-unjustified { 
-            background: linear-gradient(135deg, #dc3545, #e74c3c); 
-            color: white; 
-            border: 2px solid #bd2130;
+        
+        .status-btn.absent-unjustified {
+            background: var(--gradient-danger);
+            color: white;
         }
         
         .status-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: var(--shadow-lg);
         }
         
-        .status-btn:active {
-            transform: translateY(-1px);
-        }
-        
-        /* Tabla de estudiantes */
+        /* ====================================
+           STUDENTS TABLE
+        ==================================== */
         .students-table {
             overflow-x: auto;
         }
@@ -403,214 +575,458 @@
         }
         
         th, td {
-            padding: 12px;
+            padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--gray-200);
         }
         
         th {
-            background: #f8f9fa;
+            background: var(--gray-50);
             font-weight: 600;
-            color: #333;
+            color: var(--gray-700);
             position: sticky;
             top: 0;
+            font-size: 0.875rem;
         }
         
         tbody tr:hover {
-            background: #f8f9fa;
+            background: var(--gray-50);
         }
         
         .student-photo {
-            width: 35px;
-            height: 35px;
+            width: 2.5rem;
+            height: 2.5rem;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--gradient-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
         
         .student-name {
             font-weight: 600;
-            color: #333;
-            margin-bottom: 2px;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
         }
         
         .student-id {
-            color: #666;
-            font-size: 11px;
+            color: var(--gray-500);
+            font-size: 0.75rem;
         }
         
-        /* ========================================
-           CONTROLES DE ASISTENCIA MEJORADOS
-           ======================================== */
+        /* ====================================
+           ATTENDANCE CONTROLS
+        ==================================== */
         .attendance-controls {
             display: flex;
-            gap: 8px;
+            gap: 0.5rem;
             flex-wrap: wrap;
             align-items: center;
         }
         
         .attendance-btn {
-            padding: 6px 10px;
+            padding: 0.375rem 0.75rem;
             border: none;
-            border-radius: 20px;
+            border-radius: 1.25rem;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            min-width: 70px;
+            gap: 0.25rem;
+            min-width: 4rem;
             justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-sm);
         }
         
-        .attendance-btn.present { 
-            background: linear-gradient(135deg, #28a745, #20c997); 
-            color: white; 
+        .attendance-btn.present {
+            background: var(--gradient-success);
+            color: white;
         }
-        .attendance-btn.late-justified { 
-            background: linear-gradient(135deg, #ffc107, #ffca2c); 
-            color: #212529; 
+        
+        .attendance-btn.late-justified {
+            background: var(--gradient-warning);
+            color: white;
         }
-        .attendance-btn.late-unjustified { 
-            background: linear-gradient(135deg, #fd7e14, #ff8c42); 
-            color: white; 
+        
+        .attendance-btn.late-unjustified {
+            background: linear-gradient(135deg, #fd7e14, #ff8c42);
+            color: white;
         }
-        .attendance-btn.absent-justified { 
-            background: linear-gradient(135deg, #17a2b8, #20c997); 
-            color: white; 
+        
+        .attendance-btn.absent-justified {
+            background: var(--info);
+            color: white;
         }
-        .attendance-btn.absent-unjustified { 
-            background: linear-gradient(135deg, #dc3545, #e74c3c); 
-            color: white; 
+        
+        .attendance-btn.absent-unjustified {
+            background: var(--gradient-danger);
+            color: white;
         }
         
         .attendance-btn:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-md);
         }
         
         .attendance-status {
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 11px;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
             font-weight: 600;
             text-align: center;
-            min-width: 90px;
+            min-width: 6rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 0.25rem;
         }
         
-        .status-present { 
-            background: linear-gradient(135deg, #d4edda, #c3e6cb); 
-            color: #155724; 
-            border: 1px solid #c3e6cb;
-        }
-        .status-late-justified { 
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7); 
-            color: #856404; 
-            border: 1px solid #ffeaa7;
-        }
-        .status-late-unjustified { 
-            background: linear-gradient(135deg, #f8d7da, #f5c6cb); 
-            color: #721c24; 
-            border: 1px solid #f5c6cb;
-        }
-        .status-absent-justified { 
-            background: linear-gradient(135deg, #d1ecf1, #bee5eb); 
-            color: #0c5460; 
-            border: 1px solid #bee5eb;
-        }
-        .status-absent-unjustified { 
-            background: linear-gradient(135deg, #f5c6cb, #f1b0b7); 
-            color: #721c24; 
-            border: 1px solid #f1b0b7;
-        }
-        .status-not-marked { 
-            background: linear-gradient(135deg, #e9ecef, #dee2e6); 
-            color: #495057; 
-            border: 1px solid #dee2e6;
+        .status-present {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
         
-        /* Panel de estadísticas */
+        .status-late-justified {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        
+        .status-late-unjustified {
+            background: rgba(253, 126, 20, 0.1);
+            color: #ea580c;
+            border: 1px solid rgba(253, 126, 20, 0.2);
+        }
+        
+        .status-absent-justified {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .status-absent-unjustified {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .status-not-marked {
+            background: var(--gray-100);
+            color: var(--gray-600);
+            border: 1px solid var(--gray-200);
+        }
+        
+        /* ====================================
+           STATS PANEL
+        ==================================== */
         .stats-panel {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
-            margin-top: 30px;
+            margin-top: 2rem;
+            border: 1px solid var(--gray-200);
         }
         
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 25px;
+            gap: 1.5rem;
+            padding: 2rem;
         }
         
         .stat-card {
             text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--gray-200);
         }
         
         .stat-number {
-            font-size: 28px;
+            font-size: 2rem;
             font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
         }
         
         .stat-label {
-            color: #666;
-            font-size: 12px;
+            color: var(--gray-600);
+            font-size: 0.75rem;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
         }
         
-        /* Debug panel */
-        .debug-panel {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 12px;
-            max-width: 300px;
-            z-index: 9999;
+        /* ====================================
+           MODALS
+        ==================================== */
+        .modal {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
         }
         
-        .debug-panel.show {
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-2xl);
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+        
+        /* ====================================
+           FORM ELEMENTS
+        ==================================== */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
             display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.875rem;
         }
         
-        /* Responsivo */
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+            background: white;
+        }
+        
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* ====================================
+           NOTIFICATION SYSTEM
+        ==================================== */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 400px;
+        }
+        
+        .notification {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(420px);
+            transition: all 0.3s ease;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left-color: var(--success);
+        }
+        
+        .notification.error {
+            border-left-color: var(--danger);
+        }
+        
+        .notification.warning {
+            border-left-color: var(--warning);
+        }
+        
+        .notification.info {
+            border-left-color: var(--info);
+        }
+        
+        .notification-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .notification.success .notification-icon {
+            color: var(--success);
+        }
+        
+        .notification.error .notification-icon {
+            color: var(--danger);
+        }
+        
+        .notification.warning .notification-icon {
+            color: var(--warning);
+        }
+        
+        .notification.info .notification-icon {
+            color: var(--info);
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .notification-message {
+            color: var(--gray-600);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        /* ====================================
+           LOADING STATES
+        ==================================== */
+        .loading-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid var(--gray-300);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ====================================
+           RESPONSIVE DESIGN
+        ==================================== */
         @media (max-width: 1200px) {
             .main-content {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
             
             .sidebar {
                 order: 2;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                display: grid;
             }
         }
         
         @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
             .header {
                 flex-direction: column;
                 text-align: center;
-                gap: 15px;
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .header-actions {
+                justify-content: center;
+            }
+            
+            .period-indicator {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.75rem;
             }
             
             .quick-actions {
@@ -623,230 +1039,130 @@
             }
             
             .calendar-day {
-                padding: 8px 4px;
-                font-size: 12px;
-                min-height: 35px;
+                padding: 0.5rem 0.25rem;
+                font-size: 0.75rem;
+                min-height: 2.5rem;
             }
             
             .calendar-day-header {
-                padding: 8px 4px;
-                font-size: 10px;
+                padding: 0.5rem 0.25rem;
+                font-size: 0.625rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .sidebar {
+                grid-template-columns: 1fr;
             }
         }
         
-        /* Modal */
-        .modal {
-            display: none;
+        @media (max-width: 480px) {
+            .header-content h1 {
+                font-size: 1.5rem;
+            }
+            
+            .attendance-date {
+                font-size: 1.25rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .attendance-controls {
+                gap: 0.25rem;
+            }
+            
+            .attendance-btn, .status-btn {
+                font-size: 0.625rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+        
+        /* ====================================
+           DEBUG PANEL
+        ==================================== */
+        .debug-panel {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.75rem;
+            max-width: 300px;
+            z-index: 9999;
+            display: none;
+            backdrop-filter: blur(4px);
         }
         
-        .modal.show {
-            display: flex;
+        .debug-panel.show {
+            display: block;
         }
         
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
+        .debug-content {
+            max-height: 200px;
             overflow-y: auto;
         }
         
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+        /* ====================================
+           CONFIRMATION MODAL
+        ==================================== */
+        .confirmation-modal .modal-content {
+            max-width: 400px;
         }
         
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
+        .confirmation-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 1rem;
         }
         
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #666;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .form-input, .form-textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-input:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        /* Success/Error messages */
-        .message {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .message.show {
-            display: block;
-        }
-
-        /* INDICADOR SIMPLE DE PERÍODO ACADÉMICO */
-        .period-indicator-banner {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            margin: 15px 0 25px 0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .period-icon {
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .period-text {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .period-label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .period-info {
-            font-size: 16px;
+        .confirmation-title {
+            font-size: 1.25rem;
             font-weight: 700;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
         }
-
-        .period-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        
+        .confirmation-message {
+            text-align: center;
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
         }
-
-        .period-badge .pulse {
-            color: #10b981;
-            animation: pulse 2s infinite;
+        
+        /* ====================================
+           CUSTOM SCROLLBAR
+        ==================================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.7;
-                transform: scale(1.1);
-            }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 4px;
         }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .period-indicator-banner {
-                flex-direction: column;
-                text-align: center;
-                gap: 10px;
-            }
-
-            .period-text {
-                align-items: center;
-            }
-
-            .period-info {
-                font-size: 14px;
-            }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 4px;
         }
-
-        /* Variantes de color para diferentes estados */
-        .period-indicator-banner.loading {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-        }
-
-        .period-indicator-banner.error {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-
-        .period-indicator-banner.outdated {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
         }
     </style>
 </head>
@@ -854,33 +1170,19 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div>
+            <div class="header-content">
                 <h1>📅 Módulo de Asistencias</h1>
                 <p>Control de asistencia según reglamentos del MEP</p>
-
-                <div class="period-indicator-banner">
-                    <div class="period-icon">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="period-text">
-                        <span class="period-label">Período Académico Activo:</span>
-                        <span class="period-info" id="activePeriodDisplay">2025 - Primer Semestre - Escuela Las Flores</span>
-                    </div>
-                    <div class="period-badge">
-                        <i class="fas fa-circle pulse"></i>
-                        <span>Activo</span>
-                    </div>
-                </div>
             </div>
             <div class="header-actions">
                 <button class="btn btn-info" onclick="openLessonConfigModal()">
-                    ⚙️ Configuración de la nota
+                    ⚙️ Configuración
                 </button>
-                <button class="btn btn-purple" onclick="showClassStats()">
-                    📊 Estadísticas MEP
+                <button class="btn btn-primary" onclick="showClassStats()">
+                    📊 Estadísticas
                 </button>
                 <button class="btn btn-success" onclick="exportAttendance()">
-                    📄 Exportar Reportes
+                    📄 Exportar
                 </button>
                 <button class="btn btn-warning" onclick="toggleDebug()">
                     🐛 Debug
@@ -891,15 +1193,26 @@
             </div>
         </div>
 
-        <!-- Mensajes -->
-        <div id="successMessage" class="message success">✅ Operación completada exitosamente</div>
-        <div id="errorMessage" class="message error">❌ Error en la operación</div>
+        <!-- Period Indicator -->
+        <div class="period-indicator">
+            <div class="period-icon">
+                📅
+            </div>
+            <div class="period-content">
+                <span class="period-label">Período Académico Activo:</span>
+                <span class="period-info" id="activePeriodDisplay">2025 - Primer Semestre - Escuela Las Flores</span>
+            </div>
+            <div class="period-badge">
+                <i class="pulse">●</i>
+                <span>Activo</span>
+            </div>
+        </div>
 
-        <!-- Contenido Principal -->
+        <!-- Main Content -->
         <div class="main-content">
             <!-- Sidebar -->
             <div class="sidebar">
-                <!-- Calendario -->
+                <!-- Calendar -->
                 <div class="card">
                     <div class="card-header">
                         📅 Seleccionar Fecha
@@ -931,7 +1244,7 @@
                     </div>
                 </div>
 
-                <!-- Filtros -->
+                <!-- Filters -->
                 <div class="card">
                     <div class="card-header">
                         🎯 Filtros
@@ -951,7 +1264,7 @@
                     </div>
                 </div>
 
-                <!-- Configuración de Lecciones MEJORADA -->
+                <!-- Lesson Configuration -->
                 <div class="card">
                     <div class="card-header">
                         📚 Configuración Flexible
@@ -968,34 +1281,35 @@
                             </div>
                             <div class="config-item">
                                 <span><strong>Total teórico:</strong></span>
-                                <span id="theoreticalLessons" style="color: #666;">200</span>
+                                <span id="theoreticalLessons" style="color: var(--gray-600);">200</span>
                             </div>
                             <div class="config-item">
                                 <span><strong>Lecciones reales:</strong></span>
-                                <span id="actualLessons" style="color: #27ae60; font-weight: bold;">0</span>
+                                <span id="actualLessons" style="color: var(--success); font-weight: bold;">0</span>
                             </div>
                             <div class="config-item">
                                 <span><strong>Progreso:</strong></span>
-                                <span id="progressInfo" style="color: #667eea;">0%</span>
+                                <span id="progressInfo" style="color: var(--primary);">0%</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 5px;">
+                        <div style="display: flex; gap: 0.5rem;">
                             <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="saveLessonConfig()">
-                                💾 Guardar Config
+                                💾 Guardar
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="recalculateFromReal()">
-                                🔄 Usar Real
+                                🔄 Ajustar
                             </button>
                         </div>
-                        <div id="flexibleTip" style="margin-top: 10px; padding: 8px; background: #e8f4fd; border-radius: 5px; font-size: 12px; color: #2c5aa0;">
+                        <div id="flexibleTip" class="config-tip">
                             💡 El sistema se ajusta automáticamente a los días reales trabajados
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Área Principal -->
+
+            <!-- Main Area -->
             <div class="attendance-main">
-                <!-- Header de Asistencia -->
+                <!-- Attendance Header -->
                 <div class="attendance-header">
                     <div class="attendance-date" id="attendanceDate">
                         Sábado, 31 de Mayo de 2025
@@ -1005,7 +1319,7 @@
                     </div>
                 </div>
 
-                <!-- Acciones Rápidas -->
+                <!-- Quick Actions -->
                 <div class="quick-actions">
                     <span class="quick-actions-title">⚡ Acciones Rápidas:</span>
                     <button class="status-btn present" onclick="markAllStudents('present')">
@@ -1022,10 +1336,11 @@
                     </button>
                 </div>
 
-                <!-- Tabla de Estudiantes -->
+                <!-- Students Table -->
                 <div class="students-table">
-                    <div id="loadingState" style="text-align: center; padding: 50px; color: #666;">
-                        🔄 Seleccione grado para cargar estudiantes...
+                    <div id="loadingState" class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <div style="margin-top: 1rem;">Seleccione grado para cargar estudiantes...</div>
                     </div>
                     
                     <table id="attendanceTable" style="display: none;">
@@ -1046,7 +1361,7 @@
             </div>
         </div>
 
-        <!-- Panel de Estadísticas -->
+        <!-- Stats Panel -->
         <div class="stats-panel">
             <div class="card-header">
                 📊 Estadísticas del Día
@@ -1080,57 +1395,62 @@
         </div>
     </div>
 
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
     <!-- Debug Panel -->
     <div id="debugPanel" class="debug-panel">
         <h4>🐛 Debug Info</h4>
-        <div id="debugContent">Debug activado</div>
+        <div class="debug-content" id="debugContent">Debug activado</div>
     </div>
 
-    <!-- Modal para Justificación -->
+    <!-- Justification Modal -->
     <div class="modal" id="justificationModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Agregar Justificación</h2>
+                <h2 class="modal-title">Editar Asistencia</h2>
                 <button class="close-btn" onclick="closeJustificationModal()">&times;</button>
             </div>
             
-            <form id="justificationForm" onsubmit="saveJustification(event)">
-                <div class="form-group">
-                    <label class="form-label">Estudiante:</label>
-                    <div id="justificationStudent" style="font-weight: 600; color: #333;"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Estado:</label>
-                    <select class="form-input" id="justificationStatus" required>
-                        <option value="present">✅ Presente</option>
-                        <option value="late_justified">⏰ Tardía Justificada</option>
-                        <option value="late_unjustified">🔶 Tardía Injustificada</option>
-                        <option value="absent_justified">📋 Ausencia Justificada</option>
-                        <option value="absent_unjustified">❌ Ausencia Injustificada</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Hora de Llegada (opcional):</label>
-                    <input type="time" class="form-input" id="justificationTime">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Justificación:</label>
-                    <textarea class="form-textarea" id="justificationText" rows="3" 
-                              placeholder="Describa la justificación o motivo..."></textarea>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeJustificationModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
+            <div class="modal-body">
+                <form id="justificationForm" onsubmit="saveJustification(event)">
+                    <div class="form-group">
+                        <label class="form-label">Estudiante:</label>
+                        <div id="justificationStudent" style="font-weight: 600; color: var(--gray-700); padding: 0.5rem; background: var(--gray-50); border-radius: var(--radius-md);"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Estado:</label>
+                        <select class="form-select" id="justificationStatus" required>
+                            <option value="present">✅ Presente</option>
+                            <option value="late_justified">⏰ Tardía Justificada</option>
+                            <option value="late_unjustified">🔶 Tardía Injustificada</option>
+                            <option value="absent_justified">📋 Ausencia Justificada</option>
+                            <option value="absent_unjustified">❌ Ausencia Injustificada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Hora de Llegada (opcional):</label>
+                        <input type="time" class="form-input" id="justificationTime">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Justificación:</label>
+                        <textarea class="form-textarea" id="justificationText" rows="3" 
+                                  placeholder="Describa la justificación o motivo..."></textarea>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeJustificationModal()">Cancelar</button>
+                <button type="submit" form="justificationForm" class="btn btn-primary">Guardar</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal para Configuración de Notas -->
+    <!-- Lesson Config Modal -->
     <div class="modal" id="lessonConfigModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1138,28 +1458,37 @@
                 <button class="close-btn" onclick="closeLessonConfigModal()">&times;</button>
             </div>
             
-            <form id="lessonConfigForm" onsubmit="saveLessonConfigModal(event)">
-                <div class="form-group">
-                    <label class="form-label">📊 Escala Máxima de Notas:</label>
-                    <input type="number"
-                        class="form-input"
-                        id="maxScaleInput"
-                        step="0.1"
-                        min="1"
-                        max="100"
-                        value="5.0"
-                        required>
-                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                        5.0 = MEP tradicional | 10.0 = escala de 10 | 100 = porcentajes
+            <div class="modal-body">
+                <form id="lessonConfigForm" onsubmit="saveLessonConfigModal(event)">
+                    <div class="form-group">
+                        <label class="form-label">📊 Escala Máxima de Notas:</label>
+                        <input type="number" class="form-input" id="maxScaleInput" step="0.1" min="1" max="100" value="5.0" required>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.5rem;">
+                            5.0 = MEP tradicional | 10.0 = escala de 10 | 100 = porcentajes
+                        </div>
                     </div>
-                </div>
+                </form>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeLessonConfigModal()">Cancelar</button>
+                <button type="submit" form="lessonConfigForm" class="btn btn-primary">Guardar Configuración</button>
+            </div>
+        </div>
+    </div>
 
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeLessonConfigModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
-                </div>
-            </form>
+    <!-- Confirmation Modal -->
+    <div class="modal confirmation-modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="confirmation-icon" id="confirmationIcon">❓</div>
+                <div class="confirmation-title" id="confirmationTitle">¿Confirmar acción?</div>
+                <div class="confirmation-message" id="confirmationMessage">Esta acción no se puede deshacer.</div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeConfirmationModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmationButton" onclick="executeConfirmedAction()">Confirmar</button>
+            </div>
         </div>
     </div>
 
@@ -1177,6 +1506,8 @@
         let attendanceData = {};
         let lessonConfig = { lessonsPerWeek: 5, totalWeeks: 40, totalLessons: 200 };
         let debugMode = false;
+        let studentMEPStats = {}; // Cache para estadísticas MEP
+        let pendingConfirmationAction = null;
 
         function getCurrentAcademicPeriod() {
             if (window.unifiedPeriodSelector) {
@@ -1187,6 +1518,87 @@
                 try { return JSON.parse(saved); } catch (e) {}
             }
             return { schoolId: '1', year: 2025, periodType: 'semester', periodNumber: 1 };
+        }
+
+        // ========================================
+        // NOTIFICATION SYSTEM
+        // ========================================
+        function showNotification(type, title, message, duration = 5000) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icons[type] || icons.info}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Trigger animation
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+            
+            // Click to dismiss
+            notification.addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            });
+        }
+
+        // ========================================
+        // CONFIRMATION MODAL SYSTEM
+        // ========================================
+        function showConfirmation(options) {
+            const modal = document.getElementById('confirmationModal');
+            const icon = document.getElementById('confirmationIcon');
+            const title = document.getElementById('confirmationTitle');
+            const message = document.getElementById('confirmationMessage');
+            const button = document.getElementById('confirmationButton');
+            
+            icon.textContent = options.icon || '❓';
+            title.textContent = options.title || '¿Confirmar acción?';
+            message.textContent = options.message || 'Esta acción no se puede deshacer.';
+            button.textContent = options.confirmText || 'Confirmar';
+            button.className = `btn ${options.confirmClass || 'btn-primary'}`;
+            
+            pendingConfirmationAction = options.onConfirm;
+            modal.classList.add('show');
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').classList.remove('show');
+            pendingConfirmationAction = null;
+        }
+
+        function executeConfirmedAction() {
+            if (pendingConfirmationAction && typeof pendingConfirmationAction === 'function') {
+                pendingConfirmationAction();
+            }
+            closeConfirmationModal();
         }
 
         // Helper para peticiones autenticadas
@@ -1230,13 +1642,12 @@
         // INICIALIZACIÓN
         // ========================================
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Iniciando módulo de asistencias - VERSIÓN CORREGIDA...');
+            console.log('🚀 Iniciando módulo de asistencias mejorado...');
             initializeCalendar();
             loadFilters();
             updateCurrentDate();
             calculateTotalLessons();
             
-            // Debug inicial
             debugLog('Sistema iniciado correctamente');
         });
 
@@ -1263,22 +1674,11 @@
             if (debugMode) {
                 debugPanel.classList.add('show');
                 debugLog('Debug mode activado');
+                showNotification('info', 'Debug Activado', 'Panel de debugging habilitado');
             } else {
                 debugPanel.classList.remove('show');
+                showNotification('info', 'Debug Desactivado', 'Panel de debugging deshabilitado');
             }
-        }
-
-        function showMessage(type, message, callback) {
-            const messageEl = document.getElementById(type + 'Message');
-            messageEl.textContent = message;
-            messageEl.classList.add('show');
-
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-                if (typeof callback === 'function') {
-                    callback();
-                }
-            }, 5000);
         }
 
         // ========================================
@@ -1369,7 +1769,7 @@
 
         function selectDate(date) {
             if (isBulkMarking) {
-                showMessage('error', 'Espera a que termine el marcado masivo antes de cambiar la fecha');
+                showNotification('warning', 'Operación en Progreso', 'Espera a que termine el marcado masivo antes de cambiar la fecha');
                 return;
             }
 
@@ -1387,7 +1787,7 @@
 
         function changeMonth(delta) {
             if (isBulkMarking) {
-                showMessage('error', 'Espera a que termine el marcado masivo antes de cambiar la fecha');
+                showNotification('warning', 'Operación en Progreso', 'Espera a que termine el marcado masivo antes de cambiar la fecha');
                 return;
             }
 
@@ -1431,13 +1831,12 @@
         }
 
         // ========================================
-        // CARGA DE DATOS - CORREGIDO
+        // CARGA DE DATOS
         // ========================================
         async function loadFilters() {
             try {
                 debugLog('📋 Cargando filtros...');
                 
-                // Cargar grados
                 const gradesResponse = await authenticatedFetch('/api/grades');
                 const gradesResult = await gradesResponse.json();
                 
@@ -1449,14 +1848,15 @@
                         gradeFilter.innerHTML += `<option value="${grade.name}">${grade.name}</option>`;
                     });
                     debugLog('✅ Grados cargados:', gradesResult.data.length);
+                    showNotification('success', 'Filtros Cargados', 'Los grados se han cargado correctamente');
                 } else {
                     debugLog('⚠️ No se pudieron cargar los grados');
-                    showMessage('error', 'No se pudieron cargar los grados');
+                    showNotification('error', 'Error', 'No se pudieron cargar los grados');
                 }
                 
             } catch (error) {
                 debugLog('❌ Error cargando filtros:', error);
-                showMessage('error', 'Error cargando filtros: ' + error.message);
+                showNotification('error', 'Error de Conexión', 'Error cargando filtros: ' + error.message);
             }
         }
 
@@ -1467,7 +1867,10 @@
             
             if (!grade) {
                 document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('loadingState').innerHTML = '🔄 Seleccione grado para cargar estudiantes...';
+                document.getElementById('loadingState').innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div style="margin-top: 1rem;">Seleccione grado para cargar estudiantes...</div>
+                `;
                 document.getElementById('attendanceTable').style.display = 'none';
                 return;
             }
@@ -1477,7 +1880,10 @@
             
             try {
                 document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('loadingState').innerHTML = '🔄 Cargando estudiantes...';
+                document.getElementById('loadingState').innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div style="margin-top: 1rem;">Cargando estudiantes...</div>
+                `;
                 document.getElementById('attendanceTable').style.display = 'none';
                 
                 const period = getCurrentAcademicPeriod();
@@ -1486,7 +1892,6 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Filtrar estudiantes solo por grado y status activo
                     students = result.data.filter(student => {
                         const gradeMatch = student.grade_level === grade;
                         const statusMatch = student.status === 'active';
@@ -1496,14 +1901,12 @@
                     
                     debugLog(`✅ Estudiantes filtrados: ${students.length}`, { grade });
                     
-                    // Actualizar información del header
                     document.getElementById('attendanceInfo').textContent = 
                         `📊 ${grade} - ${students.length} estudiantes (Todas las materias)`;
                     
-                    // Cargar asistencia existente para la fecha
                     await loadAttendanceForDate();
+                    await loadConfigurationForCurrentGrade();
                     
-                    // Renderizar tabla
                     renderStudentsTable();
                     updateStats();
                     
@@ -1511,10 +1914,7 @@
                         document.getElementById('loadingState').style.display = 'none';
                         document.getElementById('attendanceTable').style.display = 'table';
                         debugLog('✅ Lista de estudiantes cargada correctamente');
-
-                        // ✅ AGREGAR ESTA LÍNEA AL FINAL
-                        await loadConfigurationForCurrentGrade();
-
+                        showNotification('success', 'Estudiantes Cargados', `${students.length} estudiantes cargados para ${grade}`);
                     } else {
                         document.getElementById('loadingState').innerHTML = 
                             `📭 No hay estudiantes activos en ${grade}`;
@@ -1523,17 +1923,15 @@
                 } else {
                     document.getElementById('loadingState').innerHTML = '❌ Error cargando estudiantes';
                     debugLog('❌ Error en respuesta:', result.message);
-                    showMessage('error', 'Error cargando estudiantes: ' + result.message);
+                    showNotification('error', 'Error', 'Error cargando estudiantes: ' + result.message);
                 }
                 
             } catch (error) {
                 debugLog('❌ Error cargando estudiantes:', error);
                 document.getElementById('loadingState').innerHTML = '❌ Error de conexión al cargar estudiantes';
-                showMessage('error', 'Error de conexión al cargar estudiantes');
+                showNotification('error', 'Error de Conexión', 'Error de conexión al cargar estudiantes');
             }
         }
-
-
 
         async function loadConfigurationForCurrentGrade() {
             if (!currentGrade) return;
@@ -1547,17 +1945,12 @@
                 if (result.success && result.data) {
                     const config = result.data;
                     
-                    // Actualizar los valores en la interfaz
                     document.getElementById('lessonsPerWeek').value = config.lessons_per_week || 5;
                     document.getElementById('totalWeeks').value = config.total_weeks || 40;
                     
-                    // Calcular total teórico
                     const theoreticalTotal = (config.lessons_per_week || 5) * (config.total_weeks || 40);
-                    
-                    // Obtener lecciones reales basadas en asistencia
                     const actualLessons = await getActualLessonsGiven();
                     
-                    // Actualizar la interfaz con información flexible
                     updateFlexibleLessonInfo(theoreticalTotal, actualLessons, config);
                     
                     debugLog('✅ Configuración cargada:', config);
@@ -1572,12 +1965,10 @@
             }
         }
 
-
         async function getActualLessonsGiven() {
             if (!currentGrade) return 0;
             
             try {
-                // Contar días únicos con asistencia registrada para este grado
                 const period = getCurrentAcademicPeriod();
                 const response = await authenticatedFetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`);
                 const result = await response.json();
@@ -1593,60 +1984,59 @@
             }
         }
 
-
-
-    function updateFlexibleLessonInfo(theoretical, actual, config) {
-        document.getElementById('theoreticalLessons').textContent = theoretical;
-        document.getElementById('actualLessons').textContent = actual;
-        
-        const progress = theoretical > 0 ? Math.round((actual / theoretical) * 100) : 0;
-        document.getElementById('progressInfo').textContent = `${progress}%`;
-        
-        // Actualizar tip según el progreso
-        const tipElement = document.getElementById('flexibleTip');
-        if (actual > theoretical) {
-            tipElement.innerHTML = '🎯 ¡Excelente! Has dado más lecciones de las planificadas';
-            tipElement.style.background = '#d4edda';
-            tipElement.style.color = '#155724';
-        } else if (actual < theoretical * 0.8) {
-            tipElement.innerHTML = '⚠️ Considera ajustar la planificación por días feriados';
-            tipElement.style.background = '#fff3cd';
-            tipElement.style.color = '#856404';
-        } else {
-            tipElement.innerHTML = '💡 El sistema se ajusta automáticamente a los días reales trabajados';
-            tipElement.style.background = '#e8f4fd';
-            tipElement.style.color = '#2c5aa0';
-        }
-    }
-
-    function updateFlexibleCalculation() {
-        const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
-        const totalWeeks = parseInt(document.getElementById('totalWeeks').value) || 40;
-        const theoretical = lessonsPerWeek * totalWeeks;
-        
-        document.getElementById('theoreticalLessons').textContent = theoretical;
-        
-        // Recalcular progreso
-        const actual = parseInt(document.getElementById('actualLessons').textContent) || 0;
-        const progress = theoretical > 0 ? Math.round((actual / theoretical) * 100) : 0;
-        document.getElementById('progressInfo').textContent = `${progress}%`;
-    }
-
-    function recalculateFromReal() {
-        const actualLessons = parseInt(document.getElementById('actualLessons').textContent) || 0;
-        const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
-        
-        if (actualLessons > 0 && lessonsPerWeek > 0) {
-            const adjustedWeeks = Math.ceil(actualLessons / lessonsPerWeek);
-            document.getElementById('totalWeeks').value = adjustedWeeks;
-            document.getElementById('theoreticalLessons').textContent = actualLessons;
-            document.getElementById('progressInfo').textContent = '100%';
+        function updateFlexibleLessonInfo(theoretical, actual, config) {
+            document.getElementById('theoreticalLessons').textContent = theoretical;
+            document.getElementById('actualLessons').textContent = actual;
             
-            showMessage('success', `✅ Ajustado a ${adjustedWeeks} semanas basado en ${actualLessons} lecciones reales`);
-        } else {
-            showMessage('info', 'Necesitas registrar asistencia primero para usar esta función');
+            const progress = theoretical > 0 ? Math.round((actual / theoretical) * 100) : 0;
+            document.getElementById('progressInfo').textContent = `${progress}%`;
+            
+            const tipElement = document.getElementById('flexibleTip');
+            if (actual > theoretical) {
+                tipElement.innerHTML = '🎯 ¡Excelente! Has dado más lecciones de las planificadas';
+                tipElement.style.background = 'rgba(16, 185, 129, 0.1)';
+                tipElement.style.color = '#059669';
+                tipElement.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+            } else if (actual < theoretical * 0.8) {
+                tipElement.innerHTML = '⚠️ Considera ajustar la planificación por días feriados';
+                tipElement.style.background = 'rgba(245, 158, 11, 0.1)';
+                tipElement.style.color = '#d97706';
+                tipElement.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+            } else {
+                tipElement.innerHTML = '💡 El sistema se ajusta automáticamente a los días reales trabajados';
+                tipElement.style.background = 'rgba(59, 130, 246, 0.1)';
+                tipElement.style.color = '#2563eb';
+                tipElement.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+            }
         }
-    }
+
+        function updateFlexibleCalculation() {
+            const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
+            const totalWeeks = parseInt(document.getElementById('totalWeeks').value) || 40;
+            const theoretical = lessonsPerWeek * totalWeeks;
+            
+            document.getElementById('theoreticalLessons').textContent = theoretical;
+            
+            const actual = parseInt(document.getElementById('actualLessons').textContent) || 0;
+            const progress = theoretical > 0 ? Math.round((actual / theoretical) * 100) : 0;
+            document.getElementById('progressInfo').textContent = `${progress}%`;
+        }
+
+        function recalculateFromReal() {
+            const actualLessons = parseInt(document.getElementById('actualLessons').textContent) || 0;
+            const lessonsPerWeek = parseInt(document.getElementById('lessonsPerWeek').value) || 5;
+            
+            if (actualLessons > 0 && lessonsPerWeek > 0) {
+                const adjustedWeeks = Math.ceil(actualLessons / lessonsPerWeek);
+                document.getElementById('totalWeeks').value = adjustedWeeks;
+                document.getElementById('theoreticalLessons').textContent = actualLessons;
+                document.getElementById('progressInfo').textContent = '100%';
+                
+                showNotification('success', 'Configuración Ajustada', `✅ Ajustado a ${adjustedWeeks} semanas basado en ${actualLessons} lecciones reales`);
+            } else {
+                showNotification('info', 'Sin Datos', 'Necesitas registrar asistencia primero para usar esta función');
+            }
+        }
 
         async function loadAttendanceForDate() {
             if (!currentGrade || students.length === 0) {
@@ -1654,7 +2044,6 @@
                 return;
             }
             
-            // ✅ NUEVO: Invalidar cache de estadísticas al cambiar fecha
             studentMEPStats = {};
             
             try {
@@ -1663,7 +2052,6 @@
                 
                 const period = getCurrentAcademicPeriod();
                 let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
-                // Ya no añadimos el parámetro subject porque no usamos filtro de materias
                 
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -1673,8 +2061,7 @@
                     debugLog('🔍 DATOS CRUDOS del servidor:', result.data);
                     
                     result.data.forEach(record => {
-                        // ✅ CORREGIDO: Usar el ID numérico correcto
-                        const studentKey = record.student_id; // Ahora debería ser numérico
+                        const studentKey = record.student_id;
                         attendanceData[studentKey] = record;
                         debugLog(`📝 Asistencia mapeada: key=${studentKey} (code: ${record.student_code}), status=${record.status}, name=${record.first_name}`);
                     });
@@ -1683,7 +2070,6 @@
                     debugLog('📋 AttendanceData final:', attendanceData);
                     debugLog('👥 Student IDs disponibles:', students.map(s => `${s.id}(${s.first_name})`));
                     
-                    // ✅ VERIFICACIÓN DE COINCIDENCIAS MEJORADA
                     students.forEach(student => {
                         const hasAttendance = !!attendanceData[student.id];
                         const attendanceStatus = attendanceData[student.id]?.status || 'none';
@@ -1699,17 +2085,21 @@
                 
             } catch (error) {
                 debugLog('❌ Error cargando asistencia:', error);
-                showMessage('error', 'Error cargando asistencia');
+                showNotification('error', 'Error', 'Error cargando asistencia');
             }
         }
 
         // ========================================
-        // RENDERIZADO DE TABLA - MEJORADO
+        // RENDERIZADO DE TABLA
         // ========================================
         async function renderStudentsTable() {
             if (students.length === 0) {
                 document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('loadingState').innerHTML = '📝 No hay estudiantes para mostrar';
+                document.getElementById('loadingState').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                        📝 No hay estudiantes para mostrar
+                    </div>
+                `;
                 document.getElementById('attendanceTable').style.display = 'none';
                 return;
             }
@@ -1720,12 +2110,9 @@
             debugLog('🎨 Renderizando tabla con estudiantes:', students.map(s => ({ id: s.id, name: s.first_name })));
             debugLog('📊 Datos de asistencia disponibles:', attendanceData);
             
-            // Invalidar cache de estadísticas cuando renderizamos
             studentMEPStats = {};
             
             const tbody = document.getElementById('attendanceTableBody');
-            
-            // Renderizar filas una por una para cargar estadísticas progresivamente
             tbody.innerHTML = '';
             
             for (const student of students) {
@@ -1737,17 +2124,15 @@
                 const statusText = getStatusText(status);
                 const statusClass = getStatusClass(status);
                 
-                // Debug por estudiante
                 debugLog(`👤 Estudiante ${student.id} (${student.first_name}):`, {
                     hasAttendance: !!attendance,
                     status: status
                 });
                 
-                // Crear fila inicial con datos básicos
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
                             <div class="student-photo">${initials}</div>
                             <div>
                                 <div class="student-name">${fullName}</div>
@@ -1783,13 +2168,15 @@
                     <td>${attendance?.arrival_time || '-'}</td>
                     <td>${attendance?.justification || '-'}</td>
                     <td id="stats-${student.id}">
-                        <div style="text-align: center; color: #666;">🔄 Calculando...</div>
+                        <div style="text-align: center; color: var(--gray-500);">
+                            <div class="loading-spinner" style="width: 1rem; height: 1rem; margin: 0 auto;"></div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem;">Calculando...</div>
+                        </div>
                     </td>
                 `;
                 
                 tbody.appendChild(row);
                 
-                // Cargar estadísticas MEP de forma asíncrona
                 getMEPGradeForStudent(student.id).then(mepStats => {
                     const statsCell = document.getElementById(`stats-${student.id}`);
                     if (statsCell) {
@@ -1799,13 +2186,13 @@
                         
                         statsCell.innerHTML = `
                             <div style="text-align: center;">
-                                <div style="font-weight: 600; color: ${attendancePercentage >= 90 ? '#28a745' : attendancePercentage >= 75 ? '#ffc107' : '#dc3545'};">
+                                <div style="font-weight: 600; color: ${attendancePercentage >= 90 ? 'var(--success)' : attendancePercentage >= 75 ? 'var(--warning)' : 'var(--danger)'};">
                                     ${attendancePercentage.toFixed(1)}%
                                 </div>
-                                <div style="font-size: 11px; color: #666;">
+                                <div style="font-size: 0.75rem; color: var(--gray-600);">
                                     Nota: ${notaAsistencia.toFixed(1)}/${mepStats.max_scale || 5.0}
                                 </div>
-                                <div style="font-size: 10px; color: #999;" title="Nota en escala 0-10 según MEP">
+                                <div style="font-size: 0.625rem; color: var(--gray-500);" title="Nota en escala 0-10 según MEP">
                                     (${nota10}/10)
                                 </div>
                             </div>
@@ -1816,7 +2203,7 @@
                     const statsCell = document.getElementById(`stats-${student.id}`);
                     if (statsCell) {
                         statsCell.innerHTML = `
-                            <div style="text-align: center; color: #dc3545;">
+                            <div style="text-align: center; color: var(--danger);">
                                 Error
                             </div>
                         `;
@@ -1852,7 +2239,7 @@
         }
 
         // ========================================
-        // FUNCIONES DE ASISTENCIA - COMPLETAMENTE CORREGIDAS
+        // FUNCIONES DE ASISTENCIA
         // ========================================
         async function markAttendance(studentId, status, date = selectedDate) {
             try {
@@ -1861,7 +2248,6 @@
                 const dateStr = date.toISOString().split('T')[0];
                 const now = new Date();
                 
-                // ✅ CORREGIDO: Usar la materia del estudiante o 'general'
                 const student = students.find(s => s.id === studentId);
                 const subjectArea = student?.subject_area || 'general';
                 
@@ -1895,14 +2281,12 @@
                 debugLog('📥 Respuesta del servidor:', result);
                 
                 if (result.success) {
-                    // ✅ CORREGIDO: Actualizar datos locales correctamente
                     attendanceData[studentId] = {
                         ...attendanceRecord,
                         id: result.data.id,
-                        student_id: studentId // Asegurar que coincide con el ID del estudiante
+                        student_id: studentId
                     };
                     
-                    // ✅ NUEVO: Invalidar cache de estadísticas MEP para este estudiante
                     delete studentMEPStats[studentId];
                     
                     debugLog('✅ Datos locales actualizados:', attendanceData[studentId]);
@@ -1912,47 +2296,56 @@
                     
                     const statusText = getStatusText(status);
                     debugLog(`✅ Asistencia guardada: ${studentId} = ${status}`);
-                    showMessage('success', `Asistencia marcada: ${statusText}`);
+                    showNotification('success', 'Asistencia Guardada', `${statusText} registrado correctamente`);
                 } else {
                     debugLog('❌ Error del servidor:', result);
-                    showMessage('error', 'Error: ' + result.message);
+                    showNotification('error', 'Error', 'Error: ' + result.message);
                 }
             } catch (error) {
                 debugLog('❌ Error marcando asistencia:', error);
-                showMessage('error', 'Error de conexión al guardar asistencia');
+                showNotification('error', 'Error de Conexión', 'Error de conexión al guardar asistencia');
             }
         }
 
         async function markAllStudents(status) {
             if (isBulkMarking) {
-                showMessage('error', 'El marcado masivo ya está en progreso');
+                showNotification('warning', 'Operación en Progreso', 'El marcado masivo ya está en progreso');
                 return;
             }
 
             if (students.length === 0) {
-                showMessage('error', 'No hay estudiantes cargados');
+                showNotification('error', 'Sin Estudiantes', 'No hay estudiantes cargados');
                 return;
             }
             
-            if (!confirm(`¿Marcar a todos los ${students.length} estudiantes como "${getStatusText(status)}"?`)) {
-                return;
-            }
+            const statusText = getStatusText(status);
             
+            showConfirmation({
+                icon: '👥',
+                title: 'Confirmar Marcado Masivo',
+                message: `¿Marcar a todos los ${students.length} estudiantes como "${statusText}"?`,
+                confirmText: 'Marcar Todos',
+                confirmClass: 'btn-warning',
+                onConfirm: () => executeMarkAllStudents(status)
+            });
+        }
+
+        async function executeMarkAllStudents(status) {
             debugLog(`📋 Marcando todos como: ${status}`);
 
             const dateSnapshot = new Date(selectedDate);
-
             isBulkMarking = true;
 
             try {
                 let successCount = 0;
                 let errorCount = 0;
                 
+                showNotification('info', 'Marcado Masivo', 'Procesando estudiantes...');
+                
                 for (const student of students) {
                     try {
                         await markAttendance(student.id, status, dateSnapshot);
                         successCount++;
-                        // Pequeña pausa para no sobrecargar el servidor
                         await new Promise(resolve => setTimeout(resolve, 100));
                     } catch (error) {
                         errorCount++;
@@ -1962,32 +2355,33 @@
                 
                 const statusText = getStatusText(status);
                 if (errorCount === 0) {
-                    showMessage(
-                        'success',
-                        `✅ ${successCount} estudiantes marcados como "${statusText}"`,
-                        () => { isBulkMarking = false; }
-                    );
+                    showNotification('success', 'Marcado Completo', `✅ ${successCount} estudiantes marcados como "${statusText}"`);
                 } else {
-                    showMessage(
-                        'error',
-                        `⚠️ ${successCount} exitosos, ${errorCount} errores`,
-                        () => { isBulkMarking = false; }
-                    );
+                    showNotification('warning', 'Marcado Parcial', `⚠️ ${successCount} exitosos, ${errorCount} errores`);
                 }
                 
                 debugLog(`📊 Resultado: ${successCount} exitosos, ${errorCount} errores`);
                 
             } catch (error) {
                 debugLog('❌ Error marcando todos:', error);
-                showMessage('error', 'Error marcando estudiantes', () => { isBulkMarking = false; });
+                showNotification('error', 'Error', 'Error marcando estudiantes');
+            } finally {
+                isBulkMarking = false;
             }
         }
 
         async function clearAllAttendance() {
-            if (!confirm('¿Eliminar toda la asistencia del día seleccionado?')) {
-                return;
-            }
-            
+            showConfirmation({
+                icon: '🗑️',
+                title: 'Eliminar Asistencia',
+                message: '¿Eliminar toda la asistencia del día seleccionado? Esta acción no se puede deshacer.',
+                confirmText: 'Eliminar Todo',
+                confirmClass: 'btn-danger',
+                onConfirm: () => executeClearAllAttendance()
+            });
+        }
+
+        async function executeClearAllAttendance() {
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
                 const period = getCurrentAcademicPeriod();
@@ -2009,35 +2403,31 @@
                     attendanceData = {};
                     renderStudentsTable();
                     updateStats();
-                    showMessage('success', '✅ Asistencia eliminada correctamente');
+                    showNotification('success', 'Asistencia Eliminada', '✅ Asistencia eliminada correctamente');
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showNotification('error', 'Error', 'Error: ' + result.message);
                 }
             } catch (error) {
                 debugLog('❌ Error eliminando asistencia:', error);
-                showMessage('error', 'Error eliminando asistencia');
+                showNotification('error', 'Error', 'Error eliminando asistencia');
             }
         }
 
         // ========================================
-        // ESTADÍSTICAS Y CÁLCULOS - USANDO LÓGICA REAL DEL MEP
+        // ESTADÍSTICAS Y CÁLCULOS MEP
         // ========================================
-        
-        let studentMEPStats = {}; // Cache para estadísticas MEP
-        
         async function calculateAttendancePercentage(studentId) {
             try {
                 const mepStats = await getMEPGradeForStudent(studentId);
                 return mepStats.attendance_percentage;
             } catch (error) {
                 debugLog('❌ Error calculando porcentaje:', error);
-                return 100; // Por defecto si hay error
+                return 100;
             }
         }
         
         async function getMEPGradeForStudent(studentId) {
             try {
-                // Obtener configuración de lecciones
                 const config = await getLessonConfigForCurrentSelection();
                 const totalLessons = config?.total_lessons || 200;
                 
@@ -2169,18 +2559,18 @@
 
         async function saveLessonConfig() {
             if (!currentGrade) {
-                showMessage('error', 'Seleccione un grado primero');
+                showNotification('error', 'Error', 'Seleccione un grado primero');
                 return;
             }
             
             try {
                 const period = getCurrentAcademicPeriod();
                 const configData = {
-                    grade_level: document.getElementById('configGrade').value,
-                    subject_area: 'general', // ✅ Siempre usar 'general'
-                    lessons_per_week: parseInt(document.getElementById('configLessonsPerWeek').value),
-                    total_weeks: parseInt(document.getElementById('configTotalWeeks').value),
-                    teacher_name: document.getElementById('configTeacher').value || null,
+                    grade_level: currentGrade,
+                    subject_area: 'general',
+                    lessons_per_week: parseInt(document.getElementById('lessonsPerWeek').value),
+                    total_weeks: parseInt(document.getElementById('totalWeeks').value),
+                    teacher_name: null,
                     year: period.year,
                     period_type: period.periodType,
                     period_number: period.periodNumber
@@ -2197,13 +2587,13 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('success', '✅ Configuración guardada correctamente');
+                    showNotification('success', 'Configuración Guardada', '✅ Configuración guardada correctamente');
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showNotification('error', 'Error', 'Error: ' + result.message);
                 }
             } catch (error) {
                 debugLog('Error guardando configuración:', error);
-                showMessage('error', 'Error guardando configuración');
+                showNotification('error', 'Error', 'Error guardando configuración');
             }
         }
 
@@ -2280,29 +2670,26 @@
                     renderStudentsTable();
                     updateStats();
                     closeJustificationModal();
-                    showMessage('success', '✅ Asistencia guardada correctamente');
+                    showNotification('success', 'Asistencia Actualizada', '✅ Asistencia guardada correctamente');
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showNotification('error', 'Error', 'Error: ' + result.message);
                 }
             } catch (error) {
                 debugLog('Error guardando justificación:', error);
-                showMessage('error', 'Error guardando asistencia');
+                showNotification('error', 'Error', 'Error guardando asistencia');
             }
         }
 
         function openLessonConfigModal() {
             if (!currentGrade) {
-                showMessage('error', 'Seleccione un grado primero');
+                showNotification('error', 'Error', 'Seleccione un grado primero');
                 return;
             }
             
             document.getElementById('lessonConfigModal').classList.add('show');
-
-            // ✅ CARGAR ESCALA ACTUAL Y PESO
             loadCurrentScale();
         }
 
-        // ✅ FUNCIÓN NUEVA - AGREGAR DESPUÉS DE openLessonConfigModal()
         async function loadCurrentScale() {
             try {
                 if (!currentGrade) {
@@ -2318,15 +2705,16 @@
                     document.getElementById('maxScaleInput').value = data.max_scale;
                     debugLog(`✅ Escala cargada: ${data.max_scale}`);
                 } else {
-                    document.getElementById('maxScaleInput').value = 5.0; // Default
+                    document.getElementById('maxScaleInput').value = 5.0;
                     debugLog('⚠️ No se encontró escala, usando 5.0 por defecto');
                 }
             } catch (error) {
                 console.error('Error cargando escala:', error);
-                document.getElementById('maxScaleInput').value = 5.0; // Default en caso de error
+                document.getElementById('maxScaleInput').value = 5.0;
                 debugLog('❌ Error cargando escala, usando 5.0 por defecto');
             }
         }
+
         function closeLessonConfigModal() {
             document.getElementById('lessonConfigModal').classList.remove('show');
         }
@@ -2335,16 +2723,14 @@
             event.preventDefault();
             
             try {
-                // ✅ OBTENER LA ESCALA MÁXIMA Y EL PESO
                 const maxScale = parseFloat(document.getElementById('maxScaleInput').value);
-                const attendanceWeight = maxScale; // Unificar peso con escala
+                const attendanceWeight = maxScale;
                 
                 if (!currentGrade) {
-                    showMessage('error', 'Seleccione un grado primero');
+                    showNotification('error', 'Error', 'Seleccione un grado primero');
                     return;
                 }
                 
-                // ✅ GUARDAR ESCALA MÁXIMA (usando grado/materia actual)
                 const scaleResponse = await authenticatedFetch('/api/grade-scale', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -2368,19 +2754,19 @@
                         })
                     }).catch(err => console.error('Error guardando peso:', err));
 
-                    showMessage('success', '✅ Configuración de nota guardada correctamente');
+                    showNotification('success', 'Configuración Guardada', '✅ Configuración de nota guardada correctamente');
                     closeLessonConfigModal();
-                    // Recargar estadísticas para ver los cambios
+                    
                     if (typeof showClassStats === 'function') {
                         showClassStats();
                     }
                 } else {
-                    showMessage('error', 'Error guardando configuración: ' + scaleResult.message);
+                    showNotification('error', 'Error', 'Error guardando configuración: ' + scaleResult.message);
                 }
                 
             } catch (error) {
                 debugLog('Error guardando configuración:', error);
-                showMessage('error', 'Error guardando configuración: ' + error.message);
+                showNotification('error', 'Error', 'Error guardando configuración: ' + error.message);
             }
         }
 
@@ -2426,22 +2812,20 @@
             }
         }
 
-
         function exportAttendance() {
-            showMessage('info', '📄 Función de exportar en desarrollo');
+            showNotification('info', 'Función en Desarrollo', '📄 Función de exportar en desarrollo');
         }
 
         function exportClassStats() {
-            showMessage('info', '📊 Función de exportar estadísticas en desarrollo');
+            showNotification('info', 'Función en Desarrollo', '📊 Función de exportar estadísticas en desarrollo');
         }
 
         // ========================================
         // ESTADÍSTICAS DE CLASE MEP
         // ========================================
-        
         async function showClassStats() {
             if (!currentGrade) {
-                showMessage('error', 'Seleccione un grado primero');
+                showNotification('error', 'Error', 'Seleccione un grado primero');
                 return;
             }
             
@@ -2449,7 +2833,7 @@
                 const config = await getLessonConfigForCurrentSelection();
                 const totalLessons = config?.total_lessons || 200;
                 
-                showMessage('success', '📊 Calculando estadísticas MEP...');
+                showNotification('info', 'Calculando Estadísticas', '📊 Calculando estadísticas MEP...');
                 
                 const period = getCurrentAcademicPeriod();
                 const response = await authenticatedFetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`);
@@ -2458,11 +2842,11 @@
                 if (result.success) {
                     displayClassStatsModal(result.data, result.summary, config);
                 } else {
-                    showMessage('error', 'Error: ' + result.message);
+                    showNotification('error', 'Error', 'Error: ' + result.message);
                 }
             } catch (error) {
                 debugLog('❌ Error obteniendo estadísticas de clase:', error);
-                showMessage('error', 'Error obteniendo estadísticas de clase');
+                showNotification('error', 'Error', 'Error obteniendo estadísticas de clase');
             }
         }
         
@@ -2470,78 +2854,78 @@
             const modal = document.createElement('div');
             modal.className = 'modal show';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+                <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
                     <div class="modal-header">
                         <h2 class="modal-title">📊 Estadísticas MEP - ${currentGrade}</h2>
                         <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
                     </div>
                     
-                    <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                         <!-- Resumen general -->
-                        <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-                            <h3>📈 Resumen General</h3>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #667eea;">${classStats.length}</div>
-                                    <div style="color: #666; font-size: 12px;">ESTUDIANTES</div>
+                        <div style="background: var(--gray-50); border-radius: var(--radius-xl); padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--gray-200);">
+                            <h3 style="margin-bottom: 1rem; color: var(--gray-900);">📈 Resumen General</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                <div style="text-align: center; padding: 1rem; background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">${classStats.length}</div>
+                                    <div style="color: var(--gray-600); font-size: 0.75rem; text-transform: uppercase; font-weight: 500;">ESTUDIANTES</div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #28a745;">${summary.average_attendance.toFixed(1)}%</div>
-                                    <div style="color: #666; font-size: 12px;">ASISTENCIA PROMEDIO</div>
+                                <div style="text-align: center; padding: 1rem; background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;">${summary.average_attendance.toFixed(1)}%</div>
+                                    <div style="color: var(--gray-600); font-size: 0.75rem; text-transform: uppercase; font-weight: 500;">ASISTENCIA PROMEDIO</div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #28a745;">${summary.average_grade.toFixed(1)}/${summary.max_scale || 5.0}</div>
-                                    <div style="color: #666; font-size: 12px;">NOTA PROMEDIO</div>
+                                <div style="text-align: center; padding: 1rem; background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;">${summary.average_grade.toFixed(1)}/${summary.max_scale || 5.0}</div>
+                                    <div style="color: var(--gray-600); font-size: 0.75rem; text-transform: uppercase; font-weight: 500;">NOTA PROMEDIO</div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #17a2b8;">${config?.total_lessons || 200}</div>
-                                    <div style="color: #666; font-size: 12px;">LECCIONES TOTAL</div>
+                                <div style="text-align: center; padding: 1rem; background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--info); margin-bottom: 0.5rem;">${config?.total_lessons || 200}</div>
+                                    <div style="color: var(--gray-600); font-size: 0.75rem; text-transform: uppercase; font-weight: 500;">LECCIONES TOTAL</div>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Tabla de estudiantes -->
-                        <h3>👥 Detalle por Estudiante</h3>
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <h3 style="margin-bottom: 1rem; color: var(--gray-900);">👥 Detalle por Estudiante</h3>
+                        <div style="overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius-lg);">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
                                 <thead>
-                                    <tr style="background: #f8f9fa;">
-                                        <th style="padding: 8px; border: 1px solid #ddd;">Estudiante</th>
-                                        <th style="padding: 8px; border: 1px solid #ddd;">Asistencia</th>
-                                        <th style="padding: 8px; border: 1px solid #ddd;">Ausencias</th>
-                                        <th style="padding: 8px; border: 1px solid #ddd;">Nota 0-10</th>
-                                        <th style="padding: 8px; border: 1px solid #ddd;">Nota Final</th>
-                                        <th style="padding: 8px; border: 1px solid #ddd;">Registros</th>
+                                    <tr style="background: var(--gray-50);">
+                                        <th style="padding: 1rem; border-bottom: 1px solid var(--gray-200); text-align: left; font-weight: 600;">Estudiante</th>
+                                        <th style="padding: 1rem; border-bottom: 1px solid var(--gray-200); text-align: center; font-weight: 600;">Asistencia</th>
+                                        <th style="padding: 1rem; border-bottom: 1px solid var(--gray-200); text-align: center; font-weight: 600;">Ausencias</th>
+                                        <th style="padding: 1rem; border-bottom: 1px solid var(--gray-200); text-align: center; font-weight: 600;">Nota 0-10</th>
+                                        <th style="padding: 1rem; border-bottom: 1px solid var(--gray-200); text-align: center; font-weight: 600;">Nota Final</th>
+                                        <th style="padding: 1rem; border-bottom: 1px solid var(--gray-200); text-align: center; font-weight: 600;">Registros</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${classStats.map(student => {
                                         const stats = student.mep_stats;
                                         return `
-                                            <tr>
-                                                <td style="padding: 8px; border: 1px solid #ddd;">
-                                                    <strong>${student.first_surname} ${student.second_surname}, ${student.first_name}</strong><br>
-                                                    <small style="color: #666;">${student.student_id}</small>
+                                            <tr style="border-bottom: 1px solid var(--gray-100);">
+                                                <td style="padding: 1rem;">
+                                                    <div style="font-weight: 600; color: var(--gray-900);">${student.first_surname} ${student.second_surname}, ${student.first_name}</div>
+                                                    <div style="font-size: 0.75rem; color: var(--gray-500);">${student.student_id}</div>
                                                 </td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                                                    <span style="color: ${stats.attendance_percentage >= 90 ? '#28a745' : stats.attendance_percentage >= 75 ? '#ffc107' : '#dc3545'}; font-weight: 600;">
+                                                <td style="padding: 1rem; text-align: center;">
+                                                    <span style="color: ${stats.attendance_percentage >= 90 ? 'var(--success)' : stats.attendance_percentage >= 75 ? 'var(--warning)' : 'var(--danger)'}; font-weight: 600;">
                                                         ${stats.attendance_percentage.toFixed(1)}%
                                                     </span>
                                                 </td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                                <td style="padding: 1rem; text-align: center;">
                                                     ${stats.total_absences.toFixed(1)} / ${stats.total_lessons}
                                                 </td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: 600;">
+                                                <td style="padding: 1rem; text-align: center; font-weight: 600;">
                                                     ${stats.nota_0_10}/10
                                                 </td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                                                    <span style="color: ${stats.nota_asistencia >= 4 ? '#28a745' : stats.nota_asistencia >= 3 ? '#ffc107' : '#dc3545'}; font-weight: 600;">
+                                                <td style="padding: 1rem; text-align: center;">
+                                                    <span style="color: ${stats.nota_asistencia >= 4 ? 'var(--success)' : stats.nota_asistencia >= 3 ? 'var(--warning)' : 'var(--danger)'}; font-weight: 600;">
                                                         ${stats.nota_asistencia.toFixed(1)}/${stats.max_scale || 5.0}
                                                     </span>
                                                 </td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">
-                                                    P:${stats.stats.present} | TJ:${stats.stats.late_justified} | TI:${stats.stats.late_unjustified}<br>
-                                                    AJ:${stats.stats.absent_justified} | AI:${stats.stats.absent_unjustified}
+                                                <td style="padding: 1rem; text-align: center; font-size: 0.75rem;">
+                                                    <div>P:${stats.stats.present} | TJ:${stats.stats.late_justified} | TI:${stats.stats.late_unjustified}</div>
+                                                    <div>AJ:${stats.stats.absent_justified} | AI:${stats.stats.absent_unjustified}</div>
                                                 </td>
                                             </tr>
                                         `;
@@ -2551,12 +2935,14 @@
                         </div>
                         
                         <!-- Explicación de la fórmula MEP -->
-                        <div style="background: #e3f2fd; border-radius: 10px; padding: 15px; margin-top: 20px;">
-                            <h4>📋 Fórmula MEP Aplicada</h4>
-                            <p style="margin: 5px 0;"><strong>1.</strong> Ausencias = Ausencias Injustificadas + (Tardías × 0.5)</p>
-                            <p style="margin: 5px 0;"><strong>2.</strong> % Ausencias = (Ausencias ÷ Total Lecciones) × 100</p>
-                            <p style="margin: 5px 0;"><strong>3.</strong> Nota 0-10 según tabla oficial MEP</p>
-                            <p style="margin: 5px 0;"><strong>4.</strong> Nota Final = Nota 0-10 × 0.5 (5% del período)</p>
+                        <div style="background: rgba(59, 130, 246, 0.05); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 2rem; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            <h4 style="color: var(--info); margin-bottom: 1rem;">📋 Fórmula MEP Aplicada</h4>
+                            <div style="color: var(--gray-700); line-height: 1.6;">
+                                <p style="margin: 0.5rem 0;"><strong>1.</strong> Ausencias = Ausencias Injustificadas + (Tardías × 0.5)</p>
+                                <p style="margin: 0.5rem 0;"><strong>2.</strong> % Ausencias = (Ausencias ÷ Total Lecciones) × 100</p>
+                                <p style="margin: 0.5rem 0;"><strong>3.</strong> Nota 0-10 según tabla oficial MEP</p>
+                                <p style="margin: 0.5rem 0;"><strong>4.</strong> Nota Final = Nota 0-10 × Escala (${summary.max_scale || 5.0}/10)</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -2577,36 +2963,31 @@
             });
         }
 
-        // Event listeners (se verifican elementos opcionales)
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        document.addEventListener('click', function(event) {
+            // Cerrar modales al hacer clic fuera
+            if (event.target.classList.contains('modal')) {
+                if (event.target.id === 'justificationModal') {
+                    closeJustificationModal();
+                } else if (event.target.id === 'lessonConfigModal') {
+                    closeLessonConfigModal();
+                } else if (event.target.id === 'confirmationModal') {
+                    closeConfirmationModal();
+                }
+            }
+        });
+
+        // Event listeners para inputs de configuración
         const lpwInput = document.getElementById('lessonsPerWeek');
         if (lpwInput) lpwInput.addEventListener('input', calculateTotalLessons);
 
         const twInput = document.getElementById('totalWeeks');
         if (twInput) twInput.addEventListener('input', calculateTotalLessons);
 
-        const clpwInput = document.getElementById('configLessonsPerWeek');
-        if (clpwInput) clpwInput.addEventListener('input', calculateTotalLessons);
-
-        const ctwInput = document.getElementById('configTotalWeeks');
-        if (ctwInput) ctwInput.addEventListener('input', calculateTotalLessons);
-
-        // Cerrar modales al hacer clic fuera
-        const justificationModal = document.getElementById('justificationModal');
-        if (justificationModal) {
-            justificationModal.addEventListener('click', function(event) {
-                if (event.target === this) closeJustificationModal();
-            });
-        }
-
-        const lessonConfigModalEl = document.getElementById('lessonConfigModal');
-        if (lessonConfigModalEl) {
-            lessonConfigModalEl.addEventListener('click', function(event) {
-                if (event.target === this) closeLessonConfigModal();
-            });
-        }
-
         // ===============================
-        // INDICADOR SIMPLE DE PERÍODO
+        // INDICADOR DE PERÍODO
         // ===============================
         class SimplePeriodIndicator {
             constructor() {
@@ -2674,7 +3055,7 @@
             }
 
             updateBannerState(state) {
-                const banner = document.querySelector('.period-indicator-banner');
+                const banner = document.querySelector('.period-indicator');
                 if (!banner) return;
                 banner.classList.remove('loading', 'error', 'outdated');
                 if (state !== 'active') {
@@ -2695,9 +3076,14 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar indicador de período cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.simplePeriodIndicator = new SimplePeriodIndicator();
+            });
+        } else {
             window.simplePeriodIndicator = new SimplePeriodIndicator();
-        });
+        }
 
         window.updatePeriodIndicator = function() {
             if (window.simplePeriodIndicator) {
@@ -2708,7 +3094,6 @@
         // Exponer funciones para recarga externa
         window.loadStudents = loadStudents;
         window.loadAttendance = loadAttendanceForDate;
-        // Function expected by the global period selector to reload data
         window.loadAttendanceData = loadAttendanceForDate;
     </script>
     <script src="js/global-period-selector.js"></script>
