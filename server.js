@@ -18,6 +18,7 @@ function loadEnv(file = '.env') {
 
 loadEnv();
 
+
 const PASSWORD_SALT = process.env.PASSWORD_SALT || 'static_salt';
 
 function hashPassword(password) {
@@ -53,7 +54,7 @@ function verifyJWT(token) {
 
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ========================================
 // MIDDLEWARES
@@ -63,16 +64,25 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
     .map(o => o.trim())
     .filter(Boolean);
 
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-            callback(new Error('Not allowed by CORS'));
+// Configuración de CORS para producción
+const corsOptions = {
+    origin: (origin, callback) => {
+        // En producción, permitir cualquier origen si no se especifica
+        if (process.env.NODE_ENV === 'production' && process.env.CORS_ORIGIN === '*') {
+            return callback(null, true);
         }
-    })
-);
+        // Lógica original para desarrollo
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-session-token', 'x-school-id']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -2636,11 +2646,20 @@ async function startServer() {
         await initializeDatabase();
         
         // Después iniciar el servidor
-        app.listen(PORT, () => {
-            console.log('🚀 Servidor corriendo en http://localhost:' + PORT);
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 Sistema Educativo ejecutándose en puerto ${PORT}`);
+            console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`👨‍💼 Admin: ${ADMIN_USERNAME}`);
+            
+            if (process.env.NODE_ENV === 'production') {
+                console.log('✅ Configurado para producción');
+                console.log('🌐 Servidor accesible desde cualquier IP');
+            } else {
+                console.log(`📊 Dashboard local: http://localhost:${PORT}/dashboard.html`);
+            }
+            
             console.log('📊 API disponible en /api/students, /api/subjects, /api/attendance');
             console.log('📝 Evaluaciones disponibles en /api/evaluations, /api/evaluation-grades');
-            console.log('🐛 Debug endpoints: /api/debug/connection, /api/debug/database');
         });
     } catch (error) {
         console.error('❌ Error iniciando servidor:', error);
