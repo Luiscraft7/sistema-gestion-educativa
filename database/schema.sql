@@ -568,18 +568,3 @@ WHEN NOT EXISTS (
 BEGIN
     SELECT RAISE(ABORT, 'Teacher is not assigned to this school');
 END;
-
--- Tabla de solicitudes de cambio de contraseña
-CREATE TABLE IF NOT EXISTS password_change_requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    teacher_id INTEGER NOT NULL,
-    teacher_email TEXT NOT NULL,
-    teacher_name TEXT NOT NULL,
-    reason TEXT,
-    status TEXT DEFAULT 'pending',
-    requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    processed_at DATETIME,
-    processed_by TEXT,
-    ip_address TEXT,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
-);
