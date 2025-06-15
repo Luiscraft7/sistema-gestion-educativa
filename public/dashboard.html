@@ -307,41 +307,19 @@
         /* Suavizar todas las transiciones */
         .expandable-panel {
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
         }
 
         .expandable-panel.show {
-            display: block;
-            animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 1000px;
+            opacity: 1;
         }
 
         .expandable-panel.hide {
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-                max-height: 0;
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-                max-height: 1000px;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-                max-height: 1000px;
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-                max-height: 0;
-            }
+            max-height: 0;
+            opacity: 0;
         }
 
         /* Efectos suaves para cambios de estado */
@@ -776,7 +754,9 @@
             border: 1px solid var(--border-color);
             overflow: hidden;
             display: none;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 0;
+            opacity: 0;
         }
 
         .panel-header {
@@ -1591,48 +1571,6 @@
             return response;
         }
 
-        // Cargar y verificar sesión al cargar la página
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Cargar tema guardado
-            loadSavedTheme();
-            
-            // Inicializar sistema de notificaciones
-            if (!window.notificationSystem) {
-                window.notificationSystem = new NotificationSystem();
-                notificationSystem = window.notificationSystem;
-            }
-            
-            const fadeElements = document.querySelectorAll('.fade-in');
-
-            if (!sessionStorage.getItem('firstDashboardLoad')) {
-                fadeElements.forEach((element, index) => {
-                    element.style.animationDelay = `${index * 0.1}s`;
-                });
-                sessionStorage.setItem('firstDashboardLoad', 'true');
-            } else {
-                fadeElements.forEach(element => element.classList.remove('fade-in'));
-            }
-
-            const sessionInfo = await checkUserSession();
-            if (sessionInfo) {
-                setupUserInterface(sessionInfo.type, sessionInfo.user);
-                if (sessionInfo.type === 'admin') {
-                    loadAdminStats();
-                } else if (sessionInfo.type === 'teacher') {
-                    loadTeacherStats();
-                    
-                    window.addEventListener('academicPeriodChanged', () => {
-                        loadTeacherStats();
-                        loadIntegratedTeacherProfile();
-                    });
-                    window.addEventListener('reloadPeriodData', () => {
-                        loadTeacherStats();
-                        loadIntegratedTeacherProfile();
-                    });
-                }
-            }
-        });
-
         // =========================
         // SISTEMA DE NOTIFICACIONES
         // =========================
@@ -1834,6 +1772,48 @@
 
         // Inicializar sistema de notificaciones
         let notificationSystem;
+
+        // Cargar y verificar sesión al cargar la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Cargar tema guardado
+            loadSavedTheme();
+            
+            // Inicializar sistema de notificaciones
+            if (!window.notificationSystem) {
+                window.notificationSystem = new NotificationSystem();
+                notificationSystem = window.notificationSystem;
+            }
+            
+            const fadeElements = document.querySelectorAll('.fade-in');
+
+            if (!sessionStorage.getItem('firstDashboardLoad')) {
+                fadeElements.forEach((element, index) => {
+                    element.style.animationDelay = `${index * 0.1}s`;
+                });
+                sessionStorage.setItem('firstDashboardLoad', 'true');
+            } else {
+                fadeElements.forEach(element => element.classList.remove('fade-in'));
+            }
+
+            const sessionInfo = await checkUserSession();
+            if (sessionInfo) {
+                setupUserInterface(sessionInfo.type, sessionInfo.user);
+                if (sessionInfo.type === 'admin') {
+                    loadAdminStats();
+                } else if (sessionInfo.type === 'teacher') {
+                    loadTeacherStats();
+                    
+                    window.addEventListener('academicPeriodChanged', () => {
+                        loadTeacherStats();
+                        loadIntegratedTeacherProfile();
+                    });
+                    window.addEventListener('reloadPeriodData', () => {
+                        loadTeacherStats();
+                        loadIntegratedTeacherProfile();
+                    });
+                }
+            }
+        });
         
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -2109,29 +2089,56 @@
             }
         }
 
-        // Funciones de los paneles expandibles (mejoradas)
+        // Funciones de los paneles expandibles (mejoradas sin parpadeo)
         function togglePeriodSelector() {
             const panel = document.getElementById('periodSelectorPanel');
             const btn = document.getElementById('periodSelectorBtn');
             
-            if (panel.style.display === 'none' || panel.style.display === '') {
+            if (!panel.classList.contains('show')) {
                 // Mostrar panel con animación suave
                 panel.style.display = 'block';
-                panel.classList.add('show');
-                panel.classList.remove('hide');
+                // Pequeño delay para que el display: block tome efecto antes de la animación
+                setTimeout(() => {
+                    panel.classList.add('show');
+                    panel.classList.remove('hide');
+                }, 10);
                 
                 btn.innerHTML = '<i class="fas fa-calendar-times"></i> Ocultar Período';
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-secondary');
             } else {
                 // Ocultar panel con animación suave
-                panel.classList.add('hide');
                 panel.classList.remove('show');
+                panel.classList.add('hide');
+                
+                // Esperar a que termine la animación antes de ocultar
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                    panel.classList.remove('hide');
+                }, 400);
+                
+                btn.innerHTML = '<i class="fas fa-calendar-alt"></i> Período Académico';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+            }
+        }
+
+        // Función específica para cerrar el panel automáticamente (sin toggle)
+        function closePeriodSelector() {
+            const panel = document.getElementById('periodSelectorPanel');
+            const btn = document.getElementById('periodSelectorBtn');
+            
+            // Solo cerrar si está abierto
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                panel.classList.add('hide');
                 
                 setTimeout(() => {
                     panel.style.display = 'none';
+                    panel.classList.remove('hide');
                 }, 400);
                 
+                // Resetear botón al estado original
                 btn.innerHTML = '<i class="fas fa-calendar-alt"></i> Período Académico';
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-primary');
@@ -2142,20 +2149,23 @@
             const panel = document.getElementById('quickEditPanel');
             const btn = document.getElementById('quickEditBtn');
             
-            if (panel.style.display === 'none' || panel.style.display === '') {
+            if (!panel.classList.contains('show')) {
                 // Mostrar panel con animación suave
                 panel.style.display = 'block';
-                panel.classList.add('show');
-                panel.classList.remove('hide');
+                setTimeout(() => {
+                    panel.classList.add('show');
+                    panel.classList.remove('hide');
+                }, 10);
                 
                 btn.innerHTML = '<i class="fas fa-eye"></i> Ver Perfil';
             } else {
                 // Ocultar panel con animación suave
-                panel.classList.add('hide');
                 panel.classList.remove('show');
+                panel.classList.add('hide');
                 
                 setTimeout(() => {
                     panel.style.display = 'none';
+                    panel.classList.remove('hide');
                 }, 400);
                 
                 btn.innerHTML = '<i class="fas fa-edit"></i> Editar Perfil';
@@ -2273,337 +2283,20 @@
             }
         }
 
-
-
-        class UnifiedPeriodSelector {
-            constructor() {
-                this.currentPeriod = this.loadCurrentPeriod();
-                this.init();
-            }
-
-            init() {
-                this.setupEventListeners();
-                this.updateUI();
-            }
-
-            setupEventListeners() {
-                const periodTypeSelector = document.getElementById('periodTypeSelector');
-                if (periodTypeSelector) {
-                    periodTypeSelector.addEventListener('change', (e) => {
-                        this.updatePeriodOptions(e.target.value);
-                    });
-                }
-
-                const yearSelector = document.getElementById('yearSelector');
-                if (yearSelector) {
-                    yearSelector.addEventListener('change', () => {
-                        this.loadAvailablePeriods();
-                    });
-                }
-
-                const applyBtn = document.getElementById('applyPeriodBtn');
-                if (applyBtn) {
-                    applyBtn.addEventListener('click', () => {
-                        this.applyPeriodChange();
-                    });
-                }
-
-                ['schoolSelector', 'yearSelector', 'periodTypeSelector', 'periodSelector'].forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.addEventListener('change', () => {
-                            this.markAsChanged();
-                        });
-                    }
-                });
-            }
-
-            updatePeriodOptions(periodType) {
-                const periodSelector = document.getElementById('periodSelector');
-                if (!periodSelector) return;
-                
-                periodSelector.innerHTML = '';
-
-                if (periodType === 'semester') {
-                    periodSelector.innerHTML = `
-                        <option value="1">Primer Semestre</option>
-                        <option value="2">Segundo Semestre</option>
-                    `;
-                } else if (periodType === 'trimester') {
-                    periodSelector.innerHTML = `
-                        <option value="1">Primer Trimestre</option>
-                        <option value="2">Segundo Trimestre</option>
-                        <option value="3">Tercer Trimestre</option>
-                    `;
-                }
-            }
-
-            async loadAvailablePeriods() {
+        // SISTEMA DE PERÍODOS ACADÉMICOS
+        function getPeriodStorageKey() {
+            const data = sessionStorage.getItem('teacherData');
+            if (data) {
                 try {
-                    const yearSelector = document.getElementById('yearSelector');
-                    if (!yearSelector) return;
-                    
-                    const year = yearSelector.value;
-                    console.log('Cargando períodos para año:', year);
-                } catch (error) {
-                    console.error('Error cargando períodos:', error);
-                }
-            }
-
-            markAsChanged() {
-                const applyBtn = document.getElementById('applyPeriodBtn');
-                if (applyBtn) {
-                    applyBtn.style.background = '#f59e0b';
-                    applyBtn.innerHTML = '<i class="fas fa-exclamation"></i> Aplicar Cambios';
-                }
-            }
-
-            async applyPeriodChange() {
-                const schoolSelector = document.getElementById('schoolSelector');
-                const yearSelector = document.getElementById('yearSelector');
-                const periodTypeSelector = document.getElementById('periodTypeSelector');
-                const periodSelector = document.getElementById('periodSelector');
-
-                if (!schoolSelector || !yearSelector || !periodTypeSelector || !periodSelector) {
-                    console.error('No se encontraron todos los selectores necesarios');
-                    return;
-                }
-
-                const oldPeriod = { ...this.currentPeriod };
-                const newPeriod = {
-                    schoolId: schoolSelector.value,
-                    year: parseInt(yearSelector.value),
-                    periodType: periodTypeSelector.value,
-                    periodNumber: parseInt(periodSelector.value)
-                };
-
-                // Verificar si realmente hay cambios
-                const hasChanges = JSON.stringify(oldPeriod) !== JSON.stringify(newPeriod);
-                if (!hasChanges) {
-                    notificationSystem.showToast('info', 'Sin cambios', 'El período seleccionado ya está activo');
-                    return;
-                }
-
-                console.log('📅 Aplicando período:', newPeriod);
-
-                try {
-                    // Generar detalles de cambios
-                    const changeDetails = notificationSystem.generateChangeDetails(oldPeriod, newPeriod);
-                    const loadingMessage = notificationSystem.getChangeMessage(oldPeriod, newPeriod);
-                    
-                    // Mostrar modal de carga
-                    notificationSystem.showModal(
-                        'loading', 
-                        'Cambiando Período', 
-                        loadingMessage,
-                        changeDetails
-                    );
-
-                    // Deshabilitar botón durante el proceso
-                    const applyBtn = document.getElementById('applyPeriodBtn');
-                    if (applyBtn) {
-                        applyBtn.disabled = true;
-                        applyBtn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></div> Aplicando...';
+                    const teacher = JSON.parse(data);
+                    if (teacher.id) {
+                        return `currentAcademicPeriod_${teacher.id}`;
                     }
-
-                    // Simular delay para mejor UX (el cambio es muy rápido)
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-
-                    // Intentar hacer request al servidor (si está disponible)
-                    let serverResult = { success: true };
-                    try {
-                        const response = await authenticatedFetch('/api/academic-periods/set-current', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                year: newPeriod.year,
-                                period_type: newPeriod.periodType,
-                                period_number: newPeriod.periodNumber
-                            }),
-                            useAdminToken: (typeof isAdmin === 'function' && isAdmin())
-                        });
-
-                        serverResult = await response.json();
-                    } catch (error) {
-                        console.warn('No se pudo conectar al servidor, continuando con cambio local:', error);
-                        // Continuar con cambio local si no hay servidor
-                    }
-
-                    if (serverResult.success) {
-                        // Sincronizar cambio de escuela en la sesión
-                        try {
-                            const schoolResp = await authenticatedFetch('/api/session/school', {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ school_id: parseInt(newPeriod.schoolId) })
-                            });
-                            const schoolResult = await schoolResp.json();
-                            if (schoolResult.success && schoolResult.school) {
-                                const teacher = JSON.parse(sessionStorage.getItem('teacherData') || '{}');
-                                teacher.school_id = schoolResult.school.id;
-                                teacher.school = schoolResult.school.name;
-                                teacher.school_name = schoolResult.school.name;
-                                sessionStorage.setItem('teacherData', JSON.stringify(teacher));
-                                const info = localStorage.getItem('teacherInfo');
-                                if (info) {
-                                    const parsed = JSON.parse(info);
-                                    parsed.school_id = schoolResult.school.id;
-                                    parsed.school = schoolResult.school.name;
-                                    parsed.school_name = schoolResult.school.name;
-                                    localStorage.setItem('teacherInfo', JSON.stringify(parsed));
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Error actualizando escuela de sesión', error);
-                        }
-
-                        // Guardar cambios
-                        this.saveCurrentPeriod(newPeriod);
-                        this.currentPeriod = newPeriod;
-                        
-                        // Actualizar UI
-                        updateCurrentPeriodDisplay();
-                        
-                        // Mostrar éxito en modal
-                        const successMessage = notificationSystem.getSuccessMessage(oldPeriod, newPeriod);
-                        notificationSystem.showModal(
-                            'success',
-                            '¡Período Cambiado!',
-                            successMessage,
-                            changeDetails
-                        );
-
-                        // Resetear botón
-                        if (applyBtn) {
-                            applyBtn.disabled = false;
-                            applyBtn.style.background = '#10b981';
-                            applyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Aplicado!';
-                        }
-
-                        // Notificar cambio a otros componentes
-                        this.broadcastPeriodChange(newPeriod);
-
-                        // Auto-cerrar modal después de 2 segundos
-                        setTimeout(() => {
-                            notificationSystem.hideModal();
-                            
-                            // Mostrar toast de confirmación
-                            notificationSystem.showToast(
-                                'success',
-                                'Período Actualizado',
-                                `Ahora estás trabajando en ${notificationSystem.getPeriodName(newPeriod.periodType, newPeriod.periodNumber)} ${newPeriod.year}`
-                            );
-                            
-                            // Ocultar panel de período después de completar
-                            setTimeout(() => {
-                                togglePeriodSelector();
-                                
-                                // Resetear botón después de cerrar panel
-                                if (applyBtn) {
-                                    applyBtn.innerHTML = '<i class="fas fa-check"></i> Aplicar Período';
-                                    applyBtn.style.background = '#667eea';
-                                }
-                            }, 1000);
-                            
-                        }, 2000);
-
-                        console.log('✅ Período académico actualizado exitosamente:', newPeriod);
-                        
-                    } else {
-                        throw new Error(serverResult.message || 'Error del servidor');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Error aplicando período:', error);
-                    
-                    // Mostrar error en modal
-                    notificationSystem.showModal(
-                        'error',
-                        'Error al Cambiar Período',
-                        'No se pudo aplicar el cambio. Por favor, inténtalo nuevamente.',
-                        `<div class="detail-item"><span class="detail-label">Error:</span><span class="detail-value" style="color: #ef4444;">${error.message}</span></div>`
-                    );
-
-                    // Resetear botón
-                    const applyBtn = document.getElementById('applyPeriodBtn');
-                    if (applyBtn) {
-                        applyBtn.disabled = false;
-                        applyBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Reintentar';
-                        applyBtn.style.background = '#ef4444';
-                    }
-
-                    // Auto-cerrar modal de error después de 3 segundos
-                    setTimeout(() => {
-                        notificationSystem.hideModal();
-                        
-                        // Mostrar toast de error
-                        notificationSystem.showToast(
-                            'error',
-                            'Error al cambiar período',
-                            'Verifica tu conexión e inténtalo nuevamente'
-                        );
-                        
-                        // Resetear botón
-                        setTimeout(() => {
-                            if (applyBtn) {
-                                applyBtn.innerHTML = '<i class="fas fa-check"></i> Aplicar Período';
-                                applyBtn.style.background = '#667eea';
-                            }
-                        }, 2000);
-                        
-                    }, 3000);
+                } catch (err) {
+                    console.warn('Error parseando teacherData:', err);
                 }
             }
-
-            updateUI() {
-                const schoolSelector = document.getElementById('schoolSelector');
-                const yearSelector = document.getElementById('yearSelector');
-                const periodTypeSelector = document.getElementById('periodTypeSelector');
-                const periodNumberSelector = document.getElementById('periodSelector');
-
-                if (schoolSelector) schoolSelector.value = this.currentPeriod.schoolId;
-                if (yearSelector) yearSelector.value = this.currentPeriod.year;
-                if (periodTypeSelector) periodTypeSelector.value = this.currentPeriod.periodType;
-                
-                this.updatePeriodOptions(this.currentPeriod.periodType);
-                if (periodNumberSelector) periodNumberSelector.value = this.currentPeriod.periodNumber;
-                
-                updateCurrentPeriodDisplay();
-            }
-
-            loadCurrentPeriod() {
-                const saved = localStorage.getItem(getPeriodStorageKey());
-                if (saved) {
-                    try {
-                        return JSON.parse(saved);
-                    } catch (error) {
-                        console.error('Error parseando período guardado:', error);
-                    }
-                }
-
-                return {
-                    schoolId: '1',
-                    year: 2025,
-                    periodType: 'semester',
-                    periodNumber: 1
-                };
-            }
-
-            saveCurrentPeriod(period) {
-                localStorage.setItem(getPeriodStorageKey(), JSON.stringify(period));
-            }
-
-            broadcastPeriodChange(newPeriod) {
-                window.dispatchEvent(new CustomEvent('academicPeriodChanged', {
-                    detail: newPeriod
-                }));
-            }
-
-            getCurrentPeriod() {
-                return this.currentPeriod;
-            }
+            return 'currentAcademicPeriod';
         }
 
         // Inicializar cuando el DOM esté listo
@@ -2623,10 +2316,160 @@
                 });
             }
             
-            // Inicializar selector de período utilizando el script global
-            window.initGlobalPeriodSelector();
+            // IMPORTANTE: Usar inicializador del global-period-selector.js PERO mantener las notificaciones
+            if (typeof window.initGlobalPeriodSelector === 'function') {
+                // Hook el sistema de notificaciones en el selector global
+                const originalPeriodSelector = window.unifiedPeriodSelector;
+                window.initGlobalPeriodSelector();
+                
+                // Si el global-period-selector tiene applyPeriodChange, lo sobrescribimos para incluir las notificaciones
+                if (window.globalPeriodSelector && window.globalPeriodSelector.applyPeriodChange) {
+                    const originalApply = window.globalPeriodSelector.applyPeriodChange.bind(window.globalPeriodSelector);
+                    
+                    window.globalPeriodSelector.applyPeriodChange = async function() {
+                        const schoolSelector = document.getElementById('schoolSelector');
+                        const yearSelector = document.getElementById('yearSelector');
+                        const periodTypeSelector = document.getElementById('periodTypeSelector');
+                        const periodSelector = document.getElementById('periodSelector');
+
+                        if (!schoolSelector || !yearSelector || !periodTypeSelector || !periodSelector) {
+                            console.error('No se encontraron todos los selectores necesarios');
+                            return;
+                        }
+
+                        const oldPeriod = { ...this.currentPeriod };
+                        const newPeriod = {
+                            schoolId: schoolSelector.value,
+                            year: parseInt(yearSelector.value),
+                            periodType: periodTypeSelector.value,
+                            periodNumber: parseInt(periodSelector.value)
+                        };
+
+                        // Verificar si realmente hay cambios
+                        const hasChanges = JSON.stringify(oldPeriod) !== JSON.stringify(newPeriod);
+                        if (!hasChanges) {
+                            notificationSystem.showToast('info', 'Sin cambios', 'El período seleccionado ya está activo');
+                            return;
+                        }
+
+                        console.log('📅 Aplicando período con notificaciones:', newPeriod);
+
+                        try {
+                            // Generar detalles de cambios
+                            const changeDetails = notificationSystem.generateChangeDetails(oldPeriod, newPeriod);
+                            const loadingMessage = notificationSystem.getChangeMessage(oldPeriod, newPeriod);
+                            
+                            // Mostrar modal de carga
+                            notificationSystem.showModal(
+                                'loading', 
+                                'Cambiando Período', 
+                                loadingMessage,
+                                changeDetails
+                            );
+
+                            // Deshabilitar botón durante el proceso
+                            const applyBtn = document.getElementById('applyPeriodBtn');
+                            if (applyBtn) {
+                                applyBtn.disabled = true;
+                                applyBtn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></div> Aplicando...';
+                            }
+
+                            // Simular delay para mejor UX
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+
+                            // Llamar al método original
+                            await originalApply();
+                            
+                            // Mostrar éxito en modal
+                            const successMessage = notificationSystem.getSuccessMessage(oldPeriod, newPeriod);
+                            notificationSystem.showModal(
+                                'success',
+                                '¡Período Cambiado!',
+                                successMessage,
+                                changeDetails
+                            );
+
+                            // Resetear botón
+                            if (applyBtn) {
+                                applyBtn.disabled = false;
+                                applyBtn.style.background = '#10b981';
+                                applyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Aplicado!';
+                            }
+
+                            // Auto-cerrar modal después de 2 segundos
+                            setTimeout(() => {
+                                notificationSystem.hideModal();
+                                
+                                // Ocultar panel de período después de completar (SIN toast para evitar duplicados)
+                                setTimeout(() => {
+                                    closePeriodSelector(); // Usar función específica para cerrar automáticamente
+                                    
+                                    // Resetear botón después de cerrar panel
+                                    if (applyBtn) {
+                                        applyBtn.innerHTML = '<i class="fas fa-check"></i> Aplicar Período';
+                                        applyBtn.style.background = '#667eea';
+                                    }
+                                }, 1000);
+                                
+                            }, 2000);
+
+                            console.log('✅ Período académico actualizado exitosamente con notificaciones:', newPeriod);
+                            
+                        } catch (error) {
+                            console.error('❌ Error aplicando período:', error);
+                            
+                            // Mostrar error en modal
+                            notificationSystem.showModal(
+                                'error',
+                                'Error al Cambiar Período',
+                                'No se pudo aplicar el cambio. Por favor, inténtalo nuevamente.',
+                                `<div class="detail-item"><span class="detail-label">Error:</span><span class="detail-value" style="color: #ef4444;">${error.message}</span></div>`
+                            );
+
+                            // Resetear botón
+                            const applyBtn = document.getElementById('applyPeriodBtn');
+                            if (applyBtn) {
+                                applyBtn.disabled = false;
+                                applyBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Reintentar';
+                                applyBtn.style.background = '#ef4444';
+                            }
+
+                            // Auto-cerrar modal de error después de 3 segundos
+                            setTimeout(() => {
+                                notificationSystem.hideModal();
+                                
+                                // Mostrar toast de error
+                                notificationSystem.showToast(
+                                    'error',
+                                    'Error al cambiar período',
+                                    'Verifica tu conexión e inténtalo nuevamente'
+                                );
+                                
+                                // Resetear botón
+                                setTimeout(() => {
+                                    if (applyBtn) {
+                                        applyBtn.innerHTML = '<i class="fas fa-check"></i> Aplicar Período';
+                                        applyBtn.style.background = '#667eea';
+                                    }
+                                }, 2000);
+                                
+                            }, 3000);
+                        }
+                    };
+                }
+            } else {
+                console.log('⚠️ global-period-selector.js no encontrado, usando funcionalidad local');
+            }
+            
             window.addEventListener('academicPeriodChanged', updateCurrentPeriodDisplay);
         });
+
+        // Función global para obtener período actual
+        window.getCurrentAcademicPeriod = () => {
+            return window.globalPeriodSelector ? 
+                window.globalPeriodSelector.getCurrentPeriod() :
+                JSON.parse(localStorage.getItem(getPeriodStorageKey()) || '{"schoolId":"1","year":2025,"periodType":"semester","periodNumber":1}');
+        };
 
     </script>
 </body>
