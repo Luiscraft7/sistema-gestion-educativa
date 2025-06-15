@@ -305,6 +305,11 @@ getBasicMultiSchoolSchema() {
                 await run('CREATE INDEX IF NOT EXISTS idx_grades_teacher ON grades(teacher_id)');
             }
 
+            const teacherInfo = await tableInfo('teachers');
+            if (!teacherInfo.some(r => r.name === 'has_temporary_password')) {
+                await run('ALTER TABLE teachers ADD COLUMN has_temporary_password INTEGER DEFAULT 0');
+            }
+
             const subjectInfo = await tableInfo('custom_subjects');
             if (!subjectInfo.some(r => r.name === 'teacher_id')) {
                 await run('ALTER TABLE custom_subjects ADD COLUMN teacher_id INTEGER DEFAULT 0');
@@ -3028,6 +3033,42 @@ async updateTeacherLastLogin(teacherId) {
         });
     });
 }
+
+async getTeacherById(id) {
+    this.ensureConnection();
+
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM teachers WHERE id = ?';
+        this.db.get(query, [id], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+async updateTeacherPassword(id, newPassword, clearTemporary = false) {
+    this.ensureConnection();
+
+    return new Promise((resolve, reject) => {
+        const hashed = this.hashPassword(newPassword || '');
+        let query = 'UPDATE teachers SET password = ?, updated_at = CURRENT_TIMESTAMP';
+        if (clearTemporary) {
+            query += ', has_temporary_password = 0';
+        }
+        query += ' WHERE id = ?';
+
+        this.db.run(query, [hashed, id], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: id, changes: this.changes });
+            }
+        });
+    });
+}
 // ========================================
 // FUNCIONES DE GESTIÓN DE SESIONES ACTIVAS
 // ========================================
@@ -3449,7 +3490,7 @@ async approvePasswordChangeRequest(requestId, adminUser, newPassword) {
 
             this.db.serialize(() => {
                 this.db.run(
-                    'UPDATE teachers SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    'UPDATE teachers SET password = ?, has_temporary_password = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
                     [hashed, reqRow.teacher_id],
                     (err) => {
                         if (err) {

@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS teachers (
     registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     activation_date DATETIME,
     last_login DATETIME,
+    has_temporary_password INTEGER DEFAULT 0,
     -- Metadatos
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
