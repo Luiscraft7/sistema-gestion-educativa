@@ -948,7 +948,7 @@
                     console.log('📋 Datos del profesor recibidos:', teacherResult.teacher);
                     console.log('📋 Nombre detectado:', teacherResult.teacher.name || teacherResult.teacher.full_name);
                     
-                    redirectUrl = 'dashboard.html';
+                    redirectUrl = teacherResult.teacher.has_temporary_password === 1 ? 'change-password.html' : 'dashboard.html';
                     showWelcomeModal('teacher', teacherResult.teacher);
                     return;
                 }

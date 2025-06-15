@@ -757,6 +757,7 @@ app.post('/api/teachers/login', async (req, res) => {
                 teacher_type: teacher.teacher_type,
                 cedula: teacher.cedula,
                 regional: teacher.regional,
+                has_temporary_password: teacher.has_temporary_password,
                 // Información de escuelas
                 schools: teacherSchools,
                 primary_school: primarySchool,
@@ -4075,6 +4076,36 @@ app.post('/api/teachers/logout', async (req, res) => {
     }
 });
 
+// Cambiar contraseña del profesor
+app.put('/api/teachers/change-password', authenticateTeacher, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!newPassword) {
+            return res.status(400).json({ success: false, message: 'Nueva contraseña requerida' });
+        }
+
+        const teacher = await database.getTeacherById(req.teacher.id);
+
+        if (!teacher) {
+            return res.status(404).json({ success: false, message: 'Profesor no encontrado' });
+        }
+
+        if (teacher.has_temporary_password !== 1) {
+            if (!currentPassword || !database.verifyPassword(currentPassword, teacher.password)) {
+                return res.status(400).json({ success: false, message: 'Contraseña actual incorrecta' });
+            }
+        }
+
+        await database.updateTeacherPassword(teacher.id, newPassword, teacher.has_temporary_password === 1);
+
+        res.json({ success: true, message: 'Contraseña actualizada' });
+    } catch (error) {
+        console.error('Error cambiando contraseña:', error);
+        res.status(500).json({ success: false, message: 'Error cambiando contraseña' });
+    }
+});
+
 
 
 // ========================================
@@ -4575,15 +4606,16 @@ app.post('/api/check-cedula', async (req, res) => {
 // Obtener información del profesor logueado (VERSIÓN REAL CON AUTENTICACIÓN)
 app.get('/api/teachers/current', authenticateTeacher, async (req, res) => {
     try {
-        // ✅ DATOS REALES del profesor autenticado (no mock)
+        const teacher = await database.getTeacherById(req.teacher.id);
         res.json({
             success: true,
             data: {
-                id: req.teacher.id,           // ID real del profesor logueado
-                full_name: req.teacher.name,  // Nombre real del profesor logueado
-                school_name: req.teacher.school, // Escuela real del profesor logueado
-                email: req.teacher.email,     // Email real del profesor logueado
-                cedula: req.teacher.cedula || 'No disponible' // Cédula si está disponible
+                id: req.teacher.id,
+                full_name: req.teacher.name,
+                school_name: req.teacher.school,
+                email: req.teacher.email,
+                cedula: req.teacher.cedula || 'No disponible',
+                has_temporary_password: teacher ? teacher.has_temporary_password : 0
             }
         });
     } catch (error) {
