@@ -215,6 +215,7 @@
             color: #bdc3c7;
             font-size: 1.1rem;
             z-index: 2;
+            transition: all 0.3s ease;
         }
         
         input[type="text"], input[type="password"] {
@@ -298,64 +299,82 @@
             transform: translateY(-1px);
         }
         
-        .divider {
-            margin: 2rem 0;
-            text-align: center;
-            position: relative;
-        }
-        
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #e8f4f8, transparent);
-        }
-        
-        .divider span {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 0 1rem;
-            color: #bdc3c7;
-            font-size: 0.9rem;
-        }
-        
-        .demo-link {
-            display: block;
-            text-align: center;
-            background: rgba(52, 152, 219, 0.1);
-            color: #3498db;
-            padding: 0.8rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(52, 152, 219, 0.2);
-        }
-        
-        .demo-link:hover {
-            background: rgba(52, 152, 219, 0.15);
-            transform: translateY(-2px);
-        }
-        
         .extra-links {
             text-align: center;
             margin-top: 2rem;
             display: flex;
             flex-direction: column;
             gap: 0.8rem;
+            transition: all 0.3s ease;
         }
         
         .extra-links a {
             color: #7f8c8d;
             text-decoration: none;
             font-size: 0.9rem;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
         
         .extra-links a:hover {
-            color: #667eea;
+            color: #667eea !important;
+            background: rgba(102, 126, 234, 0.1) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+            border-color: rgba(102, 126, 234, 0.3);
+            font-weight: 600;
+        }
+
+        /* Efectos especiales cuando el usuario está escribiendo */
+        .login-container.typing .extra-links a:hover {
+            color: #764ba2 !important;
+            background: rgba(118, 75, 162, 0.15) !important;
+            box-shadow: 0 6px 16px rgba(118, 75, 162, 0.3);
+            border-color: rgba(118, 75, 162, 0.4);
+            transform: translateY(-3px) scale(1.05);
+        }
+
+        /* Efecto mejorado para resaltar enlaces importantes */
+        .login-container.typing .logo,
+        .login-container.typing .welcome-text,
+        .login-container.typing .form-group:not(:focus-within) {
+            opacity: 0.15;
+            transition: opacity 0.3s ease;
+        }
+
+        .login-container.typing .extra-links {
+            opacity: 1;
+            transform: scale(1.08);
+            position: relative;
+            z-index: 5;
+        }
+
+        .login-container.typing .extra-links a {
+            color: #667eea !important;
+            font-weight: 700 !important;
+            background: rgba(102, 126, 234, 0.2) !important;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5) !important;
+            border: 2px solid rgba(102, 126, 234, 0.4) !important;
+            animation: strongPulse 1.8s infinite;
+            font-size: 1rem !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes strongPulse {
+            0%, 100% { 
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+                transform: translateY(0) scale(1);
+            }
+            50% { 
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.7);
+                transform: translateY(-2px) scale(1.02);
+            }
         }
         
         .footer {
@@ -367,6 +386,196 @@
             color: rgba(255, 255, 255, 0.8);
             font-size: 0.8rem;
             z-index: 10;
+        }
+
+        /* Modal de Bienvenida */
+        .welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .welcome-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 3rem 2.5rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            transform: scale(0.8) translateY(-50px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .welcome-modal.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 25px 25px 0 0;
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: modalPulse 2s infinite;
+            position: relative;
+        }
+
+        .modal-icon.admin {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .modal-icon.teacher {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        @keyframes modalPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Indicador de carga lateral */
+        .loading-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .loading-status.completed {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .loading-spinner-side {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-status.completed .loading-spinner-side {
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            border-top: 2px solid #10b981;
+            animation: none;
+            background: #10b981;
+            position: relative;
+        }
+
+        .loading-status.completed .loading-spinner-side::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .loading-status.completed .loading-text {
+            color: #10b981;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .modal-subtitle {
+            color: #7f8c8d;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-welcome-text {
+            color: #4a5568;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .modal-continue-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .modal-continue-btn.ready {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-continue-btn.ready:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
         }
         
         /* Responsive */
@@ -386,6 +595,21 @@
                 left: 10px;
                 width: 45px;
                 height: 45px;
+            }
+
+            .modal-content {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+            }
+
+            .modal-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
             }
         }
         
@@ -416,7 +640,7 @@
     </a>
     
     <!-- Contenedor principal -->
-    <div class="login-container">
+    <div class="login-container" id="loginContainer">
         <!-- Logo y título -->
         <div class="logo">
             <div class="logo-icon">
@@ -460,18 +684,13 @@
             </button>
         </form>
         
-        <!-- Divider -->
-        <div class="divider">
-            <span>👑 Administradores: usar credenciales especiales</span>
-        </div>
-        
         <!-- Enlaces adicionales -->
-        <div class="extra-links">
-            <a href="#" onclick="alert('Funcionalidad pendiente de implementar')">
+        <div class="extra-links" id="extraLinks">
+            <a href="register.html">
                 <i class="fas fa-users"></i>
                 ¿No tienes cuenta? Regístrate aquí
             </a>
-            <a href="#" onclick="alert('Funcionalidad pendiente de implementar')">
+            <a href="request-password.html">
                 <i class="fas fa-key"></i>
                 ¿Olvidaste tu contraseña?
             </a>
@@ -483,7 +702,35 @@
         © 2025 <span class="eduone-logo eduone-xs eduone-light">EduOne</span> - Sistema Integral de Gestión Educativa
     </div>
 
+    <!-- Modal de Bienvenida -->
+    <div class="welcome-modal" id="welcomeModal">
+        <div class="modal-content" id="modalContent">
+            <div class="modal-icon" id="modalIcon">
+                <i class="fas fa-user" id="modalIconSymbol"></i>
+            </div>
+            <div class="modal-title" id="modalTitle">¡Bienvenido!</div>
+            <div class="modal-subtitle" id="modalSubtitle">Acceso autorizado</div>
+            <div class="modal-welcome-text" id="modalWelcomeText">
+                Has iniciado sesión correctamente.
+            </div>
+            
+            <!-- Indicador de carga lateral -->
+            <div class="loading-status" id="loadingStatus">
+                <div class="loading-spinner-side" id="loadingSpinner"></div>
+                <span class="loading-text" id="loadingText">Preparando tu dashboard...</span>
+            </div>
+            
+            <button class="modal-continue-btn" id="continueBtn" onclick="closeModalAndRedirect()">
+                <i class="fas fa-arrow-right"></i>
+                Continuar al Dashboard
+            </button>
+        </div>
+    </div>
+
     <script>
+        let redirectUrl = '';
+        let modalTimer = null;
+
         // Función para mostrar/ocultar contraseña
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -498,6 +745,128 @@
             }
         }
 
+        // Función para mostrar modal de bienvenida
+        function showWelcomeModal(userType, userData) {
+            const modal = document.getElementById('welcomeModal');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalIconSymbol = document.getElementById('modalIconSymbol');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalWelcomeText = document.getElementById('modalWelcomeText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            const loadingText = document.getElementById('loadingText');
+            const continueBtn = document.getElementById('continueBtn');
+
+            // Mostrar modal inmediatamente con contenido de bienvenida
+            modal.classList.add('show');
+
+            // Configurar datos según el tipo de usuario
+            if (userType === 'admin') {
+                modalIcon.className = 'modal-icon admin';
+                modalIconSymbol.className = 'fas fa-crown';
+                modalTitle.textContent = `¡Bienvenido Administrador!`;
+                modalSubtitle.textContent = 'Acceso Total al Sistema';
+                modalWelcomeText.innerHTML = `
+                    <strong>Sesión administrativa iniciada</strong><br>
+                    Tienes acceso completo a todas las funciones del sistema.
+                `;
+                loadingText.textContent = 'Preparando panel de administración...';
+            } else if (userType === 'teacher') {
+                modalIcon.className = 'modal-icon teacher';
+                modalIconSymbol.className = 'fas fa-chalkboard-teacher';
+                
+                // Corregir la detección del nombre del profesor
+                const teacherName = userData.name || userData.full_name || 'Profesor';
+                
+                modalTitle.textContent = `¡Bienvenido ${teacherName}!`;
+                modalSubtitle.textContent = 'Profesor del Sistema EduOne';
+                modalWelcomeText.innerHTML = `
+                    <strong>Inicio de sesión exitoso</strong><br>
+                    Accede a tu panel de gestión educativa personalizado.
+                `;
+                loadingText.textContent = 'Cargando tus datos de estudiantes...';
+            }
+
+            // Simular tiempo de carga de 2 segundos
+            setTimeout(() => {
+                // Cambiar a estado completado
+                loadingStatus.classList.add('completed');
+                loadingText.textContent = '¡Todo listo! Ya puedes continuar';
+                continueBtn.classList.add('ready');
+                
+                // Auto-cerrar después de 3 segundos adicionales
+                modalTimer = setTimeout(() => {
+                    closeModalAndRedirect();
+                }, 3000);
+            }, 2000);
+        }
+
+        // Función para cerrar modal y redirigir
+        function closeModalAndRedirect() {
+            if (modalTimer) {
+                clearTimeout(modalTimer);
+                modalTimer = null;
+            }
+
+            const modal = document.getElementById('welcomeModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            // Animar salida
+            modalContent.style.transform = 'scale(0.9) translateY(-20px)';
+            modalContent.style.opacity = '0.8';
+            
+            setTimeout(() => {
+                modal.classList.remove('show');
+                
+                setTimeout(() => {
+                    if (redirectUrl) {
+                        // Mostrar mensaje de redirección
+                        console.log('🚀 Redirigiendo a:', redirectUrl);
+                        window.location.href = redirectUrl;
+                    }
+                }, 200);
+            }, 300);
+        }
+
+        // Gestión de efectos visuales en campos de entrada
+        function setupInputEffects() {
+            const inputs = document.querySelectorAll('input');
+            const loginContainer = document.getElementById('loginContainer');
+            const extraLinks = document.getElementById('extraLinks');
+
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    loginContainer.classList.add('typing');
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                    
+                    // Solo quitar la clase typing si ningún input tiene focus
+                    setTimeout(() => {
+                        const anyFocused = Array.from(inputs).some(inp => inp === document.activeElement);
+                        if (!anyFocused) {
+                            loginContainer.classList.remove('typing');
+                        }
+                    }, 100);
+                });
+
+                // También activar el efecto cuando el usuario empiece a escribir
+                input.addEventListener('input', function() {
+                    loginContainer.classList.add('typing');
+                });
+            });
+
+            // Mejorar el hover en el contenedor para activar el efecto
+            loginContainer.addEventListener('mouseenter', function() {
+                const anyFocused = Array.from(inputs).some(inp => inp === document.activeElement);
+                if (anyFocused) {
+                    this.classList.add('typing');
+                }
+            });
+        }
+
         // Limpia cualquier sesión previa al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.removeItem('adminSession');
@@ -507,12 +876,18 @@
             localStorage.removeItem('sessionToken');
             localStorage.removeItem('adminToken');
             
+            // Configurar efectos de entrada
+            setupInputEffects();
+            
             // Animación de entrada para los campos
             const inputs = document.querySelectorAll('input');
             inputs.forEach((input, index) => {
                 input.style.animationDelay = `${0.3 + index * 0.1}s`;
                 input.style.animation = 'slideIn 0.6s ease-out forwards';
             });
+
+            // Enfocar el campo de usuario al cargar
+            document.getElementById('email').focus();
         });
 
         // Manejo del formulario INTEGRADO (Admin + Profesores)
@@ -543,8 +918,8 @@
                     sessionStorage.setItem('adminUser', email.trim());
                     localStorage.setItem('adminToken', adminResult.token);
 
-                    alert('👑 ¡Bienvenido Administrador! Acceso total al sistema.');
-                    window.location.href = 'dashboard.html';
+                    redirectUrl = 'admin.html';
+                    showWelcomeModal('admin', { email: email.trim() });
                     return;
                 }
                 
@@ -569,8 +944,12 @@
                     sessionStorage.setItem('teacherSession', 'true');
                     sessionStorage.setItem('teacherData', JSON.stringify(teacherResult.teacher));
                     
-                    alert(`🎓 ¡Bienvenido ${teacherResult.teacher.full_name}! Accediendo al sistema...`);
-                    window.location.href = 'dashboard.html';
+                    // Debug: Mostrar los datos del profesor en consola
+                    console.log('📋 Datos del profesor recibidos:', teacherResult.teacher);
+                    console.log('📋 Nombre detectado:', teacherResult.teacher.name || teacherResult.teacher.full_name);
+                    
+                    redirectUrl = 'dashboard.html';
+                    showWelcomeModal('teacher', teacherResult.teacher);
                     return;
                 }
                 
@@ -579,23 +958,68 @@
                 
             } catch (error) {
                 console.error('Error en login:', error);
-                alert('❌ Error: ' + error.message);
+                
+                // Mostrar error con estilo mejorado
+                const errorMsg = error.message || 'Error de conexión';
+                showErrorMessage(errorMsg);
+                
             } finally {
                 // Restaurar botón
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 1000);
             }
         });
 
-        // Efectos y animaciones adicionales
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
+        // Función para mostrar mensajes de error elegantes
+        function showErrorMessage(message) {
+            // Remover mensaje de error anterior si existe
+            const existingError = document.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.cssText = `
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                color: #dc2626;
+                padding: 1rem;
+                border-radius: 12px;
+                margin-bottom: 1rem;
+                text-align: center;
+                font-size: 0.9rem;
+                animation: slideIn 0.3s ease-out;
+                backdrop-filter: blur(10px);
+            `;
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+                ${message}
+            `;
+
+            // Insertar antes del formulario
+            const form = document.getElementById('loginForm');
+            form.parentNode.insertBefore(errorDiv, form);
+
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.style.opacity = '0';
+                    errorDiv.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        errorDiv.remove();
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('welcomeModal').classList.contains('show')) {
+                closeModalAndRedirect();
+            }
         });
 
         // Animación de carga de página
@@ -604,6 +1028,8 @@
             document.body.style.transition = 'opacity 0.5s ease';
             setTimeout(() => { document.body.style.opacity = '1'; }, 100);
         });
+
+        console.log('✅ Página de login mejorada con modal de carga cargada correctamente');
     </script>
 </body>
 </html>
