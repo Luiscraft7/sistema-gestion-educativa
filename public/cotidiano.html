@@ -1458,6 +1458,7 @@
     </style>
 </head>
 <body>
+    <script src="js/global-period-selector.js"></script>
     <div class="app-container">
         <!-- SIDEBAR MEJORADO -->
         <aside class="sidebar" id="sidebar">
@@ -3493,15 +3494,7 @@ Presenta materiales completos"
 
         // Función auxiliar para obtener período académico
         function getCurrentAcademicPeriod() {
-            // Esta función debe obtener el período académico actual
-            // Por ahora retorno valores por defecto
-            return {
-                periodId: localStorage.getItem('academicPeriodId') || 1,
-                schoolId: localStorage.getItem('schoolId') || 1,
-                year: new Date().getFullYear(),
-                periodType: 'semester',
-                periodNumber: 1
-            };
+            return window.getCurrentAcademicPeriod();
         }
 
         // Actualizar display del período
@@ -3555,7 +3548,5 @@ Presenta materiales completos"
         document.head.appendChild(style);
     </script>
     
-    <!-- Script para período académico global -->
-    <script src="js/global-period-selector.js"></script>
 </body>
 </html>

@@ -851,6 +851,7 @@
     </style>
 </head>
 <body>
+    <script src="js/global-period-selector.js"></script>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -1179,14 +1180,7 @@
         let debugMode = false;
 
         function getCurrentAcademicPeriod() {
-            if (window.globalPeriodSelector) {
-                return window.globalPeriodSelector.getCurrentPeriod();
-            }
-            const saved = localStorage.getItem(getPeriodStorageKey ? getPeriodStorageKey() : 'currentAcademicPeriod');
-            if (saved) {
-                try { return JSON.parse(saved); } catch (e) {}
-            }
-            return { schoolId: '1', year: 2025, periodType: 'semester', periodNumber: 1 };
+            return window.getCurrentAcademicPeriod();
         }
 
         // Helper para peticiones autenticadas
@@ -2711,6 +2705,5 @@
         // Function expected by the global period selector to reload data
         window.loadAttendanceData = loadAttendanceForDate;
     </script>
-    <script src="js/global-period-selector.js"></script>
 </body>
 </html>

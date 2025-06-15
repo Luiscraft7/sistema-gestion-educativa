@@ -610,6 +610,7 @@
     </style>
 </head>
 <body>
+    <script src="js/global-period-selector.js"></script>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -1011,20 +1012,7 @@
         let editingStudentId = null;
         let availableGrades = [];
 
-        function getPeriodStorageKey() {
-            const data = sessionStorage.getItem('teacherData');
-            if (data) {
-                try {
-                    const teacher = JSON.parse(data);
-                    if (teacher.id) {
-                        return `currentAcademicPeriod_${teacher.id}`;
-                    }
-                } catch (err) {
-                    console.warn('Error parseando teacherData:', err);
-                }
-            }
-            return 'currentAcademicPeriod';
-        }
+
         
         // Variables para tabla masiva tipo Excel
         let bulkRowCounter = 0;
@@ -1138,50 +1126,11 @@
 
         // FUNCIÓN HELPER: Obtener período académico actual
         function getCurrentAcademicPeriod() {
-            if (window.globalPeriodSelector) {
-                return window.globalPeriodSelector.getCurrentPeriod();
-            }
-
-            const saved = localStorage.getItem(getPeriodStorageKey());
-            if (saved) {
-                try {
-                    return JSON.parse(saved);
-                } catch (error) {
-                    console.error('Error parseando período guardado:', error);
-                }
-            }
-
-            return null;
+            return window.getCurrentAcademicPeriod();
         }
 
         async function ensureCurrentPeriod() {
-            let period = getCurrentAcademicPeriod();
-            if (period && period.year) return period;
-
-            try {
-                const resp = await authenticatedFetch('/api/academic-periods/current');
-                const result = await resp.json();
-                if (result.success) {
-                    period = {
-                        schoolId: '1',
-                        year: result.data.year,
-                        periodType: result.data.period_type,
-                        periodNumber: result.data.period_number
-                    };
-                    localStorage.setItem(getPeriodStorageKey(), JSON.stringify(period));
-                    return period;
-                }
-            } catch (error) {
-                console.error('Error obteniendo período actual desde API:', error);
-            }
-
-            // Fallback por si no hay respuesta
-            return {
-                schoolId: '1',
-                year: 2025,
-                periodType: 'semester',
-                periodNumber: 1
-            };
+            return window.getCurrentAcademicPeriod();
         }
 
         function showMessage(type, message) {
@@ -2770,6 +2719,5 @@
         }
 
     </script>
-    <script src="js/global-period-selector.js"></script>
 </body>
 </html>
