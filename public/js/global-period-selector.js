@@ -102,6 +102,8 @@ class GlobalPeriodSelector {
                         periodType: 'semester',
                         periodNumber: 1
                     };
+                    // Guardar período por defecto para evitar valores null
+                    this.saveCurrentPeriod(this.currentPeriod);
                 }
             }
 
