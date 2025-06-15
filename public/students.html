@@ -2675,44 +2675,13 @@
     // HACER LA FUNCIÓN GLOBAL para que el indicador la pueda llamar
     window.loadStudents = loadStudents;
 
-    // ESCUCHAR CAMBIOS DE PERÍODO desde el dashboard automáticamente
+    // Cargar estudiantes según el período activo al iniciar
     document.addEventListener('DOMContentLoaded', async () => {
-        // Cargar estudiantes inicialmente
         await ensureCurrentPeriod();
         loadStudents();
-        
-        // Escuchar cambios globales de período
-        window.addEventListener('academicPeriodChanged', (event) => {
-            console.log('📅 Período cambió desde dashboard, recargando estudiantes automáticamente...');
-            loadStudents(); // Recargar automáticamente
-        });
-        
-        window.addEventListener('reloadPeriodData', (event) => {
-            console.log('🔄 Solicitud de recarga de datos, recargando estudiantes...');
-            loadStudents();
-        });
     });
 
     console.log('📚 Sistema de estudiantes con filtro automático de período inicializado');
-
-
-// Event listener para cambios de período académico
-window.addEventListener('academicPeriodChanged', function(event) {
-    console.log('📅 Período académico cambió en students.html:', event.detail);
-    
-    // Recargar estudiantes automáticamente
-    setTimeout(() => {
-        loadStudents();
-    }, 500);
-});
-
-// Event listener para recargar datos
-window.addEventListener('reloadPeriodData', function(event) {
-    console.log('🔄 Recargando datos de estudiantes:', event.detail);
-    loadStudents();
-});
-
-console.log('📚 Event listeners de período académico configurados en students.html');
 
 
         // Al hacer login, guardar el token
