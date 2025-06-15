@@ -1022,7 +1022,7 @@
         // Inicialización
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Iniciando gestión simple de estudiantes...');
-            await ensureCurrentPeriod();
+            await window.getCurrentAcademicPeriod();
             loadStudents();
             loadGrades();
         });
@@ -1041,7 +1041,7 @@
                 document.getElementById('emptyState').style.display = 'none';
 
                 // CORRECCIÓN: Mejor manejo del período académico actual
-                const currentPeriod = await ensureCurrentPeriod();
+                const currentPeriod = await window.getCurrentAcademicPeriod();
                 console.log('📅 Período académico activo:', currentPeriod);
 
                 // Validar que el período tenga datos válidos
@@ -1125,13 +1125,6 @@
         }
 
         // FUNCIÓN HELPER: Obtener período académico actual
-        function getCurrentAcademicPeriod() {
-            return window.getCurrentAcademicPeriod();
-        }
-
-        async function ensureCurrentPeriod() {
-            return window.getCurrentAcademicPeriod();
-        }
 
         function showMessage(type, message) {
             const messageEl = document.getElementById(type + 'Message');
@@ -1391,7 +1384,7 @@
             const studentData = Object.fromEntries(formData.entries());
 
             // AGREGAR PERÍODO ACADÉMICO ACTUAL
-            const currentPeriod = await ensureCurrentPeriod();
+            const currentPeriod = await window.getCurrentAcademicPeriod();
             console.log('📅 Guardando estudiante en período:', currentPeriod);
             
             // Buscar ID del período académico actual
@@ -2503,7 +2496,7 @@
 
             try {
                 // Obtener período actual
-                const currentPeriod = await ensureCurrentPeriod();
+                const currentPeriod = await window.getCurrentAcademicPeriod();
                 
                 // Obtener datos del profesor (si están disponibles)
                 const teacherData = this.getTeacherInfo();
@@ -2524,7 +2517,7 @@
         }
 
        getCurrentPeriod() {
-            return getCurrentAcademicPeriod();
+            return window.getCurrentAcademicPeriod();
         }
         getTeacherInfo() {
             // Intentar obtener datos del profesor de sessionStorage
@@ -2626,7 +2619,7 @@
 
     // Cargar estudiantes según el período activo al iniciar
     document.addEventListener('DOMContentLoaded', async () => {
-        await ensureCurrentPeriod();
+        await window.getCurrentAcademicPeriod();
         loadStudents();
     });
 
@@ -2649,7 +2642,7 @@
                 return;
             }
             
-            const current = getCurrentAcademicPeriod();
+            const current = window.getCurrentAcademicPeriod();
             const defaultOptions = {
                 headers: {
                     'Authorization': `Bearer ${token}`,
