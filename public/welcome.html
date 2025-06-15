@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Educativo Moderno - Gestión Académica Inteligente</title>
+    <title>EduOne - Sistema Integral de Gestión Educativa</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -17,6 +17,40 @@
             line-height: 1.6;
             color: #2d3748;
             overflow-x: hidden;
+        }
+
+        /* ESTILOS PARA EL LOGO EDUONE */
+        .eduone-logo {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            letter-spacing: -0.5px;
+        }
+
+        .eduone-xl { font-size: 4rem; line-height: 1.1; }
+        .eduone-lg { font-size: 3rem; line-height: 1.2; }
+        .eduone-md { font-size: 2rem; line-height: 1.3; }
+        .eduone-sm { font-size: 1.5rem; line-height: 1.4; }
+        .eduone-xs { font-size: 1rem; line-height: 1.5; }
+
+        /* Variante para textos sobre fondo claro */
+        .eduone-white {
+            background: linear-gradient(45deg, #ffffff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Variante para textos sobre fondo oscuro */
+        .eduone-light {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         /* Hero Section */
@@ -60,11 +94,14 @@
         .hero h1 {
             font-size: 3.5rem;
             font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero .subtitle {
+            font-size: 1.8rem;
+            font-weight: 400;
             margin-bottom: 1.5rem;
-            background: linear-gradient(45deg, #ffffff, #f0f8ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            opacity: 0.9;
         }
 
         .hero p {
@@ -441,6 +478,10 @@
                 font-size: 2.5rem;
             }
 
+            .hero .subtitle {
+                font-size: 1.4rem;
+            }
+
             .hero p {
                 font-size: 1.1rem;
             }
@@ -573,7 +614,8 @@
         
         <div class="hero-content">
             <div class="logo-hero">🎓</div>
-            <h1>Sistema Educativo Moderno</h1>
+            <h1 class="eduone-logo eduone-xl eduone-white">EduOne</h1>
+            <p class="subtitle">Sistema Integral de Gestión Educativa</p>
             <p>Transforma la gestión académica de tu institución con una plataforma inteligente, moderna e intuitiva. Adiós al Excel, hola al futuro de la educación.</p>
             
             <div class="cta-buttons">
@@ -601,7 +643,7 @@
     <section class="features">
         <div class="container">
             <div class="section-title">
-                <h2>¿Por qué elegir nuestro sistema?</h2>
+                <h2>¿Por qué elegir <span class="eduone-logo eduone-lg">EduOne</span>?</h2>
                 <p>Creado por un profesor para profesores. Conocemos de primera mano las necesidades reales del aula y hemos diseñado cada función para facilitar al máximo tu trabajo diario, ahorrándote tiempo y eliminando las frustraciones del papeleo tradicional.</p>
             </div>
 
@@ -720,7 +762,7 @@
     <footer class="footer">
         <div class="footer-content">
             <p><i class="fas fa-heart" style="color: #4facfe;"></i> Desarrollado con pasión para transformar la educación</p>
-            <p style="margin-top: 1rem; opacity: 0.7;">© 2025 Sistema Educativo Moderno - Todos los derechos reservados</p>
+            <p style="margin-top: 1rem; opacity: 0.7;">© 2025 <span class="eduone-logo eduone-xs eduone-light">EduOne</span> - Sistema Integral de Gestión Educativa - Todos los derechos reservados</p>
         </div>
     </footer>
 
