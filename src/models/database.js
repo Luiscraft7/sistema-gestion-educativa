@@ -3381,6 +3381,122 @@ async copyStudentsBetweenPeriods(fromPeriodId, toPeriodId) {
     });
 }
 
+// ========================================
+// SOLICITUDES DE CAMBIO DE CONTRASEÑA
+// ========================================
+
+async createPasswordChangeRequest(email, reason, ipAddress) {
+    this.ensureConnection();
+
+    return new Promise((resolve, reject) => {
+        const findQuery = 'SELECT id, full_name, email FROM teachers WHERE email = ?';
+        this.db.get(findQuery, [email], (err, teacher) => {
+            if (err) {
+                reject(err);
+            } else if (!teacher) {
+                reject(new Error('Teacher not found'));
+            } else {
+                const insertQuery = `
+                    INSERT INTO password_change_requests (
+                        teacher_id, teacher_email, teacher_name, reason, ip_address
+                    ) VALUES (?, ?, ?, ?, ?)
+                `;
+                const params = [
+                    teacher.id,
+                    teacher.email,
+                    teacher.full_name,
+                    reason || null,
+                    ipAddress || null
+                ];
+                this.db.run(insertQuery, params, function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({ id: this.lastID });
+                    }
+                });
+            }
+        });
+    });
+}
+
+async getPendingPasswordRequests() {
+    this.ensureConnection();
+
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM password_change_requests WHERE status = 'pending' ORDER BY requested_at DESC`;
+        this.db.all(query, [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows || []);
+            }
+        });
+    });
+}
+
+async approvePasswordChangeRequest(requestId, adminUser, newPassword) {
+    this.ensureConnection();
+
+    return new Promise((resolve, reject) => {
+        const selectQuery = 'SELECT teacher_id FROM password_change_requests WHERE id = ?';
+        this.db.get(selectQuery, [requestId], (err, reqRow) => {
+            if (err || !reqRow) {
+                return reject(err || new Error('Request not found'));
+            }
+
+            const hashed = this.hashPassword(newPassword || '');
+
+            this.db.serialize(() => {
+                this.db.run(
+                    'UPDATE teachers SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    [hashed, reqRow.teacher_id],
+                    (err) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            const updateReq = `
+                                UPDATE password_change_requests
+                                SET status = 'approved', processed_at = CURRENT_TIMESTAMP, processed_by = ?
+                                WHERE id = ?
+                            `;
+                            this.db.run(updateReq, [adminUser, requestId], function(err) {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve({ id: requestId, changes: this.changes });
+                                }
+                            });
+                        }
+                    }
+                );
+            });
+        });
+    });
+}
+
+async rejectPasswordChangeRequest(requestId, adminUser, reason) {
+    this.ensureConnection();
+
+    return new Promise((resolve, reject) => {
+        const query = `
+            UPDATE password_change_requests
+            SET status = 'rejected',
+                processed_at = CURRENT_TIMESTAMP,
+                processed_by = ?,
+                reason = ?
+            WHERE id = ?
+        `;
+        this.db.run(query, [adminUser, reason || null, requestId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ id: requestId, changes: this.changes });
+            }
+        });
+    });
+}
+
 
 
     

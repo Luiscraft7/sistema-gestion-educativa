@@ -775,6 +775,25 @@ app.post('/api/teachers/login', async (req, res) => {
     }
 });
 
+// Solicitud de cambio de contraseña por email
+app.post('/api/password-change/request', async (req, res) => {
+    try {
+        const { email, reason } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email requerido' });
+        }
+
+        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+        const result = await database.createPasswordChangeRequest(email.trim(), reason || null, ipAddress);
+
+        res.json({ success: true, data: result, message: 'Solicitud registrada' });
+    } catch (error) {
+        console.error('Error solicitando cambio de contraseña:', error);
+        res.status(500).json({ success: false, message: 'Error procesando solicitud' });
+    }
+});
+
 
 
 // NUEVO ENDPOINT: Actualizar perfil del profesor
@@ -3930,6 +3949,39 @@ app.post('/api/admin/logout', authenticateAdmin, (req, res) => {
         success: true,
         message: 'Sesión administrativa cerrada'
     });
+});
+
+// Listar solicitudes pendientes de cambio de contraseña
+app.get('/api/admin/password-requests', authenticateAdmin, async (req, res) => {
+    try {
+        const requests = await database.getPendingPasswordRequests();
+        res.json({ success: true, data: requests, count: requests.length });
+    } catch (error) {
+        console.error('Error obteniendo solicitudes de contraseña:', error);
+        res.status(500).json({ success: false, message: 'Error obteniendo solicitudes' });
+    }
+});
+
+// Procesar solicitud de cambio de contraseña
+app.post('/api/admin/password-requests/:id/process', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, password, reason } = req.body;
+
+        if (action === 'approve') {
+            if (!password) {
+                return res.status(400).json({ success: false, message: 'Nueva contraseña requerida' });
+            }
+            await database.approvePasswordChangeRequest(id, req.admin.email, password);
+            res.json({ success: true, message: 'Solicitud aprobada' });
+        } else {
+            await database.rejectPasswordChangeRequest(id, req.admin.email, reason || null);
+            res.json({ success: true, message: 'Solicitud rechazada' });
+        }
+    } catch (error) {
+        console.error('Error procesando solicitud de contraseña:', error);
+        res.status(500).json({ success: false, message: 'Error procesando solicitud' });
+    }
 });
 
 
