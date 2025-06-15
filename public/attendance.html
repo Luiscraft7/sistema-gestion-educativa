@@ -1179,8 +1179,8 @@
         let debugMode = false;
 
         function getCurrentAcademicPeriod() {
-            if (window.unifiedPeriodSelector) {
-                return window.unifiedPeriodSelector.getCurrentPeriod();
+            if (window.globalPeriodSelector) {
+                return window.globalPeriodSelector.getCurrentPeriod();
             }
             const saved = localStorage.getItem(getPeriodStorageKey ? getPeriodStorageKey() : 'currentAcademicPeriod');
             if (saved) {

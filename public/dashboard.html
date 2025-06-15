@@ -2636,15 +2636,15 @@
                 });
             }
             
-            // Inicializar selector de período
-            window.unifiedPeriodSelector = new UnifiedPeriodSelector();
+            // Inicializar selector de período utilizando el script global
+            window.initGlobalPeriodSelector();
             window.addEventListener('academicPeriodChanged', updateCurrentPeriodDisplay);
         });
 
         // Función global para obtener período actual
         window.getCurrentAcademicPeriod = () => {
-            return window.unifiedPeriodSelector ?
-                window.unifiedPeriodSelector.getCurrentPeriod() :
+            return window.globalPeriodSelector ?
+                window.globalPeriodSelector.getCurrentPeriod() :
                 JSON.parse(localStorage.getItem(getPeriodStorageKey()) || '{}');
         };
     </script>

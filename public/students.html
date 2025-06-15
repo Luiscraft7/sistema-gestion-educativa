@@ -1138,8 +1138,8 @@
 
         // FUNCIÓN HELPER: Obtener período académico actual
         function getCurrentAcademicPeriod() {
-            if (window.unifiedPeriodSelector) {
-                return window.unifiedPeriodSelector.getCurrentPeriod();
+            if (window.globalPeriodSelector) {
+                return window.globalPeriodSelector.getCurrentPeriod();
             }
 
             const saved = localStorage.getItem(getPeriodStorageKey());
