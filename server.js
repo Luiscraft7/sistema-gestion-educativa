@@ -3967,13 +3967,13 @@ app.get('/api/admin/password-requests', authenticateAdmin, async (req, res) => {
 app.post('/api/admin/password-requests/:id/process', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { action, password, reason } = req.body;
+        const { action, newPassword, reason } = req.body;
 
         if (action === 'approve') {
-            if (!password) {
+            if (!newPassword) {
                 return res.status(400).json({ success: false, message: 'Nueva contraseña requerida' });
             }
-            await database.approvePasswordChangeRequest(id, req.admin.email, password);
+            await database.approvePasswordChangeRequest(id, req.admin.email, newPassword);
             res.json({ success: true, message: 'Solicitud aprobada' });
         } else {
             await database.rejectPasswordChangeRequest(id, req.admin.email, reason || null);
