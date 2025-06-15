@@ -3508,6 +3508,17 @@ Presenta materiales completos"
         document.addEventListener('DOMContentLoaded', function() {
             updatePeriodDisplay();
         });
+        window.addEventListener("academicPeriodChanged", () => {
+            console.log("📅 Período cambió, recargando datos...");
+            updatePeriodDisplay();
+            loadSystemData();
+        });
+
+        window.addEventListener("reloadPeriodData", () => {
+            console.log("🔄 Recargando datos por cambio de período...");
+            updatePeriodDisplay();
+            loadSystemData();
+        });
 
         function updatePeriodDisplay() {
             const display = document.getElementById('activePeriodDisplay');
