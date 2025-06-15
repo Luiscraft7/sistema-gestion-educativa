@@ -1179,9 +1179,7 @@
         let lessonConfig = { lessonsPerWeek: 5, totalWeeks: 40, totalLessons: 200 };
         let debugMode = false;
 
-        function getCurrentAcademicPeriod() {
-            return window.getCurrentAcademicPeriod();
-        }
+
 
         // Helper para peticiones autenticadas
         async function authenticatedFetch(url, options = {}) {
@@ -1474,7 +1472,7 @@
                 document.getElementById('loadingState').innerHTML = '🔄 Cargando estudiantes...';
                 document.getElementById('attendanceTable').style.display = 'none';
                 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const url = `/api/students?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -1572,7 +1570,7 @@
             
             try {
                 // Contar días únicos con asistencia registrada para este grado
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const response = await authenticatedFetch(`/api/attendance/lesson-count?grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`);
                 const result = await response.json();
                 
@@ -1655,7 +1653,7 @@
                 const dateStr = selectedDate.toISOString().split('T')[0];
                 debugLog('📊 Cargando asistencia para:', { date: dateStr, grade: currentGrade, subject: currentSubject });
                 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 // Ya no añadimos el parámetro subject porque no usamos filtro de materias
                 
@@ -1859,7 +1857,7 @@
                 const student = students.find(s => s.id === studentId);
                 const subjectArea = student?.subject_area || 'general';
                 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const attendanceRecord = {
                     student_id: studentId,
                     date: dateStr,
@@ -1984,7 +1982,7 @@
             
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 let url = `/api/attendance?date=${dateStr}&grade=${encodeURIComponent(currentGrade)}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 if (currentSubject) {
                     url += `&subject=${encodeURIComponent(currentSubject)}`;
@@ -2042,7 +2040,7 @@
                 }
                 
                 // Construir URL con parámetros correctos
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const params = new URLSearchParams({
                     grade: currentGrade,
                     subject: currentSubject || 'general',
@@ -2168,7 +2166,7 @@
             }
             
             try {
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const configData = {
                     grade_level: document.getElementById('configGrade').value,
                     subject_area: 'general', // ✅ Siempre usar 'general'
@@ -2240,7 +2238,7 @@
                 const student = students.find(s => s.id === currentStudentId);
                 const subjectArea = currentSubject || student?.subject_area || 'general';
                 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const attendanceRecord = {
                     student_id: currentStudentId,
                     date: dateStr,
@@ -2352,7 +2350,7 @@
                 const scaleResult = await scaleResponse.json();
 
                 if (scaleResult.success) {
-                    const period = getCurrentAcademicPeriod();
+                    const period = window.getCurrentAcademicPeriod();
                     await authenticatedFetch('/api/sea/weights', {
                         method: 'PUT',
                         body: JSON.stringify({
@@ -2385,7 +2383,7 @@
                     return null;
                 }
                 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const params = new URLSearchParams({
                     grade: currentGrade,
                     subject: currentSubject || 'general',
@@ -2445,7 +2443,7 @@
                 
                 showMessage('success', '📊 Calculando estadísticas MEP...');
                 
-                const period = getCurrentAcademicPeriod();
+                const period = window.getCurrentAcademicPeriod();
                 const response = await authenticatedFetch(`/api/attendance/class-stats?grade=${encodeURIComponent(currentGrade)}&subject=${encodeURIComponent(currentSubject || 'general')}&totalLessons=${totalLessons}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`);
                 const result = await response.json();
                 
@@ -2632,7 +2630,7 @@
                 if (!display) return;
 
                 try {
-                    const currentPeriod = getCurrentAcademicPeriod();
+                    const currentPeriod = window.getCurrentAcademicPeriod();
                     const teacherData = this.getTeacherInfo();
                     const periodText = this.buildPeriodText(currentPeriod, teacherData);
                     display.textContent = periodText;
