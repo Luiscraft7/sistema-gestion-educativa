@@ -112,6 +112,7 @@ class GlobalPeriodSelector {
             this.setupEventListeners();
             this.updateUI();
             this.isInitialized = true;
+            this.broadcastPeriodChange(this.currentPeriod);
             console.log('✅ Selector global de períodos inicializado');
         } catch (error) {
             console.error('❌ Error inicializando selector global:', error);
