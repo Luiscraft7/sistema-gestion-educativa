@@ -4334,6 +4334,30 @@ app.put('/api/academic-periods/:id/activate', authenticateAdmin, async (req, res
     }
 });
 
+// Obtener o crear un período académico y devolver su ID
+app.post('/api/academic-periods/ensure', authenticateAdminOrTeacher, async (req, res) => {
+    try {
+        const { year, period_type, period_number } = req.body;
+
+        if (!year || !period_type || !period_number) {
+            return res.status(400).json({
+                success: false,
+                message: 'Año, tipo de período y número son requeridos'
+            });
+        }
+
+        const id = await getOrCreateAcademicPeriodId(year, period_type, period_number);
+        res.json({ success: true, data: { id } });
+    } catch (error) {
+        console.error('Error asegurando período académico:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error asegurando período académico',
+            error: error.message
+        });
+    }
+});
+
 // Obtener escuelas disponibles
 app.get('/api/schools', authenticateAdmin, async (req, res) => {
     try {
