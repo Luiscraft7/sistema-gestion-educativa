@@ -108,12 +108,42 @@ function buildDefaultPeriod() {
         schoolId = String(teacher.school_id);
     }
 
-    return {
+    const basePeriod = {
         schoolId,
         year: 2025,
         periodType: 'semester',
-        periodNumber: 1
+        periodNumber: 1,
+        periodId: null
     };
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        const sessionToken = localStorage.getItem('sessionToken');
+        const token = sessionToken || adminToken;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/academic-periods/ensure', false);
+        if (token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({
+            year: basePeriod.year,
+            period_type: basePeriod.periodType,
+            period_number: basePeriod.periodNumber
+        }));
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+            const result = JSON.parse(xhr.responseText);
+            if (result.success && result.data && result.data.id) {
+                basePeriod.periodId = result.data.id;
+            }
+        }
+    } catch (err) {
+        console.error('Error obteniendo ID de período por defecto:', err);
+    }
+
+    return basePeriod;
 }
 
 class GlobalPeriodSelector {
