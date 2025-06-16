@@ -877,7 +877,11 @@
                     showError('Período académico no disponible');
                     return;
                 }
-                const url = `/api/sea/grade-subjects?academic_period_id=${period.periodId}`;
+                const params = new URLSearchParams();
+                if (period.periodId) {
+                    params.append('academic_period_id', period.periodId);
+                }
+                const url = `/api/sea/grade-subjects?${params.toString()}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
                 
@@ -935,7 +939,14 @@
                     showError('Período académico no disponible');
                     return;
                 }
-                const url = `/api/sea/consolidated?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}&academic_period_id=${period.periodId}`;
+                const params = new URLSearchParams({
+                    grade: grade,
+                    subject: subject
+                });
+                if (period.periodId) {
+                    params.append('academic_period_id', period.periodId);
+                }
+                const url = `/api/sea/consolidated?${params.toString()}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
                 

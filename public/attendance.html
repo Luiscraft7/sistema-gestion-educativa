@@ -1223,13 +1223,27 @@
         // ========================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Iniciando módulo de asistencias - VERSIÓN CORREGIDA...');
-            initializeCalendar();
-            loadFilters();
-            updateCurrentDate();
-            calculateTotalLessons();
-            
-            // Debug inicial
-            debugLog('Sistema iniciado correctamente');
+            const start = () => {
+                initializeCalendar();
+                loadFilters();
+                updateCurrentDate();
+                calculateTotalLessons();
+
+                // Debug inicial
+                debugLog('Sistema iniciado correctamente');
+            };
+
+            if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                start();
+            } else {
+                const handler = () => {
+                    window.removeEventListener('academicPeriodChanged', handler);
+                    if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                        start();
+                    }
+                };
+                window.addEventListener('academicPeriodChanged', handler, { once: true });
+            }
         });
 
         // ========================================
@@ -2351,13 +2365,16 @@
 
                 if (scaleResult.success) {
                     const period = window.getCurrentAcademicPeriod();
+                    const payload = {
+                        attendance_weight: attendanceWeight,
+                        school_id: period.schoolId
+                    };
+                    if (period.periodId) {
+                        payload.academic_period_id = period.periodId;
+                    }
                     await authenticatedFetch('/api/sea/weights', {
                         method: 'PUT',
-                        body: JSON.stringify({
-                            attendance_weight: attendanceWeight,
-                            academic_period_id: period.periodId,
-                            school_id: period.schoolId
-                        })
+                        body: JSON.stringify(payload)
                     }).catch(err => console.error('Error guardando peso:', err));
 
                     showMessage('success', '✅ Configuración de nota guardada correctamente');

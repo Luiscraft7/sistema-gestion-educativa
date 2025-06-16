@@ -100,7 +100,8 @@ class GlobalPeriodSelector {
                         schoolId: '1',
                         year: 2025,
                         periodType: 'semester',
-                        periodNumber: 1
+                        periodNumber: 1,
+                        periodId: 1
                     };
                     // Guardar período por defecto para evitar valores null
                     this.saveCurrentPeriod(this.currentPeriod);
