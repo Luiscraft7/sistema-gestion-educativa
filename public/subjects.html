@@ -807,7 +807,18 @@
         // ========================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Iniciando módulo de materias...');
-            loadData();
+            const start = () => loadData();
+            if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                start();
+            } else {
+                const handler = () => {
+                    window.removeEventListener('academicPeriodChanged', handler);
+                    if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                        start();
+                    }
+                };
+                window.addEventListener('academicPeriodChanged', handler, { once: true });
+            }
         });
 
         // ========================================
@@ -825,6 +836,10 @@
         async function loadSubjects() {
             try {
                 const period = getCurrentAcademicPeriod();
+                if (!period) {
+                    showMessage('error', 'Período académico no disponible');
+                    return;
+                }
                 const url = `/api/custom-subjects?school_id=${period.schoolId}&year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -845,6 +860,10 @@
         async function loadGrades() {
             try {
                 const period = getCurrentAcademicPeriod();
+                if (!period) {
+                    showMessage('error', 'Período académico no disponible');
+                    return;
+                }
                 const url = `/api/grades?school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -865,6 +884,10 @@
         async function loadGradeAssignments() {
             try {
                 const period = getCurrentAcademicPeriod();
+                if (!period) {
+                    showMessage('error', 'Período académico no disponible');
+                    return;
+                }
                 const url = `/api/grade-subjects?year=${period.year}&period_type=${period.periodType}&period_number=${period.periodNumber}&school_id=${period.schoolId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();

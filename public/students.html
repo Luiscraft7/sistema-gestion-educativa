@@ -1022,9 +1022,22 @@
         // Inicialización
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Iniciando gestión simple de estudiantes...');
-            await window.getCurrentAcademicPeriod();
-            loadStudents();
-            loadGrades();
+            const start = async () => {
+                await window.getCurrentAcademicPeriod();
+                loadStudents();
+                loadGrades();
+            };
+            if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                start();
+            } else {
+                const handler = async () => {
+                    window.removeEventListener('academicPeriodChanged', handler);
+                    if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                        start();
+                    }
+                };
+                window.addEventListener('academicPeriodChanged', handler, { once: true });
+            }
         });
 
         // ========================================
@@ -2619,8 +2632,21 @@
 
     // Cargar estudiantes según el período activo al iniciar
     document.addEventListener('DOMContentLoaded', async () => {
-        await window.getCurrentAcademicPeriod();
-        loadStudents();
+        const start = async () => {
+            await window.getCurrentAcademicPeriod();
+            loadStudents();
+        };
+        if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+            start();
+        } else {
+            const handler = async () => {
+                window.removeEventListener('academicPeriodChanged', handler);
+                if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                    start();
+                }
+            };
+            window.addEventListener('academicPeriodChanged', handler, { once: true });
+        }
     });
 
     console.log('📚 Sistema de estudiantes con filtro automático de período inicializado');

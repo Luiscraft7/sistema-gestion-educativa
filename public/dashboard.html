@@ -1775,43 +1775,57 @@
 
         // Cargar y verificar sesión al cargar la página
         document.addEventListener('DOMContentLoaded', async function() {
-            // Cargar tema guardado
-            loadSavedTheme();
-            
-            // Inicializar sistema de notificaciones
-            if (!window.notificationSystem) {
-                window.notificationSystem = new NotificationSystem();
-                notificationSystem = window.notificationSystem;
-            }
-            
-            const fadeElements = document.querySelectorAll('.fade-in');
+            const start = async () => {
+                // Cargar tema guardado
+                loadSavedTheme();
 
-            if (!sessionStorage.getItem('firstDashboardLoad')) {
-                fadeElements.forEach((element, index) => {
-                    element.style.animationDelay = `${index * 0.1}s`;
-                });
-                sessionStorage.setItem('firstDashboardLoad', 'true');
-            } else {
-                fadeElements.forEach(element => element.classList.remove('fade-in'));
-            }
-
-            const sessionInfo = await checkUserSession();
-            if (sessionInfo) {
-                setupUserInterface(sessionInfo.type, sessionInfo.user);
-                if (sessionInfo.type === 'admin') {
-                    loadAdminStats();
-                } else if (sessionInfo.type === 'teacher') {
-                    loadTeacherStats();
-                    
-                    window.addEventListener('academicPeriodChanged', () => {
-                        loadTeacherStats();
-                        loadIntegratedTeacherProfile();
-                    });
-                    window.addEventListener('reloadPeriodData', () => {
-                        loadTeacherStats();
-                        loadIntegratedTeacherProfile();
-                    });
+                // Inicializar sistema de notificaciones
+                if (!window.notificationSystem) {
+                    window.notificationSystem = new NotificationSystem();
+                    notificationSystem = window.notificationSystem;
                 }
+
+                const fadeElements = document.querySelectorAll('.fade-in');
+
+                if (!sessionStorage.getItem('firstDashboardLoad')) {
+                    fadeElements.forEach((element, index) => {
+                        element.style.animationDelay = `${index * 0.1}s`;
+                    });
+                    sessionStorage.setItem('firstDashboardLoad', 'true');
+                } else {
+                    fadeElements.forEach(element => element.classList.remove('fade-in'));
+                }
+
+                const sessionInfo = await checkUserSession();
+                if (sessionInfo) {
+                    setupUserInterface(sessionInfo.type, sessionInfo.user);
+                    if (sessionInfo.type === 'admin') {
+                        loadAdminStats();
+                    } else if (sessionInfo.type === 'teacher') {
+                        loadTeacherStats();
+
+                        window.addEventListener('academicPeriodChanged', () => {
+                            loadTeacherStats();
+                            loadIntegratedTeacherProfile();
+                        });
+                        window.addEventListener('reloadPeriodData', () => {
+                            loadTeacherStats();
+                            loadIntegratedTeacherProfile();
+                        });
+                    }
+                }
+            };
+
+            if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                await start();
+            } else {
+                const handler = async () => {
+                    window.removeEventListener('academicPeriodChanged', handler);
+                    if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                        await start();
+                    }
+                };
+                window.addEventListener('academicPeriodChanged', handler, { once: true });
             }
         });
         

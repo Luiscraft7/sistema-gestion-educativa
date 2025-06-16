@@ -827,10 +827,22 @@
 
         // Cargar al inicializar
         document.addEventListener('DOMContentLoaded', function() {
-            loadGradeSubjects();
-            
-            // Limpiar animaciones al salir de la página
-            window.addEventListener('beforeunload', clearAllAnimations);
+            const start = () => {
+                loadGradeSubjects();
+                // Limpiar animaciones al salir de la página
+                window.addEventListener('beforeunload', clearAllAnimations);
+            };
+            if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                start();
+            } else {
+                const handler = () => {
+                    window.removeEventListener('academicPeriodChanged', handler);
+                    if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                        start();
+                    }
+                };
+                window.addEventListener('academicPeriodChanged', handler, { once: true });
+            }
         });
 
         // Función para obtener icono según tipo de evaluación
@@ -861,6 +873,10 @@
         async function loadGradeSubjects() {
             try {
                 const period = getCurrentAcademicPeriod();
+                if (!period) {
+                    showError('Período académico no disponible');
+                    return;
+                }
                 const url = `/api/sea/grade-subjects?academic_period_id=${period.periodId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
@@ -915,6 +931,10 @@
 
             try {
                 const period = getCurrentAcademicPeriod();
+                if (!period) {
+                    showError('Período académico no disponible');
+                    return;
+                }
                 const url = `/api/sea/consolidated?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}&academic_period_id=${period.periodId}`;
                 const response = await authenticatedFetch(url);
                 const result = await response.json();
