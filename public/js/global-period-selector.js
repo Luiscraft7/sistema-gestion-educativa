@@ -78,6 +78,44 @@ function getPeriodStorageKey() {
     return 'currentAcademicPeriod';
 }
 
+// Obtener datos del profesor desde sessionStorage o localStorage
+function getStoredTeacher() {
+    let teacher = null;
+    const sessionData = sessionStorage.getItem('teacherData');
+    if (sessionData) {
+        try { teacher = JSON.parse(sessionData); } catch (e) { console.warn('Error parseando teacherData:', e); }
+    }
+    if (!teacher) {
+        const info = localStorage.getItem('teacherInfo');
+        if (info) {
+            try { teacher = JSON.parse(info); } catch (e) { console.warn('Error parseando teacherInfo:', e); }
+        }
+    }
+    return teacher || {};
+}
+
+// Construir período por defecto en base a la información del profesor
+function buildDefaultPeriod() {
+    const teacher = getStoredTeacher();
+
+    let schoolId = '1';
+    if (teacher.primary_school && teacher.primary_school.school_id) {
+        schoolId = String(teacher.primary_school.school_id);
+    } else if (Array.isArray(teacher.schools) && teacher.schools.length > 0) {
+        const first = teacher.schools[0];
+        schoolId = String(first.school_id || first.id);
+    } else if (teacher.school_id) {
+        schoolId = String(teacher.school_id);
+    }
+
+    return {
+        schoolId,
+        year: 2025,
+        periodType: 'semester',
+        periodNumber: 1
+    };
+}
+
 class GlobalPeriodSelector {
     constructor() {
         this.currentPeriod = null;
@@ -96,13 +134,9 @@ class GlobalPeriodSelector {
                     this.currentPeriod = apiPeriod;
                     this.saveCurrentPeriod(apiPeriod);
                 } else {
-                    this.currentPeriod = {
-                        schoolId: '1',
-                        year: 2025,
-                        periodType: 'semester',
-                        periodNumber: 1
-                    };
-                    // Guardar período por defecto para evitar valores null
+                    // Crear período por defecto basado en el profesor
+                    this.currentPeriod = buildDefaultPeriod();
+                    // Guardar período por defecto para que esté disponible antes de inicializar
                     this.saveCurrentPeriod(this.currentPeriod);
                 }
             }
@@ -799,7 +833,7 @@ window.getCurrentAcademicPeriod = function() {
     if (window.globalPeriodSelector) {
         return window.globalPeriodSelector.getCurrentPeriod();
     }
-    
+
     // Fallback: leer de localStorage
     const saved = localStorage.getItem(getPeriodStorageKey());
     if (saved) {
@@ -809,8 +843,10 @@ window.getCurrentAcademicPeriod = function() {
             console.error('Error parseando período de localStorage:', error);
         }
     }
-    
-    return null;
+    // Si no existe en almacenamiento, construir período por defecto
+    const defaultPeriod = buildDefaultPeriod();
+    localStorage.setItem(getPeriodStorageKey(), JSON.stringify(defaultPeriod));
+    return defaultPeriod;
 };
 
 // Función para forzar recarga de datos basado en período actual
