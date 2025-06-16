@@ -2245,6 +2245,42 @@ Presenta materiales completos"
         // Las implemento aquí abajo manteniendo la funcionalidad original pero agregando las mejoras de UI
 
         async function loadSystemData() {
+            // Esperar a que el selector global proporcione un período válido
+            let currentPeriod = window.getCurrentAcademicPeriod();
+
+            if (!currentPeriod) {
+                currentPeriod = await new Promise(resolve => {
+                    const handler = (e) => {
+                        cleanup();
+                        resolve(e.detail || window.getCurrentAcademicPeriod());
+                    };
+                    const checkInterval = setInterval(() => {
+                        if (window.globalPeriodSelector && window.globalPeriodSelector.isInitialized) {
+                            const period = window.getCurrentAcademicPeriod();
+                            if (period) {
+                                cleanup();
+                                resolve(period);
+                            }
+                        }
+                    }, 200);
+                    const timeout = setTimeout(() => {
+                        cleanup();
+                        resolve(null);
+                    }, 5000);
+                    const cleanup = () => {
+                        clearInterval(checkInterval);
+                        clearTimeout(timeout);
+                        window.removeEventListener('academicPeriodChanged', handler);
+                    };
+                    window.addEventListener('academicPeriodChanged', handler);
+                });
+
+                if (!currentPeriod) {
+                    showNotification('No hay período académico disponible', 'error');
+                    return;
+                }
+            }
+
             // Código original mantenido
             const gradesResponse = await authenticatedFetch('/api/grades');
             const gradesData = await gradesResponse.json();
@@ -2269,7 +2305,6 @@ Presenta materiales completos"
                 allSubjects = subjectsData.data;
             }
 
-            const currentPeriod = window.getCurrentAcademicPeriod();
             const studentParams = new URLSearchParams({
                 year: currentPeriod.year,
                 period_type: currentPeriod.periodType,
