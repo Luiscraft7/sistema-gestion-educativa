@@ -1459,6 +1459,17 @@
 </head>
 <body>
     <script src="js/global-period-selector.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.initGlobalPeriodSelector) {
+                try {
+                    window.initGlobalPeriodSelector();
+                } catch (err) {
+                    console.warn('initGlobalPeriodSelector failed:', err);
+                }
+            }
+        });
+    </script>
     <div class="app-container">
         <!-- SIDEBAR MEJORADO -->
         <aside class="sidebar" id="sidebar">
