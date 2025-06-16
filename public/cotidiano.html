@@ -1814,9 +1814,22 @@ Presenta materiales completos"
         let calificaciones = {};
         // Datos históricos por estudiante (suma de porcentajes y total de fechas)
         let historicalStats = {};
-        let currentGrado = localStorage.getItem('cotidianoGrado') || '';
-        let currentMateria = localStorage.getItem('cotidianoMateria') || '';
-        let currentDate = localStorage.getItem('cotidianoFecha') || new Date().toISOString().split('T')[0];
+        const teacherDataRaw = sessionStorage.getItem('teacherData') || localStorage.getItem('teacherInfo');
+        let teacherId = 'default';
+        if (teacherDataRaw) {
+            try {
+                const t = JSON.parse(teacherDataRaw);
+                if (t && t.id) teacherId = t.id;
+            } catch (err) {
+                console.warn('Error parsing teacher data:', err);
+            }
+        }
+
+        const lsKey = (base) => `${base}_${teacherId}`;
+
+        let currentGrado = localStorage.getItem(lsKey('cotidianoGrado')) || '';
+        let currentMateria = localStorage.getItem(lsKey('cotidianoMateria')) || '';
+        let currentDate = localStorage.getItem(lsKey('cotidianoFecha')) || new Date().toISOString().split('T')[0];
         let hasUnsavedChanges = false;
         let autoSaveEnabled = false;
         let autoSaveTimer = null;
@@ -2663,7 +2676,7 @@ Presenta materiales completos"
             const materiaSelect = document.getElementById('materia');
 
             currentGrado = gradoSelect.value;
-            localStorage.setItem('cotidianoGrado', currentGrado);
+            localStorage.setItem(lsKey('cotidianoGrado'), currentGrado);
             
             if (currentGrado) {
                 materiaSelect.disabled = false;
@@ -2709,7 +2722,7 @@ Presenta materiales completos"
         function cambiarMateria() {
             const materiaSelect = document.getElementById('materia');
             currentMateria = materiaSelect.value;
-            localStorage.setItem('cotidianoMateria', currentMateria);
+            localStorage.setItem(lsKey('cotidianoMateria'), currentMateria);
             
             if (currentGrado && currentMateria) {
                 loadCurrentData();
@@ -2738,7 +2751,7 @@ Presenta materiales completos"
             }
             
             currentDate = nuevaFecha;
-            localStorage.setItem('cotidianoFecha', currentDate);
+            localStorage.setItem(lsKey('cotidianoFecha'), currentDate);
             
             resetIndicatorsOnDateChange();
             
